@@ -1,0 +1,59 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+BUILD	Makefile	/^BUILD = build$/;"	m
+CXXFLAGS	Makefile	/^CXXFLAGS  = -std=c++17 -Wall -Wextra -Wpedantic -Weffc++ -g `sdl2-config --cflags`$/;"	m
+DEP	Makefile	/^DEP = $(SRC:%.cc=$(DEPDIR)\/%.d)$/;"	m
+DEPDIR	Makefile	/^DEPDIR = $(CURDIR)\/.d$/;"	m
+HSV_to_RGB	src/vision.cc	/^void HSV_to_RGB(float h, float s, float v,$/;"	f
+INCDIR	Makefile	/^INCDIR = $(CURDIR)\/inc$/;"	m
+LIBS	Makefile	/^LIBS   = -lSDL2$/;"	m
+MAGIC_33	src/main.cc	/^    MAGIC_33 = 33$/;"	e	enum:magic_numbers	file:
+OBJ	Makefile	/^OBJ = $(SRC:%.cc=%.o)$/;"	m
+OBJDIR	Makefile	/^OBJDIR = $(CURDIR)\/$(BUILD)$/;"	m
+SRC	Makefile	/^SRC	= $(notdir $(wildcard $(SRCDIR)\/*.cc))$/;"	m
+SRCDIR	Makefile	/^SRCDIR = $(CURDIR)\/src$/;"	m
+TARGET	Makefile	/^TARGET = visualisation$/;"	m
+check_state	src/controller.cc	/^bool check_state() {$/;"	f
+colors	src/vision.cc	/^static std::vector<unsigned> colors;$/;"	v	file:
+core	inc/controller.h	/^    int core;$/;"	m	struct:schedule
+deadline	inc/controller.h	/^    int deadline;$/;"	m	struct:job
+exit_SDL_DestroyRenderer	src/vision.cc	/^void exit_SDL_DestroyRenderer(int status, void *renderer) {$/;"	f
+exit_SDL_DestroyWindow	src/vision.cc	/^void exit_SDL_DestroyWindow(int status, void *window) {$/;"	f
+handle_input	src/controller.cc	/^void handle_input(const struct input *input) {$/;"	f
+handle_key_press	src/input.cc	/^static void handle_key_press(SDL_KeyboardEvent kb_event, struct input *input) {$/;"	f	file:
+handle_key_release	src/input.cc	/^static void handle_key_release(SDL_KeyboardEvent kb_event) {$/;"	f	file:
+id	inc/controller.h	/^    int id;$/;"	m	struct:job
+init_SDL	src/main.cc	/^void init_SDL() {$/;"	f
+init_colors	src/vision.cc	/^void init_colors(int n_jobs) {$/;"	f
+init_graphics	src/vision.cc	/^void init_graphics() {$/;"	f
+init_state	src/controller.cc	/^const struct state *init_state(void) {$/;"	f
+input	inc/input.h	/^struct input {$/;"	s
+job	inc/controller.h	/^struct job {$/;"	s
+job_id	inc/controller.h	/^    int job_id;$/;"	m	struct:schedule
+jobs	inc/controller.h	/^    std::vector<struct job> jobs;$/;"	m	struct:state
+magic_numbers	src/main.cc	/^enum magic_numbers {$/;"	g	file:
+main	src/main.cc	/^int main(int argc, char *argv[]) {$/;"	f
+n_cores	inc/controller.h	/^    int n_cores;$/;"	m	struct:state
+parse_job	src/controller.cc	/^static void parse_job(std::string line) {$/;"	f	file:
+parse_n_cores	src/controller.cc	/^static void parse_n_cores(std::string line) {$/;"	f	file:
+parse_schedule	src/controller.cc	/^static void parse_schedule(std::string line) {$/;"	f	file:
+quit	inc/input.h	/^    int quit;$/;"	m	struct:input
+read_input	src/input.cc	/^void read_input(struct input *input) {$/;"	f
+read_input_from_file	src/controller.cc	/^void read_input_from_file(std::string path) {$/;"	f
+read_input_from_stdin	src/controller.cc	/^void read_input_from_stdin() {$/;"	f
+render_vision	src/vision.cc	/^void render_vision(const struct state *state) {$/;"	f
+renderer	src/vision.cc	/^static SDL_Renderer *renderer;$/;"	v	file:
+running	inc/controller.h	/^    int running;$/;"	m	struct:state
+schedule	inc/controller.h	/^struct schedule {$/;"	s
+schedules	inc/controller.h	/^    std::vector<struct schedule> schedules;$/;"	m	struct:state
+set_color	src/vision.cc	/^void set_color(int job) {$/;"	f
+start	inc/controller.h	/^    int start;$/;"	m	struct:schedule
+state	inc/controller.h	/^struct state {$/;"	s
+state	src/controller.cc	/^static struct state *state;$/;"	v	typeref:struct:state	file:
+time	inc/controller.h	/^    int time;$/;"	m	struct:job
+time	inc/controller.h	/^    int time;$/;"	m	struct:schedule
+window	src/vision.cc	/^static SDL_Window *window;$/;"	v	file:

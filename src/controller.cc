@@ -3,11 +3,13 @@
 #include <assert.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cstdio>
 
-static void parse_n_cores(std::string line);
-static void parse_job(std::string line);
-static void parse_schedule(std::string line);
+static void parse_line(std::string);
+static void parse_n_cores(std::stringstream *line);
+static void parse_job(std::stringstream *line);
+static void parse_schedule(std::stringstream *line);
 
 static struct state *state;
 
@@ -29,7 +31,10 @@ void handle_input(const struct input *input) {
 
 
 void read_input_from_stdin() {
-    return;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        parse_line(line);
+    }
 }
 
 void read_input_from_file(std::string path) {
@@ -40,27 +45,34 @@ void read_input_from_file(std::string path) {
     }
     std::string line;
     while (std::getline(input_file, line)) {
-        switch (line[0]) {
-            case 'c': parse_n_cores(line);  break;
-            case 'j': parse_job(line);      break;
-            case 's': parse_schedule(line); break;
-        }
+        parse_line(line);
     }
     input_file.close();
 }
+void parse_line(std::string line) {
+    std::stringstream ss(line);
+    char type;
+    ss >> type;
+    switch (type) {
+        case 'c': parse_n_cores(&ss);  break;
+        case 'j': parse_job(&ss);      break;
+        case 's': parse_schedule(&ss); break;
+    }
 
-static void parse_n_cores(std::string line) {
-    std::sscanf(line.c_str(), "c %d", &state->n_cores);
 }
-static void parse_job(std::string line) {
+
+static void parse_n_cores(std::stringstream *line) {
+    *line >> state->n_cores;
+}
+static void parse_job(std::stringstream *line) {
     int id, deadline, time;
-    std::sscanf(line.c_str(), "j %d %d %d", &id, &time, &deadline);
+    *line >> id >> time >> deadline;
     state->jobs.push_back({id, deadline, time});
 }
-static void parse_schedule(std::string line) {
-    int job_id, core, start, time;
-    int i = std::sscanf(line.c_str(), "s %d %d %d %d", &job_id, &core, &start, &time);
-    state->schedules.push_back({job_id, core, start, time});
+static void parse_schedule(std::stringstream *line) {
+    int job_id, core, start;
+    *line >> job_id >> core >> start;
+    state->schedules.push_back({job_id, core, start});
 }
 bool check_state() {
     return true;

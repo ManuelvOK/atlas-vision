@@ -11,7 +11,7 @@ void init_SDL();
 enum magic_numbers {
     MAGIC_33 = 33
 };
-int main(int argc, char ** argv) {
+int main(int argc, char *argv[]) {
     init_SDL();
     init_graphics();
 
@@ -24,6 +24,8 @@ int main(int argc, char ** argv) {
     if (not check_state()) {
         exit(EXIT_FAILURE);
     }
+
+    calculate_vision(state);
 
     struct input input = {0};
     while (state->running) {

@@ -14,7 +14,6 @@ struct schedule {
     int job_id;
     int core;
     int start;
-    int time;
 };
 
 struct state {
