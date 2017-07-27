@@ -6,11 +6,41 @@
 #include <sstream>
 #include <cstdio>
 
-static void parse_line(std::string);
+/**
+ * parse line of input data
+ *
+ * @param line
+ *   line to parse
+ */
+static void parse_line(std::string line);
+
+/**
+ * parse number of cores from input line
+ *
+ * @param line
+ *   line to parse with index at first parameter
+ */
 static void parse_n_cores(std::stringstream *line);
+
+/**
+ * parse job from input line
+ *
+ * @param line
+ *   line to parse with index at first parameter
+ */
 static void parse_job(std::stringstream *line);
+
+/**
+ * parse schedule cores from input line
+ *
+ * @param line
+ *   line to parse with index at first parameter
+ */
 static void parse_schedule(std::stringstream *line);
 
+/**
+ * state of application
+ */
 static struct state *state;
 
 const struct state *init_state(void) {

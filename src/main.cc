@@ -6,16 +6,21 @@
 #include <input.h>
 #include <controller.h>
 
+/**
+ * Initialise SDL for video output
+ */
 void init_SDL();
 
 enum magic_numbers {
     MAGIC_33 = 33
 };
+
 int main(int argc, char *argv[]) {
     init_SDL();
     init_graphics();
 
     const struct state *state = init_state();
+
     if (argc > 1) {
         read_input_from_file(argv[1]);
     } else {

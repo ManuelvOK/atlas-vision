@@ -2,7 +2,22 @@
 
 #include <SDL2/SDL.h>
 
+/**
+ * handle a pressed key
+ *
+ * @param kb_event
+ *   keyboard event from SDL
+ * @param input
+ *   input struct to put data to
+ */
 static void handle_key_press(SDL_KeyboardEvent kb_event, struct input *input);
+
+/**
+ * handle a released key
+ *
+ * @param kb_event
+ *   keyboard event from SDL
+ */
 static void handle_key_release(SDL_KeyboardEvent kb_event);
 
 void read_input(struct input *input) {

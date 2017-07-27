@@ -7,9 +7,28 @@
 #include <vector>
 #include <map>
 
+/**
+ * SDL Window
+ */
 static SDL_Window *window;
+
+/**
+ * SDL Renderer
+ */
 static SDL_Renderer *renderer;
 
+/**
+ * Data for rendering.
+ *
+ * this gets precomputed at the beginning and is used for rendering.
+ *
+ * @param n_jobs
+ *   number of jobs
+ * @param width
+ *
+ * @param window_width
+ *
+ */
 static struct vision_state{
     int n_jobs;
     int width;
