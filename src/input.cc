@@ -29,6 +29,7 @@ void read_input(struct input *input) {
             default: break;
         }
     }
+    SDL_GetMouseState(&input->mouse_position_x, &input->mouse_position_y);
 }
 
 static void handle_key_press(SDL_KeyboardEvent kb_event, struct input *input) {

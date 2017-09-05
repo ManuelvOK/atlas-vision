@@ -7,6 +7,8 @@
  *   flag to determine whether quit input is given
  */
 struct input {
+    int mouse_position_x;
+    int mouse_position_y;
     int quit;
 };
 

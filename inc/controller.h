@@ -53,6 +53,7 @@ struct state {
     int n_cores;
     std::vector<struct job> jobs;
     std::vector<struct schedule> schedules;
+    int hovered_job;
 };
 
 /**

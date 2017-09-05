@@ -25,3 +25,16 @@ void render_vision(const struct state *state);
  *   application state to precompute vision for
  */
 void calculate_vision(const struct state *state);
+
+/**
+ * interprete mouse position and save the hovered element in state
+ *
+ * @param x
+ *   x coordinate of mouse position
+ * @param y
+ *   y coordinate of mouse position
+ *
+ * @return
+ *   id of hovered job or -1 if no job is hovered
+ */
+int get_hovered_job(int x, int y);

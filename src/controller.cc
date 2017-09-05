@@ -6,6 +6,7 @@
 #include <sstream>
 #include <cstdio>
 
+#include <vision.h>
 /**
  * parse line of input data
  *
@@ -50,13 +51,16 @@ const struct state *init_state(void) {
     state->n_cores = -1;
     state->jobs = std::vector<struct job>();
     state->schedules = std::vector<struct schedule>();
+    state->hovered_job = -1;
     return state;
 }
 
 void handle_input(const struct input *input) {
     if (input->quit) {
         state->running = 0;
+        return;
     }
+    state->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y);
 }
 
 
