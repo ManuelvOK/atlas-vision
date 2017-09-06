@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     while (state->running) {
         read_input(&input);
         handle_input(&input);
+        control();
         render_vision(state);
         SDL_Delay(MAGIC_33);
     }

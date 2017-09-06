@@ -37,6 +37,22 @@ struct schedule {
 };
 
 /**
+ * Representation of the simulation player
+ *
+ * @param running
+ *   determines if the simulation gets played
+ * @param position
+ *   current position of player
+ * @param max_position
+ *   length of full simulation
+ */
+struct player {
+    int running;
+    float position;
+    float max_position;
+};
+
+/**
  * Representation of the application data
  *
  * @param running
@@ -47,6 +63,8 @@ struct schedule {
  *   list of jobs
  * @param schedules
  *   list of schedules for the jobs
+ * @param player
+ *   simulation player
  */
 struct state {
     int running;
@@ -54,6 +72,7 @@ struct state {
     std::vector<struct job> jobs;
     std::vector<struct schedule> schedules;
     int hovered_job;
+    struct player player;
 };
 
 /**
@@ -94,3 +113,8 @@ void read_input_from_file(std::string path);
  *   True of state is plausible. False otherwise
  */
 bool check_state();
+
+/**
+ * perform logic step for each tick
+ */
+void control();

@@ -10,6 +10,8 @@ struct input {
     int mouse_position_x;
     int mouse_position_y;
     int quit;
+    int toggle_play;
+    int rewind;
 };
 
 /**

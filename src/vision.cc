@@ -20,6 +20,8 @@ static SDL_Renderer *renderer;
 /**
  * Data for rendering.
  *
+ * TODO: This is a mess! Solve it better.
+ *
  * this gets precomputed at the beginning and is used for rendering.
  *
  * @param n_jobs
@@ -47,6 +49,10 @@ static struct vision_state{
     int color_deadline_height = 20;
     int color_deadline_spacing = 2;
     int schedule_offset_y;
+    int player_offset_x = 30;
+    int player_offset_y = 700;
+    int player_width = 600;
+    int player_height = 30;
     std::vector<SDL_Rect> jobs_in_schedule_position;
     std::vector<SDL_Rect> jobs_in_schedule_render_position;
     std::vector<SDL_Rect> jobs_in_EDF_view_position;
@@ -102,11 +108,67 @@ static void HSV_to_RGB(float h, float s, float v,
  * @param state
  *   application state
  */
-void calculate_render_positions();
+static void calculate_render_positions();
 
-bool point_inside_rendered_job(int x, int y, int job);
+/**
+ * check if point is inside a rendered job
+ *
+ * @param x
+ *   x coordinate of point to check
+ * @param y
+ *   y coordinate of point to check
+ * @param job
+ *   id of job to check point for
+ *
+ * @return
+ *   true if Point is inside one of the rendered job rects. Otherwise false
+ */
+static bool point_inside_rendered_job(int x, int y, int job);
 
-bool point_inside_rect(int x, int y, SDL_Rect *r);
+/**
+ * check if point is inside a SDL_Rect
+ *
+ * @param x
+ *   x coordinate of point to check
+ * @param y
+ *   y coordinate of point to check
+ *
+ * @return
+ *   true if Point is inside SDL_Rect. Otherwise False
+ */
+static bool point_inside_rect(int x, int y, SDL_Rect *r);
+
+/**
+ * prepare rendering of jobs in Schedule view
+ *
+ * @param state
+ *   application state
+ */
+static void render_jobs_in_schedule(const struct state *state);
+
+/**
+ * prepare rendering of jobs in EDF view
+ *
+ * @param state
+ *   application state
+ */
+static void render_jobs_in_EDF_view(const struct state *state);
+
+/**
+ * prepare rendering of job deadlines in EDF view
+ *
+ * @param state
+ *   application state
+ */
+static void render_deadlines(const struct state *state);
+
+/**
+ * prepare rendering for everything that concerns the simulation playing
+ *
+ * @param state
+ *   application state
+ */
+static void render_player(const struct state *state);
 
 void exit_SDL_DestroyWindow(int status, void *window) {
     (void) status;
@@ -236,40 +298,90 @@ void calculate_render_positions() {
 }
 
 void render_vision(const struct state *state) {
+    calculate_render_positions();
+
+    /* init colors if not happend before */
     if (vision_state.colors.empty()) {
         init_colors(state->jobs.size());
     }
+
+    /* paint background white */
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
     SDL_RenderClear(renderer);
 
+    /* render job views */
+    render_jobs_in_schedule(state);
+    render_jobs_in_EDF_view(state);
+    render_deadlines(state);
+
+    /* render player */
+    render_player(state);
+
+    SDL_RenderPresent(renderer);
+}
+
+void render_jobs_in_schedule(const struct state *state) {
     for (int i = 0; i < vision_state.n_jobs; ++i) {
-        /* draw job in schedule view */
         SDL_Rect r = vision_state.jobs_in_schedule_render_position[i];
         float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
         set_color(i, modifier);
         SDL_RenderFillRect(renderer, &r);
         SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
         SDL_RenderDrawRect(renderer, &r);
+    }
+}
 
-        /* draw job in EDF view */
-        r = vision_state.jobs_in_EDF_view_render_position[i];
+void render_jobs_in_EDF_view(const struct state *state) {
+    for (int i = 0; i < vision_state.n_jobs; ++i) {
+        SDL_Rect r = vision_state.jobs_in_EDF_view_render_position[i];
+        float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
         set_color(i, modifier * 0.8);
         SDL_RenderFillRect(renderer, &r);
+    }
+}
 
-        /* draw deadline for job in EDF View */
-        r = vision_state.deadline_history_render_position[i];
+void render_deadlines(const struct state *state) {
+    /* draw job history for each deadline */
+    for (int i = 0; i < vision_state.n_jobs; ++i) {
+        float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
+        SDL_Rect r = vision_state.deadline_history_render_position[i];
         set_color(i, modifier);
         SDL_RenderFillRect(renderer, &r);
     }
 
+    /* draw deadline in EDF view */
     for (int i = 0; i < vision_state.deadlines.size(); ++i) {
-        /* draw deadline for job in EDF View */
         SDL_Rect r = vision_state.deadlines_render_position[i];
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderFillRect(renderer, &r);
     }
+}
 
-    SDL_RenderPresent(renderer);
+void render_player(const struct state *state) {
+    /* render static player */
+    SDL_Rect r;
+    r.x = vision_state.player_offset_x;
+    r.y = vision_state.player_offset_y;
+    r.w = vision_state.player_width;
+    r.h = vision_state.player_height;
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &r);
+
+    /* render unit markings */
+    float unit = vision_state.player_width * 1.0f / state->player.max_position;
+    for (int i = 1; i < state->player.max_position; ++i) {
+        float x = vision_state.player_offset_x + unit * i;
+        int y = vision_state.player_offset_y + 5;
+        SDL_RenderDrawLine(renderer, x, y, x, y + vision_state.player_height - 6);
+    }
+
+    /* TODO: render Points of interest */
+
+    /* render current position */
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    float x = vision_state.player_offset_x + unit * state->player.position;
+    float y = vision_state.player_offset_y + 1;
+    SDL_RenderDrawLine(renderer, x, y, x, y + vision_state.player_height - 2);
 }
 
 void init_colors(int n_jobs) {
@@ -297,58 +409,36 @@ void set_color(int job, float modifier) {
     SDL_SetRenderDrawColor(renderer, r * 255, g * 255, b * 255, 255);
 }
 
-void HSV_to_RGB(float h, float s, float v,
-                float *r, float *g, float *b) {
+void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {
 
     int i;
     float f, p, q, t;
-    if( s == 0 ) {
-        // achromatic (grey)
+    if (s == 0) {
+        /* achromatic (grey) */
         *r = *g = *b = v;
         return;
     }
-    h /= 60;            // sector 0 to 5
-    i = floor( h );
-    f = h - i;          // factorial part of h
-    p = v * ( 1 - s );
-    q = v * ( 1 - s * f );
-    t = v * ( 1 - s * ( 1 - f ) );
-    switch( i ) {
-        case 0:
-            *r = v;
-            *g = t;
-            *b = p;
-            break;
-        case 1:
-            *r = q;
-            *g = v;
-            *b = p;
-            break;
-        case 2:
-            *r = p;
-            *g = v;
-            *b = t;
-            break;
-        case 3:
-            *r = p;
-            *g = q;
-            *b = v;
-            break;
-        case 4:
-            *r = t;
-            *g = p;
-            *b = v;
-            break;
-        default:        // case 5:
-            *r = v;
-            *g = p;
-            *b = q;
-            break;
+
+    /* sector 0 to 5 */
+    h /= 60;
+    i = floor(h);
+
+    /* factorial part of h */
+    f = h - i;
+    p = v * (1 - s);
+    q = v * (1 - s * f);
+    t = v * (1 - s * (1 - f));
+    switch(i) {
+        case 0: *r = v; *g = t; *b = p; break;
+        case 1: *r = q; *g = v; *b = p; break;
+        case 2: *r = p; *g = v; *b = t; break;
+        case 3: *r = p; *g = q; *b = v; break;
+        case 4: *r = t; *g = p; *b = v; break;
+        default: *r = v; *g = p; *b = q; break;
     }
 }
 
 int get_hovered_job(int x, int y) {
-    calculate_render_positions();
     for (int i = 0; i < vision_state.n_jobs; ++i) {
         if (point_inside_rendered_job(x, y, i)) {
             return i;

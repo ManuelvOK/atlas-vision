@@ -17,15 +17,33 @@ OBJDIR	Makefile	/^OBJDIR = $(CURDIR)\/$(BUILD)$/;"	m
 SRC	Makefile	/^SRC	= $(notdir $(wildcard $(SRCDIR)\/*.cc))$/;"	m
 SRCDIR	Makefile	/^SRCDIR = $(CURDIR)\/src$/;"	m
 TARGET	Makefile	/^TARGET = visualisation$/;"	m
+calculate_job_in_EDF_view	src/vision.cc	/^void calculate_job_in_EDF_view(const struct job &job, int offset) {$/;"	f
+calculate_job_in_schedule	src/vision.cc	/^void calculate_job_in_schedule(const struct state *state, const struct schedule &schedule) {$/;"	f
+calculate_player_values	src/controller.cc	/^void calculate_player_values() {$/;"	f
+calculate_render_positions	src/vision.cc	/^void calculate_render_positions() {$/;"	f
+calculate_vision	src/vision.cc	/^void calculate_vision(const struct state *state) {$/;"	f
 check_state	src/controller.cc	/^bool check_state() {$/;"	f
-colors	src/vision.cc	/^static std::vector<unsigned> colors;$/;"	v	file:
+color_deadline_height	src/vision.cc	/^    int color_deadline_height = 20;$/;"	m	struct:vision_state	file:
+color_deadline_spacing	src/vision.cc	/^    int color_deadline_spacing = 2;$/;"	m	struct:vision_state	file:
+color_deadline_width	src/vision.cc	/^    int color_deadline_width = 4;$/;"	m	struct:vision_state	file:
+colors	src/vision.cc	/^    std::vector<unsigned> colors;$/;"	m	struct:vision_state	file:
+control	src/controller.cc	/^void control() {$/;"	f
 core	inc/controller.h	/^    int core;$/;"	m	struct:schedule
 deadline	inc/controller.h	/^    int deadline;$/;"	m	struct:job
+deadline_height	src/vision.cc	/^    int deadline_height = 24;$/;"	m	struct:vision_state	file:
+deadline_history_render_position	src/vision.cc	/^    std::vector<SDL_Rect> deadline_history_render_position;$/;"	m	struct:vision_state	file:
+deadline_margin_x	src/vision.cc	/^    int deadline_margin_x = -1;$/;"	m	struct:vision_state	file:
+deadline_margin_y	src/vision.cc	/^    int deadline_margin_y = -2;$/;"	m	struct:vision_state	file:
+deadline_width	src/vision.cc	/^    int deadline_width = 2;$/;"	m	struct:vision_state	file:
+deadlines	src/vision.cc	/^    std::map<int, std::vector<int>> deadlines;$/;"	m	struct:vision_state	file:
+deadlines_render_position	src/vision.cc	/^    std::vector<SDL_Rect> deadlines_render_position;$/;"	m	struct:vision_state	file:
 exit_SDL_DestroyRenderer	src/vision.cc	/^void exit_SDL_DestroyRenderer(int status, void *renderer) {$/;"	f
 exit_SDL_DestroyWindow	src/vision.cc	/^void exit_SDL_DestroyWindow(int status, void *window) {$/;"	f
+get_hovered_job	src/vision.cc	/^int get_hovered_job(int x, int y) {$/;"	f
 handle_input	src/controller.cc	/^void handle_input(const struct input *input) {$/;"	f
 handle_key_press	src/input.cc	/^static void handle_key_press(SDL_KeyboardEvent kb_event, struct input *input) {$/;"	f	file:
 handle_key_release	src/input.cc	/^static void handle_key_release(SDL_KeyboardEvent kb_event) {$/;"	f	file:
+hovered_job	inc/controller.h	/^    int hovered_job;$/;"	m	struct:state
 id	inc/controller.h	/^    int id;$/;"	m	struct:job
 init_SDL	src/main.cc	/^void init_SDL() {$/;"	f
 init_colors	src/vision.cc	/^void init_colors(int n_jobs) {$/;"	f
@@ -33,27 +51,63 @@ init_graphics	src/vision.cc	/^void init_graphics() {$/;"	f
 init_state	src/controller.cc	/^const struct state *init_state(void) {$/;"	f
 input	inc/input.h	/^struct input {$/;"	s
 job	inc/controller.h	/^struct job {$/;"	s
+job_height	src/vision.cc	/^    int job_height = 20;$/;"	m	struct:vision_state	file:
 job_id	inc/controller.h	/^    int job_id;$/;"	m	struct:schedule
+job_margin_x	src/vision.cc	/^    int job_margin_x = 0;$/;"	m	struct:vision_state	file:
+job_margin_y	src/vision.cc	/^    int job_margin_y = 0;$/;"	m	struct:vision_state	file:
+job_width	src/vision.cc	/^    int job_width = 30;$/;"	m	struct:vision_state	file:
 jobs	inc/controller.h	/^    std::vector<struct job> jobs;$/;"	m	struct:state
+jobs_in_EDF_view_position	src/vision.cc	/^    std::vector<SDL_Rect> jobs_in_EDF_view_position;$/;"	m	struct:vision_state	file:
+jobs_in_EDF_view_render_position	src/vision.cc	/^    std::vector<SDL_Rect> jobs_in_EDF_view_render_position;$/;"	m	struct:vision_state	file:
+jobs_in_schedule_position	src/vision.cc	/^    std::vector<SDL_Rect> jobs_in_schedule_position;$/;"	m	struct:vision_state	file:
+jobs_in_schedule_render_position	src/vision.cc	/^    std::vector<SDL_Rect> jobs_in_schedule_render_position;$/;"	m	struct:vision_state	file:
 magic_numbers	src/main.cc	/^enum magic_numbers {$/;"	g	file:
 main	src/main.cc	/^int main(int argc, char *argv[]) {$/;"	f
+margin_x	src/vision.cc	/^    int margin_x = 20;$/;"	m	struct:vision_state	file:
+margin_y	src/vision.cc	/^    int margin_y = 20;$/;"	m	struct:vision_state	file:
+max_position	inc/controller.h	/^    float max_position;$/;"	m	struct:player
+mouse_position_x	inc/input.h	/^    int mouse_position_x;$/;"	m	struct:input
+mouse_position_y	inc/input.h	/^    int mouse_position_y;$/;"	m	struct:input
 n_cores	inc/controller.h	/^    int n_cores;$/;"	m	struct:state
-parse_job	src/controller.cc	/^static void parse_job(std::string line) {$/;"	f	file:
-parse_n_cores	src/controller.cc	/^static void parse_n_cores(std::string line) {$/;"	f	file:
-parse_schedule	src/controller.cc	/^static void parse_schedule(std::string line) {$/;"	f	file:
+n_jobs	src/vision.cc	/^    int n_jobs;$/;"	m	struct:vision_state	file:
+parse_job	src/controller.cc	/^static void parse_job(std::stringstream *line) {$/;"	f	file:
+parse_line	src/controller.cc	/^void parse_line(std::string line) {$/;"	f
+parse_n_cores	src/controller.cc	/^static void parse_n_cores(std::stringstream *line) {$/;"	f	file:
+parse_schedule	src/controller.cc	/^static void parse_schedule(std::stringstream *line) {$/;"	f	file:
+player	inc/controller.h	/^    struct player player;$/;"	m	struct:state	typeref:struct:state::player
+player	inc/controller.h	/^struct player {$/;"	s
+player_offset_x	src/vision.cc	/^    int player_offset_x = 30;$/;"	m	struct:vision_state	file:
+player_offset_y	src/vision.cc	/^    int player_offset_y = 700;$/;"	m	struct:vision_state	file:
+player_tick	src/controller.cc	/^void player_tick() {$/;"	f
+player_width	src/vision.cc	/^    int player_width = 600;$/;"	m	struct:vision_state	file:
+point_inside_rect	src/vision.cc	/^bool point_inside_rect(int x, int y, SDL_Rect *r) {$/;"	f
+point_inside_rendered_job	src/vision.cc	/^bool point_inside_rendered_job(int x, int y, int job) {$/;"	f
+position	inc/controller.h	/^    float position;$/;"	m	struct:player
 quit	inc/input.h	/^    int quit;$/;"	m	struct:input
 read_input	src/input.cc	/^void read_input(struct input *input) {$/;"	f
 read_input_from_file	src/controller.cc	/^void read_input_from_file(std::string path) {$/;"	f
 read_input_from_stdin	src/controller.cc	/^void read_input_from_stdin() {$/;"	f
+render_deadlines	src/vision.cc	/^void render_deadlines(const struct state *state) {$/;"	f
+render_jobs_in_EDF_view	src/vision.cc	/^void render_jobs_in_EDF_view(const struct state *state) {$/;"	f
+render_jobs_in_schedule	src/vision.cc	/^void render_jobs_in_schedule(const struct state *state) {$/;"	f
+render_player	src/vision.cc	/^void render_player(const struct state *state) {$/;"	f
 render_vision	src/vision.cc	/^void render_vision(const struct state *state) {$/;"	f
 renderer	src/vision.cc	/^static SDL_Renderer *renderer;$/;"	v	file:
+reset_input	src/input.cc	/^static void reset_input(struct input *input) {$/;"	f	file:
+rewind	inc/input.h	/^    int rewind;$/;"	m	struct:input
+running	inc/controller.h	/^    int running;$/;"	m	struct:player
 running	inc/controller.h	/^    int running;$/;"	m	struct:state
 schedule	inc/controller.h	/^struct schedule {$/;"	s
+schedule_offset_y	src/vision.cc	/^    int schedule_offset_y;$/;"	m	struct:vision_state	file:
 schedules	inc/controller.h	/^    std::vector<struct schedule> schedules;$/;"	m	struct:state
-set_color	src/vision.cc	/^void set_color(int job) {$/;"	f
+set_color	src/vision.cc	/^void set_color(int job, float modifier) {$/;"	f
 start	inc/controller.h	/^    int start;$/;"	m	struct:schedule
 state	inc/controller.h	/^struct state {$/;"	s
 state	src/controller.cc	/^static struct state *state;$/;"	v	typeref:struct:state	file:
 time	inc/controller.h	/^    int time;$/;"	m	struct:job
-time	inc/controller.h	/^    int time;$/;"	m	struct:schedule
+toggle_play	inc/input.h	/^    int toggle_play;$/;"	m	struct:input
+vision_state	src/vision.cc	/^static struct vision_state{$/;"	s	file:
+vision_state	src/vision.cc	/^} vision_state;$/;"	v	typeref:struct:vision_state	file:
+width	src/vision.cc	/^    int width;$/;"	m	struct:vision_state	file:
 window	src/vision.cc	/^static SDL_Window *window;$/;"	v	file:
+window_width	src/vision.cc	/^    int window_width = 1000;$/;"	m	struct:vision_state	file:

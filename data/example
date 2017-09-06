@@ -1,0 +1,28 @@
+# This is an Example File for the ATLAS Scheduling algorithm visualisation
+#
+# Number of cores specification
+# c number_of_cores
+#
+# job specification
+# j job_id deadline execution_time_estimate execution_time submission_time
+#
+# schedule specification
+# s job_id core begin execution_time
+#
+# EDF recovery specification
+# r job_id core begin execution_time
+#
+# CFS schedule specification
+# l job_id core begin execution_time
+
+c 1
+j 0 1 2
+s 0 0 1
+j 1 1 4
+s 1 0 2
+j 2 2 5
+s 2 0 3
+j 3 1 9
+s 3 0 7
+j 4 1 9
+s 4 0 8
