@@ -11,13 +11,19 @@
  *   job id
  * @param deadline
  *   timestamp for the deadline of the job
- * @param time
- *   execution time estimate
+ * @param execution_time_estimate
+ *   estimated execution time
+ * @param execution_time
+ *   real execution time
+ * @param submission_time
+ *   timestamp the job gets submitted
  */
 struct job {
     int id;
     int deadline;
-    int time;
+    int execution_time_estimate;
+    int execution_time;
+    int submission_time;
 };
 
 /**
@@ -27,13 +33,19 @@ struct job {
  *   Id of the concerning job
  * @param core
  *   core on wich the job gets executed
- * @param start
- *   start tie of job execution
+ * @player_state
+ *   player state in wich the schedule is active
+ * @param begin
+ *   start time of job execution
+ * @param execution_time
+ *   time the scheduled job runs
  */
 struct schedule {
     int job_id;
     int core;
-    int start;
+    int player_state;
+    int begin;
+    int execution_time;
 };
 
 /**

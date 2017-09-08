@@ -80,7 +80,7 @@ void handle_input(const struct input *input) {
     if (input->rewind) {
         state->player.position = 0;
     }
-    state->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y);
+    state->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y, state);
 }
 
 void read_input_from_stdin() {
@@ -107,7 +107,7 @@ void read_input_from_file(std::string path) {
 
 void parse_line(std::string line) {
     std::stringstream ss(line);
-    char type;
+    char type = 0;
     ss >> type;
     switch (type) {
         case 'c': parse_n_cores(&ss);  break;
@@ -121,17 +121,21 @@ void parse_line(std::string line) {
 
 static void parse_n_cores(std::stringstream *line) {
     *line >> state->n_cores;
+    std::cout << line->str() << std::endl;
 }
+
 static void parse_job(std::stringstream *line) {
-    int id, deadline, time;
-    *line >> id >> time >> deadline;
-    state->jobs.push_back({id, deadline, time});
+    int id, deadline, time_estimate, time, submission;
+    *line >> id >> deadline >> time_estimate >> time >> submission;
+    state->jobs.push_back({id, deadline, time_estimate, time, submission});
 }
+
 static void parse_schedule(std::stringstream *line) {
-    int job_id, core, start;
-    *line >> job_id >> core >> start;
-    state->schedules.push_back({job_id, core, start});
+    int job_id, core, player_time, begin, time;
+    *line >> job_id >> core >> player_time >> begin >> time;
+    state->schedules.push_back({job_id, core, player_time, begin, time});
 }
+
 bool check_state() {
     return true;
 }
@@ -153,7 +157,7 @@ void player_tick() {
 
 void calculate_player_values() {
     struct schedule last_schedule = state->schedules.back();
-    struct job last_job = state->jobs[last_schedule.job_id];
+    //struct job last_job = state->jobs[last_schedule.job_id];
 
-    state->player.max_position = last_schedule.start + last_job.time;
+    state->player.max_position = last_schedule.begin + last_schedule.execution_time;
 }

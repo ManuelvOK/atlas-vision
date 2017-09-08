@@ -7,22 +7,70 @@
 # j job_id deadline execution_time_estimate execution_time submission_time
 #
 # schedule specification
-# s job_id core begin execution_time
+# s job_id core submission_time begin execution_time
 #
 # EDF recovery specification
-# r job_id core begin execution_time
+# r job_id core submission_time begin execution_time
 #
 # CFS schedule specification
-# l job_id core begin execution_time
+# l job_id core submission_time begin execution_time
 
 c 1
-j 0 1 2
-s 0 0 1
-j 1 1 4
-s 1 0 2
-j 2 2 5
-s 2 0 3
-j 3 1 9
-s 3 0 7
-j 4 1 9
-s 4 0 8
+j 0 18 2 2 0 #A1
+j 1 25 1 1 0 #A2
+j 2 32 2 2 5 #A3
+j 3 39 2 2 5 #A4
+
+j 4 20 1 1 0 #B1
+j 5 24 2 2 2 #B2
+j 6 28 1 1 2 #B3
+j 7 32 2 2 7 #B4
+
+j 8 16 2 2 0 #X0
+j 9 24 3 3 0 #X1
+j 10 20 2 2 0 #X2
+j 11 22 1 1 7 #X3
+
+# schedules from timestamp 0
+s 8 0 0 13 2
+s 0 0 0 15 2
+s 10 0 0 17 2
+s 4 0 0 19 1
+s 9 0 0 21 3
+s 1 0 0 24 1
+
+# schedules from timestamp 2
+s 8 0 2 12 2
+s 0 0 2 14 2
+s 10 0 2 16 2
+s 4 0 2 18 1
+s 9 0 2 19 3
+s 5 0 2 22 2
+s 1 0 2 24 1
+s 6 0 2 27 1
+
+# schedules from timestamp 5
+s 8 0 5 12 2
+s 0 0 5 14 2
+s 10 0 5 16 2
+s 4 0 5 18 1
+s 9 0 5 19 3
+s 5 0 5 22 2
+s 1 0 5 24 1
+s 6 0 5 27 1
+s 2 0 5 30 2
+s 3 0 5 37 2
+
+# schedules from timestamp 7
+s 8 0 7 11 2
+s 0 0 7 13 2
+s 10 0 7 15 2
+s 4 0 7 17 1
+s 11 0 7 18 1
+s 9 0 7 19 3
+s 5 0 7 22 2
+s 1 0 7 24 1
+s 6 0 7 27 1
+s 2 0 7 28 2
+s 7 0 7 30 2
+s 3 0 7 37 2

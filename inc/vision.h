@@ -2,6 +2,8 @@
 
 #include <SDL2/SDL.h>
 
+#include <controller.h>
+
 /**
  * initialise graphics
  */
@@ -33,8 +35,10 @@ void calculate_vision(const struct state *state);
  *   x coordinate of mouse position
  * @param y
  *   y coordinate of mouse position
+ * @param state
+ *   application state
  *
  * @return
  *   id of hovered job or -1 if no job is hovered
  */
-int get_hovered_job(int x, int y);
+int get_hovered_job(int x, int y, const struct state *state);

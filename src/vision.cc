@@ -53,8 +53,8 @@ static struct vision_state{
     int player_offset_y = 700;
     int player_width = 600;
     int player_height = 30;
-    std::vector<SDL_Rect> jobs_in_schedule_position;
-    std::vector<SDL_Rect> jobs_in_schedule_render_position;
+    std::vector<SDL_Rect> schedule_position;
+    std::vector<SDL_Rect> schedule_render_position;
     std::vector<SDL_Rect> jobs_in_EDF_view_position;
     std::vector<SDL_Rect> jobs_in_EDF_view_render_position;
     std::vector<SDL_Rect> deadlines_render_position;
@@ -125,6 +125,20 @@ static void calculate_render_positions();
  */
 static bool point_inside_rendered_job(int x, int y, int job);
 
+/**
+ * check if point is inside a rendered schedule
+ *
+ * @param x
+ *   x coordinate of point to check
+ * @param y
+ *   y coordinate of point to check
+ * @param schedule
+ *   id of schedule to check point for
+ *
+ * @return
+ *   true if Point is inside one of the rendered schedule rect. Otherwise false
+ */
+static bool point_inside_rendered_schedule(int x, int y, int schedule);
 /**
  * check if point is inside a SDL_Rect
  *
@@ -197,21 +211,21 @@ void init_graphics() {
 }
 
 void calculate_job_in_schedule(const struct state *state, const struct schedule &schedule) {
-    struct job job = state->jobs[schedule.job_id];
+    //struct job job = state->jobs[schedule.job_id];
     SDL_Rect job_in_schedule = {
-        schedule.start,
-        schedule.core,
-        job.time,
+        schedule.begin,
+        schedule.player_state, //schedule.core,
+        schedule.execution_time,
         1,
     };
-    vision_state.jobs_in_schedule_position.push_back(job_in_schedule);
+    vision_state.schedule_position.push_back(job_in_schedule);
 }
 
 void calculate_job_in_EDF_view(const struct job &job, int offset) {
     SDL_Rect job_in_EDF_view = {
         offset,
         0,
-        job.time,
+        job.execution_time_estimate,
         1
     };
     vision_state.jobs_in_EDF_view_position.push_back(job_in_EDF_view);
@@ -232,9 +246,9 @@ void calculate_vision(const struct state *state) {
         struct job job = state->jobs[s.job_id];
         calculate_job_in_schedule(state, s);
         calculate_job_in_EDF_view(job, offset);
-        offset += job.time;
+        offset += job.execution_time_estimate;
         /* create SDL rects for render positions */
-        vision_state.jobs_in_schedule_render_position.push_back({0,0,0,0});
+        vision_state.schedule_render_position.push_back({0,0,0,0});
         vision_state.jobs_in_EDF_view_render_position.push_back({0,0,0,0});
         vision_state.deadline_history_render_position.push_back({0,0,0,0});
     }
@@ -248,19 +262,21 @@ void calculate_vision(const struct state *state) {
 
 void calculate_render_positions() {
 
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
+    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
         /* precompute positions for job in schedule view */
-        SDL_Rect *r = &vision_state.jobs_in_schedule_render_position[i];
-        *r = vision_state.jobs_in_schedule_position[i];
+        SDL_Rect *r = &vision_state.schedule_render_position[i];
+        *r = vision_state.schedule_position[i];
         r->x *= vision_state.job_width;
         r->x += vision_state.margin_x;
         r->y *= vision_state.job_height;
         r->y += vision_state.margin_y + vision_state.schedule_offset_y;
         r->w *= vision_state.job_width;
         r->h *= vision_state.job_height;
+    }
 
+    for (int i = 0; i < vision_state.n_jobs; ++i) {
         /* precompute positions for job in EDF view */
-        r = &vision_state.jobs_in_EDF_view_render_position[i];
+        SDL_Rect *r = &vision_state.jobs_in_EDF_view_render_position[i];
         *r = vision_state.jobs_in_EDF_view_position[i];
         r->x *= vision_state.job_width;
         r->x += vision_state.margin_x;
@@ -306,7 +322,7 @@ void render_vision(const struct state *state) {
     }
 
     /* paint background white */
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
+    SDL_SetRenderDrawColor(renderer, 170, 170, 170, 0);
     SDL_RenderClear(renderer);
 
     /* render job views */
@@ -321,10 +337,11 @@ void render_vision(const struct state *state) {
 }
 
 void render_jobs_in_schedule(const struct state *state) {
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
-        SDL_Rect r = vision_state.jobs_in_schedule_render_position[i];
-        float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
-        set_color(i, modifier);
+    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
+        struct schedule s = state->schedules[i];
+        SDL_Rect r = vision_state.schedule_render_position[i];
+        float modifier = (s.job_id == state->hovered_job) ? 1.0 : 0.9;
+        set_color(s.job_id, modifier);
         SDL_RenderFillRect(renderer, &r);
         SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
         SDL_RenderDrawRect(renderer, &r);
@@ -438,21 +455,29 @@ void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {
     }
 }
 
-int get_hovered_job(int x, int y) {
+int get_hovered_job(int x, int y, const struct state *state) {
     for (int i = 0; i < vision_state.n_jobs; ++i) {
         if (point_inside_rendered_job(x, y, i)) {
             return i;
         }
     }
+    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
+        if (point_inside_rendered_schedule(x, y, i)) {
+            return state->schedules[i].job_id;
+        }
+    }
     return -1;
 }
 
+bool point_inside_rendered_schedule(int x, int y, int schedule) {
+    SDL_Rect *r_schedule = &vision_state.schedule_render_position[schedule];
+    return point_inside_rect(x, y, r_schedule);
+}
+
 bool point_inside_rendered_job(int x, int y, int job) {
-    SDL_Rect *r_schedule = &vision_state.jobs_in_schedule_render_position[job];
     SDL_Rect *r_EDF = &vision_state.jobs_in_EDF_view_render_position[job];
     SDL_Rect *r_deadline = &vision_state.deadline_history_render_position[job];
-    return point_inside_rect(x, y, r_schedule)
-        || point_inside_rect(x, y, r_EDF)
+    return point_inside_rect(x, y, r_EDF)
         || point_inside_rect(x, y, r_deadline);
 }
 
