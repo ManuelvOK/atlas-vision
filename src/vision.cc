@@ -50,6 +50,8 @@ static struct {
         int height = 30;
         int grid_height_big = 15;
         int grid_height_small = 5;
+        int poi_max_height = 20;
+        float poi_width = 1.0 / 3; // this is a factor for the unit width
     } player;
 } config;
 
@@ -57,6 +59,7 @@ static int n_jobs;
 static int n_schedules;
 static std::vector<SDL_Rect> schedule_positions;
 static std::vector<SDL_Rect> schedule_render_positions;
+static std::vector<SDL_Rect> current_schedule_render_positions;
 static std::vector<SDL_Rect> jobs_in_EDF_view_positions;
 static std::vector<SDL_Rect> jobs_in_EDF_view_render_positions;
 static std::vector<SDL_Rect> deadlines_render_positions;
@@ -109,7 +112,7 @@ static void HSV_to_RGB(float h, float s, float v,
  * @param state
  *   application state
  */
-static void calculate_render_positions();
+static void calculate_render_positions(const struct state *state);
 
 /**
  * check if point is inside a rendered job
@@ -239,15 +242,15 @@ void calculate_job_in_EDF_view(const struct job &job, int offset) {
 
 void calculate_vision(const struct state *state) {
     n_jobs = state->jobs.size();
-    config.schedule_offset_y = config.job.height
-                               + config.color_deadline.height
-                               + 20;
+    n_schedules = state->schedules.size();
+    config.schedule_offset_y = config.job.height + config.color_deadline.height + 20;
     int offset = 0;
     for (const struct schedule &s: state->schedules) {
         struct job job = state->jobs[s.job_id];
         calculate_job_in_schedule(state, s);
         calculate_job_in_EDF_view(job, offset);
         offset += job.execution_time_estimate;
+
         /* create SDL rects for render positions */
         schedule_render_positions.push_back({0,0,0,0});
         jobs_in_EDF_view_render_positions.push_back({0,0,0,0});
@@ -261,9 +264,22 @@ void calculate_vision(const struct state *state) {
     config.job.width = config.window.width / width;
 }
 
-void calculate_render_positions() {
+void calculate_render_positions(const struct state *state) {
+    current_schedule_render_positions.clear();
+    for (int i: state->player.states[state->player.current_state].schedules) {
+        /* precompute positions for job in schedule view */
+        SDL_Rect r = schedule_positions[i];
+        r.x *= config.job.width;
+        r.x += config.margin_x;
+        r.y = 10;
+        r.y *= config.job.height;
+        r.y += config.margin_y + config.schedule_offset_y;
+        r.w *= config.job.width;
+        r.h *= config.job.height;
+        current_schedule_render_positions.push_back(r);
+    }
 
-    for (int i = 0; i < schedule_render_positions.size(); ++i) {
+    for (int i = 0; i < n_schedules; ++i) {
         /* precompute positions for job in schedule view */
         SDL_Rect *r = &schedule_render_positions[i];
         *r = schedule_positions[i];
@@ -315,7 +331,7 @@ void calculate_render_positions() {
 }
 
 void render_vision(const struct state *state) {
-    calculate_render_positions();
+    calculate_render_positions(state);
 
     /* init colors if not happend before */
     if (colors.empty()) {
@@ -338,7 +354,16 @@ void render_vision(const struct state *state) {
 }
 
 void render_jobs_in_schedule(const struct state *state) {
-    for (int i = 0; i < schedule_render_positions.size(); ++i) {
+    /* TODO: this is copy paste skit. DONT */
+    for (SDL_Rect r: current_schedule_render_positions) {
+        set_color(0);
+        SDL_RenderFillRect(renderer, &r);
+        SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
+        SDL_RenderDrawRect(renderer, &r);
+
+    }
+
+    for (int i = 0; i < n_schedules; ++i) {
         struct schedule s = state->schedules[i];
         SDL_Rect r = schedule_render_positions[i];
         float modifier = (s.job_id == state->hovered_job) ? 1.0 : 0.9;
@@ -397,7 +422,24 @@ void render_player(const struct state *state) {
         SDL_RenderDrawLine(renderer, x, y - height, x, y - 1);
     }
 
-    /* TODO: render Points of interest */
+    /* render Points of interest */
+    /* begin whith getting maximum value for submission count */
+    int max_submissions = 0;
+    for (struct player_state s: state->player.states) {
+        max_submissions = std::max(max_submissions, s.n_submissions);
+    }
+
+    /* actually render new submissions into player overwiev */
+    for (struct player_state s: state->player.states) {
+        SDL_Rect r;
+        r.x = config.player.offset_x + s.begin * unit + 1;
+        r.y = config.player.offset_y + config.player.height - 1;
+        r.w = unit * config.player.poi_width;
+        r.h = -config.player.poi_max_height / max_submissions * s.n_submissions;
+        SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);
+        SDL_RenderFillRect(renderer, &r);
+    }
+
 
     /* render current position */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -466,7 +508,7 @@ int get_hovered_job(int x, int y, const struct state *state) {
             return i;
         }
     }
-    for (int i = 0; i < schedule_render_positions.size(); ++i) {
+    for (int i = 0; i < n_schedules; ++i) {
         if (point_inside_rendered_schedule(x, y, i)) {
             return state->schedules[i].job_id;
         }

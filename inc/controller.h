@@ -3,6 +3,7 @@
 #include <input.h>
 #include <vector>
 #include <string>
+#include <map>
 
 /**
  * Object representing a job
@@ -43,9 +44,26 @@ struct job {
 struct schedule {
     int job_id;
     int core;
+    int player_time;
     int player_state;
     int begin;
     int execution_time;
+};
+
+/**
+ * one schedule set that exists from a specific point in time
+ *
+ * @param begin
+ *   beginning time of this state
+ * @param schedules
+ *   list of schedule_handles from the schedules that are active during this state.
+ * @param n_submission
+ *   count of jobs that get submittet at the beginning of this state
+ */
+struct player_state {
+    int begin;
+    std::vector<int> schedules;
+    int n_submissions;
 };
 
 /**
@@ -57,11 +75,20 @@ struct schedule {
  *   current position of player
  * @param max_position
  *   length of full simulation
+ * @param states
+ *   player states that exists
+ * @param current_state
+ *   number of current player state
+ * @param next_state_at
+ *   time when the player_state changes next
  */
 struct player {
     int running;
     float position;
     float max_position;
+    std::vector<struct player_state> states;
+    int current_state;
+    int next_state_at;
 };
 
 /**

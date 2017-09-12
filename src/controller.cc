@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <algorithm>
 
 #include <vision.h>
 /**
@@ -66,6 +67,9 @@ const struct state *init_state(void) {
     state->player.running = 0;
     state->player.position = 0;
     state->player.max_position = 0;
+    state->player.states = std::vector<struct player_state>();
+    state->player.current_state = 0;
+    state->player.next_state_at = 0;
     return state;
 }
 
@@ -79,6 +83,10 @@ void handle_input(const struct input *input) {
     }
     if (input->rewind) {
         state->player.position = 0;
+        /* TODO: this has to be done another way */
+        state->player.current_state = 0;
+        /* TODO: this WILL cause segmentation faults. DONT! */
+        state->player.next_state_at = state->player.states[1].begin;
     }
     state->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y, state);
 }
@@ -133,7 +141,7 @@ static void parse_job(std::stringstream *line) {
 static void parse_schedule(std::stringstream *line) {
     int job_id, core, player_time, begin, time;
     *line >> job_id >> core >> player_time >> begin >> time;
-    state->schedules.push_back({job_id, core, player_time, begin, time});
+    state->schedules.push_back({job_id, core, player_time, 0, begin, time});
 }
 
 bool check_state() {
@@ -149,9 +157,23 @@ void player_tick() {
         return;
     }
     state->player.position += 0.04;
+    /* TODO: this is if in if. Do not! and find another solution for checking player_state.
+     * since the player will eventually be manipulated via mouseclick, it is possible to go
+     * backwards or jump between states */
+    if (state->player.position > state->player.next_state_at) {
+        ++state->player.current_state;
+        std::cout << "state changed to " << state->player.current_state << std::endl;
+        if (state->player.current_state == state->player.states.size() - 1) {
+            state->player.next_state_at = state->player.max_position;
+        } else {
+            state->player.next_state_at =
+                state->player.states[state->player.current_state + 1].begin;
+        }
+    }
     if (state->player.position > state->player.max_position) {
         state->player.running = 0;
         state->player.position = 0;
+        state->player.current_state = 0;
     }
 }
 
@@ -160,4 +182,31 @@ void calculate_player_values() {
     //struct job last_job = state->jobs[last_schedule.job_id];
 
     state->player.max_position = last_schedule.begin + last_schedule.execution_time;
+
+    int schedule_handle = 0;
+    /* key is player_time, value is local_player_state*/
+    std::map<int, std::vector<int>> state_list;
+    for (const struct schedule &s: state->schedules) {
+        if (state_list.find(s.player_time) == state_list.end()) {
+            state_list.emplace(s.player_time, std::vector<int>());
+        }
+        state_list[s.player_time].push_back(schedule_handle);
+        ++schedule_handle;
+    }
+
+    int player_state = 0;
+    /* TODO: this will lead to problems, since the new submissions do not depend on new schedules */
+    int previous_size = 0;
+    /* since std::map sorts keys, this is the order we want */
+    for (std::pair<int, std::vector<int>> s: state_list) {
+        int n_submissions = s.second.size() - previous_size;
+        previous_size = s.second.size();
+        state->player.states.push_back({s.first, s.second, n_submissions});
+        for (int schedule_handle: s.second) {
+            state->schedules[schedule_handle].player_state = player_state;
+        }
+        ++player_state;
+    }
+    /* TODO: this WILL lead to segmentation faults. */
+    state->player.next_state_at = state->player.states[1].begin;
 }
