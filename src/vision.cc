@@ -17,51 +17,52 @@ static SDL_Window *window;
  */
 static SDL_Renderer *renderer;
 
-/**
- * Data for rendering.
- *
- * TODO: This is a mess! Solve it better.
- *
- * this gets precomputed at the beginning and is used for rendering.
- *
- * @param n_jobs
- *   number of jobs
- * @param width
- *
- * @param window_width
- *
- */
-static struct vision_state{
-    int n_jobs;
-    int width;
-    int window_width = 1000;
+/* TODO: better get this dynamically done */
+static int width;
+static struct {
+    struct {
+        int width = 1000;
+    } window;
     int margin_x = 20;
     int margin_y = 20;
-    int job_margin_x = 0;
-    int job_margin_y = 0;
-    int job_height = 20;
-    int job_width = 30;
-    int deadline_margin_x = -1;
-    int deadline_margin_y = -2;
-    int deadline_width = 2;
-    int deadline_height = 24;
-    int color_deadline_width = 4;
-    int color_deadline_height = 20;
-    int color_deadline_spacing = 2;
-    int schedule_offset_y;
-    int player_offset_x = 30;
-    int player_offset_y = 700;
-    int player_width = 600;
-    int player_height = 30;
-    std::vector<SDL_Rect> schedule_position;
-    std::vector<SDL_Rect> schedule_render_position;
-    std::vector<SDL_Rect> jobs_in_EDF_view_position;
-    std::vector<SDL_Rect> jobs_in_EDF_view_render_position;
-    std::vector<SDL_Rect> deadlines_render_position;
-    std::vector<SDL_Rect> deadline_history_render_position;
-    std::map<int, std::vector<int>> deadlines;
-    std::vector<unsigned> colors;
-} vision_state;
+    struct {
+        int margin_x = 0;
+        int margin_y = 0;
+        int height = 20;
+        int width = 30;
+    } job;
+    struct {
+        int margin_x = -1;
+        int margin_y = -2;
+        int width = 2;
+        int height = 24;
+    } deadline;
+    struct {
+        int width = 4;
+        int height = 20;
+        int spacing = 2;
+    } color_deadline;
+    int schedule_offset_y = 0; // this gets computed later
+    struct {
+        int offset_x = 30;
+        int offset_y = 700;
+        int width = 600;
+        int height = 30;
+        int grid_height_big = 15;
+        int grid_height_small = 5;
+    } player;
+} config;
+
+static int n_jobs;
+static int n_schedules;
+static std::vector<SDL_Rect> schedule_positions;
+static std::vector<SDL_Rect> schedule_render_positions;
+static std::vector<SDL_Rect> jobs_in_EDF_view_positions;
+static std::vector<SDL_Rect> jobs_in_EDF_view_render_positions;
+static std::vector<SDL_Rect> deadlines_render_positions;
+static std::vector<SDL_Rect> deadline_history_render_positions;
+static std::map<int, std::vector<int>> deadlines;
+static std::vector<unsigned> colors;
 
 /**
  * set render color to preset colors have to be initialised first
@@ -218,7 +219,7 @@ void calculate_job_in_schedule(const struct state *state, const struct schedule 
         schedule.execution_time,
         1,
     };
-    vision_state.schedule_position.push_back(job_in_schedule);
+    schedule_positions.push_back(job_in_schedule);
 }
 
 void calculate_job_in_EDF_view(const struct job &job, int offset) {
@@ -228,19 +229,19 @@ void calculate_job_in_EDF_view(const struct job &job, int offset) {
         job.execution_time_estimate,
         1
     };
-    vision_state.jobs_in_EDF_view_position.push_back(job_in_EDF_view);
+    jobs_in_EDF_view_positions.push_back(job_in_EDF_view);
 
-    if (vision_state.deadlines.find(job.deadline) == vision_state.deadlines.end()) {
-        vision_state.deadlines.insert({job.deadline, std::vector<int>()});
+    if (deadlines.find(job.deadline) == deadlines.end()) {
+        deadlines.insert({job.deadline, std::vector<int>()});
     }
-    vision_state.deadlines[job.deadline].push_back(job.id);
+    deadlines[job.deadline].push_back(job.id);
 }
 
 void calculate_vision(const struct state *state) {
-    vision_state.n_jobs = state->jobs.size();
-    vision_state.schedule_offset_y = vision_state.job_height
-                                     + vision_state.color_deadline_height
-                                     + 20;
+    n_jobs = state->jobs.size();
+    config.schedule_offset_y = config.job.height
+                               + config.color_deadline.height
+                               + 20;
     int offset = 0;
     for (const struct schedule &s: state->schedules) {
         struct job job = state->jobs[s.job_id];
@@ -248,65 +249,65 @@ void calculate_vision(const struct state *state) {
         calculate_job_in_EDF_view(job, offset);
         offset += job.execution_time_estimate;
         /* create SDL rects for render positions */
-        vision_state.schedule_render_position.push_back({0,0,0,0});
-        vision_state.jobs_in_EDF_view_render_position.push_back({0,0,0,0});
-        vision_state.deadline_history_render_position.push_back({0,0,0,0});
+        schedule_render_positions.push_back({0,0,0,0});
+        jobs_in_EDF_view_render_positions.push_back({0,0,0,0});
+        deadline_history_render_positions.push_back({0,0,0,0});
     }
     /* create SDL rects for deadline render positions */
-    for (int i = 0; i < vision_state.deadlines.size(); ++i) {
-        vision_state.deadlines_render_position.push_back({0,0,0,0});
+    for (int i = 0; i < deadlines.size(); ++i) {
+        deadlines_render_positions.push_back({0,0,0,0});
     }
-    vision_state.width = std::max(offset, state->jobs.back().deadline);
-    vision_state.job_width = vision_state.window_width / vision_state.width;
+    width = std::max(offset, state->jobs.back().deadline);
+    config.job.width = config.window.width / width;
 }
 
 void calculate_render_positions() {
 
-    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
+    for (int i = 0; i < schedule_render_positions.size(); ++i) {
         /* precompute positions for job in schedule view */
-        SDL_Rect *r = &vision_state.schedule_render_position[i];
-        *r = vision_state.schedule_position[i];
-        r->x *= vision_state.job_width;
-        r->x += vision_state.margin_x;
-        r->y *= vision_state.job_height;
-        r->y += vision_state.margin_y + vision_state.schedule_offset_y;
-        r->w *= vision_state.job_width;
-        r->h *= vision_state.job_height;
+        SDL_Rect *r = &schedule_render_positions[i];
+        *r = schedule_positions[i];
+        r->x *= config.job.width;
+        r->x += config.margin_x;
+        r->y *= config.job.height;
+        r->y += config.margin_y + config.schedule_offset_y;
+        r->w *= config.job.width;
+        r->h *= config.job.height;
     }
 
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
+    for (int i = 0; i < n_jobs; ++i) {
         /* precompute positions for job in EDF view */
-        SDL_Rect *r = &vision_state.jobs_in_EDF_view_render_position[i];
-        *r = vision_state.jobs_in_EDF_view_position[i];
-        r->x *= vision_state.job_width;
-        r->x += vision_state.margin_x;
-        r->y *= vision_state.job_height;
-        r->y += vision_state.margin_y;
-        r->w *= vision_state.job_width;
-        r->h *= vision_state.job_height;
+        SDL_Rect *r = &jobs_in_EDF_view_render_positions[i];
+        *r = jobs_in_EDF_view_positions[i];
+        r->x *= config.job.width;
+        r->x += config.margin_x;
+        r->y *= config.job.height;
+        r->y += config.margin_y;
+        r->w *= config.job.width;
+        r->h *= config.job.height;
     }
 
     /* precompute positions for deadlines */
     int i = 0;
-    for (std::pair<int, std::vector<int>> p: vision_state.deadlines) {
-        int deadline_position_x = p.first * vision_state.job_width + vision_state.margin_x;
-        SDL_Rect *r = &vision_state.deadlines_render_position[i];
-        r->x = deadline_position_x + vision_state.deadline_margin_x;
-        r->y = vision_state.margin_y + vision_state.deadline_margin_y;
-        r->w = vision_state.deadline_width;
-        r->h = vision_state.deadline_height;
+    for (std::pair<int, std::vector<int>> p: deadlines) {
+        int deadline_position_x = p.first * config.job.width + config.margin_x;
+        SDL_Rect *r = &deadlines_render_positions[i];
+        r->x = deadline_position_x + config.deadline.margin_x;
+        r->y = config.margin_y + config.deadline.margin_y;
+        r->w = config.deadline.width;
+        r->h = config.deadline.height;
 
         int color_deadline_frame_size = p.second.size()
-            * (vision_state.color_deadline_width + vision_state.color_deadline_spacing)
-            - vision_state.color_deadline_spacing;
+            * (config.color_deadline.width + config.color_deadline.spacing)
+            - config.color_deadline.spacing;
 
         int offset = -color_deadline_frame_size / 2;
         for (int id: p.second) {
-            r = &vision_state.deadline_history_render_position[id];
+            r = &deadline_history_render_positions[id];
             r->x = deadline_position_x + offset;
-            r->y = vision_state.margin_y + vision_state.deadline_margin_y + vision_state.deadline_height + vision_state.color_deadline_spacing;
-            r->w = vision_state.color_deadline_width;
-            r->h = vision_state.color_deadline_height;
+            r->y = config.margin_y + config.deadline.margin_y + config.deadline.height + config.color_deadline.spacing;
+            r->w = config.color_deadline.width;
+            r->h = config.color_deadline.height;
             offset += 6;
         }
         ++i;
@@ -317,7 +318,7 @@ void render_vision(const struct state *state) {
     calculate_render_positions();
 
     /* init colors if not happend before */
-    if (vision_state.colors.empty()) {
+    if (colors.empty()) {
         init_colors(state->jobs.size());
     }
 
@@ -337,9 +338,9 @@ void render_vision(const struct state *state) {
 }
 
 void render_jobs_in_schedule(const struct state *state) {
-    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
+    for (int i = 0; i < schedule_render_positions.size(); ++i) {
         struct schedule s = state->schedules[i];
-        SDL_Rect r = vision_state.schedule_render_position[i];
+        SDL_Rect r = schedule_render_positions[i];
         float modifier = (s.job_id == state->hovered_job) ? 1.0 : 0.9;
         set_color(s.job_id, modifier);
         SDL_RenderFillRect(renderer, &r);
@@ -349,8 +350,8 @@ void render_jobs_in_schedule(const struct state *state) {
 }
 
 void render_jobs_in_EDF_view(const struct state *state) {
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
-        SDL_Rect r = vision_state.jobs_in_EDF_view_render_position[i];
+    for (int i = 0; i < n_jobs; ++i) {
+        SDL_Rect r = jobs_in_EDF_view_render_positions[i];
         float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
         set_color(i, modifier * 0.8);
         SDL_RenderFillRect(renderer, &r);
@@ -359,16 +360,16 @@ void render_jobs_in_EDF_view(const struct state *state) {
 
 void render_deadlines(const struct state *state) {
     /* draw job history for each deadline */
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
+    for (int i = 0; i < n_jobs; ++i) {
         float modifier = (i == state->hovered_job) ? 1.0 : 0.9;
-        SDL_Rect r = vision_state.deadline_history_render_position[i];
+        SDL_Rect r = deadline_history_render_positions[i];
         set_color(i, modifier);
         SDL_RenderFillRect(renderer, &r);
     }
 
     /* draw deadline in EDF view */
-    for (int i = 0; i < vision_state.deadlines.size(); ++i) {
-        SDL_Rect r = vision_state.deadlines_render_position[i];
+    for (int i = 0; i < deadlines.size(); ++i) {
+        SDL_Rect r = deadlines_render_positions[i];
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderFillRect(renderer, &r);
     }
@@ -377,28 +378,32 @@ void render_deadlines(const struct state *state) {
 void render_player(const struct state *state) {
     /* render static player */
     SDL_Rect r;
-    r.x = vision_state.player_offset_x;
-    r.y = vision_state.player_offset_y;
-    r.w = vision_state.player_width;
-    r.h = vision_state.player_height;
+    r.x = config.player.offset_x;
+    r.y = config.player.offset_y;
+    r.w = config.player.width;
+    r.h = config.player.height;
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(renderer, &r);
 
     /* render unit markings */
-    float unit = vision_state.player_width * 1.0f / state->player.max_position;
+    float unit = config.player.width * 1.0f / state->player.max_position;
     for (int i = 1; i < state->player.max_position; ++i) {
-        float x = vision_state.player_offset_x + unit * i;
-        int y = vision_state.player_offset_y + 5;
-        SDL_RenderDrawLine(renderer, x, y, x, y + vision_state.player_height - 6);
+        float x = config.player.offset_x + unit * i;
+        int y = config.player.offset_y + config.player.height;
+        int height = config.player.grid_height_small;
+        if (i % 5 == 0) {
+            height = config.player.grid_height_big;
+        }
+        SDL_RenderDrawLine(renderer, x, y - height, x, y - 1);
     }
 
     /* TODO: render Points of interest */
 
     /* render current position */
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    float x = vision_state.player_offset_x + unit * state->player.position;
-    float y = vision_state.player_offset_y + 1;
-    SDL_RenderDrawLine(renderer, x, y, x, y + vision_state.player_height - 2);
+    float x = config.player.offset_x + unit * state->player.position;
+    float y = config.player.offset_y + 1;
+    SDL_RenderDrawLine(renderer, x, y, x, y + config.player.height - 2);
 }
 
 void init_colors(int n_jobs) {
@@ -407,13 +412,13 @@ void init_colors(int n_jobs) {
         c.push_back((360 / (n_jobs)) * i);
     }
     int half = c.size() / 2;
-    vision_state.colors.reserve(n_jobs);
+    colors.reserve(n_jobs);
     for (int i = 0; i < half; ++i) {
-        vision_state.colors.push_back(c[half + i]);
-        vision_state.colors.push_back(c[i]);
+        colors.push_back(c[half + i]);
+        colors.push_back(c[i]);
     }
     if (c.size() % 2 == 1) {
-        vision_state.colors.push_back(c.back());
+        colors.push_back(c.back());
     }
 }
 
@@ -422,7 +427,7 @@ void set_color(int job, float modifier) {
     float g = 0;
     float b = 0;
 
-    HSV_to_RGB((float)vision_state.colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
+    HSV_to_RGB((float)colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
     SDL_SetRenderDrawColor(renderer, r * 255, g * 255, b * 255, 255);
 }
 
@@ -456,12 +461,12 @@ void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {
 }
 
 int get_hovered_job(int x, int y, const struct state *state) {
-    for (int i = 0; i < vision_state.n_jobs; ++i) {
+    for (int i = 0; i < n_jobs; ++i) {
         if (point_inside_rendered_job(x, y, i)) {
             return i;
         }
     }
-    for (int i = 0; i < vision_state.schedule_render_position.size(); ++i) {
+    for (int i = 0; i < schedule_render_positions.size(); ++i) {
         if (point_inside_rendered_schedule(x, y, i)) {
             return state->schedules[i].job_id;
         }
@@ -470,13 +475,13 @@ int get_hovered_job(int x, int y, const struct state *state) {
 }
 
 bool point_inside_rendered_schedule(int x, int y, int schedule) {
-    SDL_Rect *r_schedule = &vision_state.schedule_render_position[schedule];
+    SDL_Rect *r_schedule = &schedule_render_positions[schedule];
     return point_inside_rect(x, y, r_schedule);
 }
 
 bool point_inside_rendered_job(int x, int y, int job) {
-    SDL_Rect *r_EDF = &vision_state.jobs_in_EDF_view_render_position[job];
-    SDL_Rect *r_deadline = &vision_state.deadline_history_render_position[job];
+    SDL_Rect *r_EDF = &jobs_in_EDF_view_render_positions[job];
+    SDL_Rect *r_deadline = &deadline_history_render_positions[job];
     return point_inside_rect(x, y, r_EDF)
         || point_inside_rect(x, y, r_deadline);
 }
