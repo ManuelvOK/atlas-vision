@@ -88,7 +88,6 @@ struct player {
     float max_position;
     std::vector<struct player_state> states;
     int current_state;
-    int next_state_at;
 };
 
 /**

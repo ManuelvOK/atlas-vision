@@ -10,8 +10,17 @@ struct input {
     int mouse_position_x;
     int mouse_position_y;
     int quit;
-    int toggle_play;
-    int rewind;
+    struct {
+        int toggle_play;
+        int rewind;
+        float position;
+    } player;
+    struct {
+        int changed;
+        int width;
+        int height;
+    } window;
+
 };
 
 /**
@@ -19,5 +28,7 @@ struct input {
  *
  * @param input
  *   Struct to save input data to
+ * @param state
+ *   application_state
  */
-void read_input(struct input *input);
+void read_input(struct input *input, const struct state *state);

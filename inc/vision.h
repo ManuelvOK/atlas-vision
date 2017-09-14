@@ -29,7 +29,7 @@ void render_vision(const struct state *state);
 void calculate_vision(const struct state *state);
 
 /**
- * interprete mouse position and save the hovered element in state
+ * interprete mouse position and get hovered job
  *
  * @param x
  *   x coordinate of mouse position
@@ -42,3 +42,28 @@ void calculate_vision(const struct state *state);
  *   id of hovered job or -1 if no job is hovered
  */
 int get_hovered_job(int x, int y, const struct state *state);
+
+/**
+ * get player position under mouse cursor
+ *
+ * @param x
+ *   x coordinate of mouse position
+ * @param y
+ *   y coordinate of mouse position
+ * @param state
+ *   application state
+ *
+ * @return
+ *   player position unter mouse pointer
+ */
+float position_in_player(int x, int y, const struct state *state);
+
+/**
+ * The Window size has changed, that means the rendering has to adjust scaling.
+ *
+ * @param width
+ *   window width
+ * @param height
+ *   window height
+ */
+void update_window(int width, int height);

@@ -47,6 +47,11 @@ static void parse_schedule(std::stringstream *line);
 static void calculate_player_values();
 
 /**
+ * check, wich state the player is according to its position
+ */
+void update_player_state();
+
+/**
  * perform logic steps for simulation player
  */
 static void player_tick();
@@ -69,7 +74,6 @@ const struct state *init_state(void) {
     state->player.max_position = 0;
     state->player.states = std::vector<struct player_state>();
     state->player.current_state = 0;
-    state->player.next_state_at = 0;
     return state;
 }
 
@@ -78,16 +82,24 @@ void handle_input(const struct input *input) {
         state->running = 0;
         return;
     }
-    if (input->toggle_play) {
+    /* Player input */
+    if (input->player.toggle_play) {
         state->player.running = !state->player.running;
     }
-    if (input->rewind) {
+    if (input->player.rewind) {
         state->player.position = 0;
-        /* TODO: this has to be done another way */
-        state->player.current_state = 0;
-        /* TODO: this WILL cause segmentation faults. DONT! */
-        state->player.next_state_at = state->player.states[1].begin;
+        update_player_state();
     }
+    if (input->player.position >= 0) {
+        state->player.position = input->player.position;
+        update_player_state();
+    }
+
+    /* window changed */
+    if (input->window.changed) {
+        update_window(input->window.width, input->window.height);
+    }
+    /* hovered job */
     state->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y, state);
 }
 
@@ -152,29 +164,30 @@ void control() {
     player_tick();
 }
 
-void player_tick() {
-    if (!state->player.running) {
-        return;
-    }
-    state->player.position += 0.04;
-    /* TODO: this is if in if. Do not! and find another solution for checking player_state.
-     * since the player will eventually be manipulated via mouseclick, it is possible to go
-     * backwards or jump between states */
-    if (state->player.position > state->player.next_state_at) {
-        ++state->player.current_state;
-        std::cout << "state changed to " << state->player.current_state << std::endl;
-        if (state->player.current_state == state->player.states.size() - 1) {
-            state->player.next_state_at = state->player.max_position;
-        } else {
-            state->player.next_state_at =
-                state->player.states[state->player.current_state + 1].begin;
+void update_player_state() {
+    state->player.current_state = 0;
+    for (const struct player_state &s: state->player.states) {
+        if (s.begin < state->player.position) {
+            ++state->player.current_state;
         }
+    }
+    --state->player.current_state;
+    if (state->player.current_state >= state->player.states.size()) {
+        state->player.current_state = 0;
     }
     if (state->player.position > state->player.max_position) {
         state->player.running = 0;
         state->player.position = 0;
         state->player.current_state = 0;
     }
+}
+
+void player_tick() {
+    if (!state->player.running) {
+        return;
+    }
+    state->player.position += 0.04;
+    update_player_state();
 }
 
 void calculate_player_values() {
@@ -207,6 +220,4 @@ void calculate_player_values() {
         }
         ++player_state;
     }
-    /* TODO: this WILL lead to segmentation faults. */
-    state->player.next_state_at = state->player.states[1].begin;
 }

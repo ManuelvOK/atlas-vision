@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
     struct input input = {0};
     while (state->running) {
-        read_input(&input);
+        read_input(&input, state);
         handle_input(&input);
         control();
         render_vision(state);
