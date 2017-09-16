@@ -48,6 +48,7 @@ CXXFLAGS  = -std=c++17 -Wall -Wextra -Wpedantic -Weffc++ -g `sdl2-config --cflag
 CXXFLAGS += -I$(INCDIR)
 
 .PHONY: all
+all: export LANG=en_US.utf8
 all: $(TARGET)
 
 $(TARGET): $(OBJ)

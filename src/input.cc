@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 
+#include <model.h>
 #include <vision.h>
 
 /**
@@ -37,7 +38,7 @@ static void reset_input(struct input *input);
  */
 static int mouse_down = 0;
 
-void read_input(struct input *input, const struct state *state) {
+void read_input(struct input *input) {
     reset_input(input);
     SDL_GetMouseState(&input->mouse_position_x, &input->mouse_position_y);
 
@@ -53,7 +54,7 @@ void read_input(struct input *input, const struct state *state) {
         }
         if (mouse_down) {
             input->player.position =
-                position_in_player(input->mouse_position_x, input->mouse_position_y, state);
+                position_in_player(input->mouse_position_x, input->mouse_position_y);
         }
     }
 }

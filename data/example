@@ -1,76 +1,96 @@
 # This is an Example File for the ATLAS Scheduling algorithm visualisation
 #
 # Number of cores specification
-# c number_of_cores
+# > c number_of_cores
 #
 # job specification
-# j job_id deadline execution_time_estimate execution_time submission_time
+# > j deadline execution_time_estimate execution_time submission_time
 #
 # schedule specification
-# s job_id core submission_time begin execution_time
+# > s job_id core scheduler submission_time begin execution_time
+# where scheduler can be ATLAS (a), Recovery (r) or CFG (c)
 #
-# EDF recovery specification
-# r job_id core submission_time begin execution_time
+# schedule change/altering
+# > a type timestamp schedule_id [value]
+# list of types and values:
 #
-# CFS schedule specification
-# l job_id core submission_time begin execution_time
+#   type                | t | value
+# =============================================
+#   delete              | d | no value
+# ----------------------------------------------
+#   begin               | b | float
+# ----------------------------------------------
+#   change scheduler    | c | 'a' or 'r' or 'c'
+# ----------------------------------------------
+#   execution time      | e | float
+# ----------------------------------------------
 
 c 1
-j 0 18 2 2 0 #A1
-j 1 25 1 1 0 #A2
-j 2 32 2 2 5 #A3
-j 3 39 2 2 5 #A4
 
-j 4 20 1 1 0 #B1
-j 5 24 2 2 2 #B2
-j 6 28 1 1 2 #B3
-j 7 32 2 2 7 #B4
+########
+# JOBS #
+########
 
-j 8 16 2 2 0 #X0
-j 9 24 3 3 0 #X1
-j 10 20 2 2 0 #X2
-j 11 22 1 1 7 #X3
+j 18 2 2 0 #A1 id=1
+j 25 1 1 0 #A2 id=2
+j 32 2 2 5 #A3 id=3
+j 39 2 2 5 #A4 id=4
 
-# schedules from timestamp 0
-s 8 0 0 13 2
-s 0 0 0 15 2
-s 10 0 0 17 2
-s 4 0 0 19 1
-s 9 0 0 21 3
-s 1 0 0 24 1
+j 20 1 1 0 #B1 id=6
+j 24 2 2 2 #B2 id=7
+j 28 1 1 2 #B3 id=8
+j 32 2 2 7 #B4 id=9
 
-# schedules from timestamp 2
-s 8 0 2 12 2
-s 0 0 2 14 2
-s 10 0 2 16 2
-s 4 0 2 18 1
-s 9 0 2 19 3
-s 5 0 2 22 2
-s 1 0 2 24 1
-s 6 0 2 27 1
+j 16 2 2 0 #X0 id=10
+j 24 3 3 0 #X1 id=11
+j 20 2 2 0 #X2 id=12
+j 22 1 1 7 #X3 id=13
 
-# schedules from timestamp 5
-s 8 0 5 12 2
-s 0 0 5 14 2
-s 10 0 5 16 2
-s 4 0 5 18 1
-s 9 0 5 19 3
-s 5 0 5 22 2
-s 1 0 5 24 1
-s 6 0 5 27 1
-s 2 0 5 30 2
-s 3 0 5 37 2
+#############
+# schedules #
+#############
 
-# schedules from timestamp 7
-s 8 0 7 11 2
-s 0 0 7 13 2
-s 10 0 7 15 2
-s 4 0 7 17 1
-s 11 0 7 18 1
-s 9 0 7 19 3
-s 5 0 7 22 2
-s 1 0 7 24 1
-s 6 0 7 27 1
-s 2 0 7 28 2
-s 7 0 7 30 2
-s 3 0 7 37 2
+# timestamp 0
+s 8  0 a 0 13 2 #X0 id=2
+s 0  0 a 0 15 2 #A1 id=3
+s 10 0 a 0 17 2 #X2 id=4
+s 4  0 a 0 19 1 #B1 id=5
+s 9  0 a 0 21 3 #X1 id=6
+s 1  0 a 0 24 1 #A2 id=7
+s 8  0 c 0 0  8 #X0 CFS id=8
+
+# timestamp 2
+s 5  0 a 2 22 2 #B2 id=9
+s 6  0 a 2 27 1 #B3 id=10
+
+# timestamp 5
+s 2  0 a 5 30 2 #A2 id=11
+s 3  0 a 5 37 2 #A3 id=12
+
+# timestamp 7
+s 11 0 a 7 18 1 #X3 id=13
+s 7  0 a 7 30 2 #B4 id=14
+
+# timestamp 8
+s 0  0 c 8 8 5 #A1 CFS id=15
+
+#####################
+# altered Schedules #
+#####################
+
+# timestamp 2
+a b 2 0 12 #X0 1 back
+a b 2 1 14 #A1 1 back
+a b 2 2 16 #X2 1 back
+a b 2 3 18 #B1 1 back
+a b 2 4 19 #X1 2 back
+
+# timestamp 7
+a b 7 0 11 #X0 1 back
+a b 7 1 13 #A1 1 back
+a b 7 2 15 #X2 1 back
+a b 7 3 17 #B1 1 back
+
+# timestamp 8
+a d 8 0 #X0 atlas schedule deleted because CFS did it
+

@@ -1,5 +1,6 @@
 #pragma once
 
+class Model;
 /**
  * Struct to save input data to
  *
@@ -28,7 +29,5 @@ struct input {
  *
  * @param input
  *   Struct to save input data to
- * @param state
- *   application_state
  */
-void read_input(struct input *input, const struct state *state);
+void read_input(struct input *input);
