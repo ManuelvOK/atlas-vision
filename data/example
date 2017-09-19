@@ -20,8 +20,6 @@
 # ----------------------------------------------
 #   begin               | b | float
 # ----------------------------------------------
-#   change scheduler    | c | 'a' or 'r' or 'c'
-# ----------------------------------------------
 #   execution time      | e | float
 # ----------------------------------------------
 
@@ -31,66 +29,72 @@ c 1
 # JOBS #
 ########
 
-j 18 2 2 0 #A1 id=1
-j 25 1 1 0 #A2 id=2
-j 32 2 2 5 #A3 id=3
-j 39 2 2 5 #A4 id=4
+j 18 2 2 0 #A1 id=0
+j 25 1 1 0 #A2 id=1
+j 32 2 2 5 #A3 id=2
+j 39 2 2 5 #A4 id=3
 
-j 20 1 1 0 #B1 id=6
-j 24 2 2 2 #B2 id=7
-j 28 1 1 2 #B3 id=8
-j 32 2 2 7 #B4 id=9
+j 20 1 1 0 #B1 id=4
+j 24 2 2 2 #B2 id=5
+j 28 1 1 2 #B3 id=6
+j 32 2 2 7 #B4 id=7
 
-j 16 2 2 0 #X0 id=10
-j 24 3 3 0 #X1 id=11
-j 20 2 2 0 #X2 id=12
-j 22 1 1 7 #X3 id=13
+j 16 2 2 0 #X0 id=8
+j 24 3 3 0 #X1 id=9
+j 20 2 2 0 #X2 id=10
+j 22 1 1 7 #X3 id=11
 
 #############
 # schedules #
 #############
 
 # timestamp 0
-s 8  0 a 0 13 2 #X0 id=2
-s 0  0 a 0 15 2 #A1 id=3
-s 10 0 a 0 17 2 #X2 id=4
-s 4  0 a 0 19 1 #B1 id=5
-s 9  0 a 0 21 3 #X1 id=6
-s 1  0 a 0 24 1 #A2 id=7
-s 8  0 c 0 0  8 #X0 CFS id=8
+s 8  0 a 0  13 2 #X0 id=0
+s 0  0 a 0  15 2 #A1 id=1
+s 10 0 a 0  17 2 #X2 id=2
+s 4  0 a 0  19 1 #B1 id=3
+s 9  0 a 0  21 3 #X1 id=4
+s 1  0 a 0  24 1 #A2 id=5
+s 8  0 c 0  0  8 #X0 CFS id=6
 
 # timestamp 2
-s 5  0 a 2 22 2 #B2 id=9
-s 6  0 a 2 27 1 #B3 id=10
+s 5  0 a 2  22 2 #B2 id=7
+s 6  0 a 2  27 1 #B3 id=8
 
 # timestamp 5
-s 2  0 a 5 30 2 #A2 id=11
-s 3  0 a 5 37 2 #A3 id=12
+s 2  0 a 5  30 2 #A3 id=9
+s 3  0 a 5  37 2 #A4 id=10
 
 # timestamp 7
-s 11 0 a 7 18 1 #X3 id=13
-s 7  0 a 7 30 2 #B4 id=14
+s 11 0 a 7  18 1 #X3 id=11
+s 7  0 a 7  30 2 #B4 id=12
 
 # timestamp 8
-s 0  0 c 8 8 5 #A1 CFS id=15
+s 0  0 c 8  8  5 #A1 CFS id=13
+
+# timestamp 15
+s 10 0 r 15 25 2 #X2 has a code dependency from X1 so it gets to recovery. id = 14
 
 #####################
 # altered Schedules #
 #####################
 
 # timestamp 2
-a b 2 0 12 #X0 1 back
-a b 2 1 14 #A1 1 back
-a b 2 2 16 #X2 1 back
-a b 2 3 18 #B1 1 back
-a b 2 4 19 #X1 2 back
+a b 2 0  12 #X0 1 back
+a b 2 1  14 #A1 1 back
+a b 2 2  16 #X2 1 back
+a b 2 3  18 #B1 1 back
+a b 2 4  19 #X1 2 back
 
 # timestamp 7
 a b 7 0 11 #X0 1 back
 a b 7 1 13 #A1 1 back
 a b 7 2 15 #X2 1 back
 a b 7 3 17 #B1 1 back
+a b 7 9 28 #A3 2 back
 
 # timestamp 8
-a d 8 0 #X0 atlas schedule deleted because CFS did it
+a d 8  0 #X0 atlas schedule deleted because CFS did it
 
+#timestamp 15
+a d 15 2 #X2 has a code dependency from X1 so it gets to recovery

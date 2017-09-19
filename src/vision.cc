@@ -7,6 +7,8 @@
 
 #include <model.h>
 #include <controller.h>
+#include <schedule_rect.h>
+#include <vision_config.h>
 
 /**
  * SDL Window
@@ -23,43 +25,7 @@ static SDL_Renderer *renderer;
  */
 static const Model *model = nullptr;
 
-static struct {
-    struct {
-        int width_px = 1000;
-        int height_px = 400;
-        int margin_x_px = 20;
-        int margin_y_px = 20;
-    } window;
-    struct {
-        float width_px = 30;
-        float height_px = 20;
-    } unit;
-    struct {
-        int margin_x_px = 0;
-        int margin_y_px = 0;
-    } job;
-    struct {
-        const float margin_x_u = -1.0/30;
-        const float margin_y_u = -2.0/20;
-        const float width_u = 2.0/30;
-        const float height_u = 24.0/20;
-    } deadline;
-    struct {
-        const float width_u = 4.0/30;
-        const float height_u = 1;
-        const float spacing_u = 2.0/30;
-    } color_deadline;
-    const int schedule_offset_y_u = 3;
-    struct {
-        const int offset_y_u = 10;
-        int width_u = 0; // this gets computed later
-        const int height_u = 1;
-        const float grid_height_big_u = 1.0/2;
-        const float grid_height_small_u = 1.0/6;
-        const float poi_max_height_u = 2.0/3;
-        const float poi_width_u = 1.0/3;
-    } player;
-} config;
+Vision_config config;
 
 struct job_rect {
     SDL_Rect r;
@@ -69,9 +35,8 @@ struct job_rect {
 
 static int n_jobs;
 static int n_schedules;
-static std::vector<struct job_rect> schedule_render_positions;
-static std::vector<struct job_rect> jobs_in_EDF_view_positions;
-static std::vector<struct job_rect> jobs_in_EDF_view_render_positions;
+static std::vector<Schedule_rect> schedules;
+static std::vector<Schedule_rect> EDF_schedules;
 static std::vector<struct job_rect> deadlines_render_positions;
 static std::vector<struct job_rect> deadline_history_render_positions;
 static std::map<int, std::vector<int>> deadlines;
@@ -132,7 +97,7 @@ static void calculate_render_positions();
  * @return
  *   true if Point is inside SDL_Rect. Otherwise False
  */
-static bool point_inside_rect(int x, int y, const SDL_Rect &r);
+static bool point_inside_rect(int x, int y, const SDL_Rect *r);
 
 /**
  * prepare rendering of jobs in Schedule view
@@ -147,7 +112,7 @@ static void render_jobs_in_schedule();
  * @param rect
  *   Position to render
  */
-static void render_schedule(const struct job_rect &schedule);
+static void render_schedule(Schedule_rect &schedule);
 
 /**
  * prepare rendering of jobs in EDF view
@@ -173,8 +138,6 @@ static int u_to_px_w(float unit);
 static int u_to_px_h(float unit);
 //static float px_to_u_w(int pixel);
 //static float px_to_u_h(int pixel);
-
-static void scale(SDL_Rect *r);
 
 static void recompute_config();
 
@@ -206,16 +169,7 @@ void init_graphics(const Model *_model) {
 }
 
 void calculate_job_in_EDF_view(const Job &job, int offset) {
-    SDL_Rect job_in_EDF_view = {
-        offset,
-        0,
-        job.execution_time_estimate,
-        1
-    };
-    SDL_Rect r = job_in_EDF_view;
-    std::cout << "EDF SDL_Rect(" << r.x << ", " << r.y << ", " << r.w << ", " << r.h << ")"
-              << std::endl;
-    jobs_in_EDF_view_positions.push_back({job_in_EDF_view, job.id, true});
+    EDF_schedules.emplace_back(&config, job.id, offset, 0, job.execution_time_estimate, 1);
 
     if (deadlines.find(job.deadline) == deadlines.end()) {
         deadlines.insert({job.deadline, std::vector<int>()});
@@ -246,14 +200,12 @@ void calculate_vision() {
         calculate_job_in_EDF_view(job, offset);
         offset += job.execution_time_estimate;
         max_deadline = std::max(max_deadline, job.deadline);
+        deadline_history_render_positions.push_back({{0,0,0,0},0,true});
     }
 
     for (const Schedule &s: model->schedules) {
-
         /* create SDL rects for render positions */
-        schedule_render_positions.push_back({{0,0,0,0},s.job_id,false});
-        jobs_in_EDF_view_render_positions.push_back({{0,0,0,0},0,true});
-        deadline_history_render_positions.push_back({{0,0,0,0},0,true});
+        schedules.emplace_back(&config, s.job_id);
     }
     /* create SDL rects for deadline render positions */
     for (unsigned i = 0; i < deadlines.size(); ++i) {
@@ -263,33 +215,37 @@ void calculate_vision() {
     recompute_config();
 }
 
-void calculate_render_positions() {
+void calculate_schedule_render_position(const Schedule &schedule) {
     float timestamp = model->player.position;
-    for (const Schedule &schedule: model->schedules) {
-        /* precompute positions for job in schedule view */
-        struct job_rect *s = &schedule_render_positions[schedule.id];
-        /* TODO handle CFG and Recovery in other ways */
-        int begin, execution_time;
-        scheduler_type scheduler;
-        std::tie(begin, scheduler, execution_time) = schedule.get_data_at_time(timestamp);
-        s->visible = schedule.exists_at_time(timestamp) && scheduler == scheduler_type::ATLAS;
-        s->r.x = begin;
-        s->r.y = 10;
-        s->r.w = execution_time;
-        s->r.h = 1;
-        //std::cout << "S   SDL_Rect(" << s->r.x << ", " << s->r.y << ", " << s->r.w << ", "
-        //          << s->r.h << ")" << std::endl;
-        scale(&s->r);
-        s->r.y += u_to_px_h(config.schedule_offset_y_u);
-    }
+    /* precompute positions for job in schedule view */
+    Schedule_rect *s = &schedules[schedule.id];
 
-    for (int i = 0; i < n_jobs; ++i) {
-        /* precompute positions for job in EDF view */
-        struct job_rect *s = &jobs_in_EDF_view_render_positions[i];
-        *s = jobs_in_EDF_view_positions[i];
-        //std::cout << "EDF SDL_Rect(" << s->r.x << ", " << s->r.y << ", " << s->r.w << ", "
-        //          << s->r.h << ")" << std::endl;
-        scale(&s->r);
+    int begin, execution_time;
+    scheduler_type scheduler;
+    std::tie(begin, scheduler, execution_time) = schedule.get_data_at_time(timestamp);
+
+    s->visible = schedule.exists_at_time(timestamp);
+    s->x = begin;
+    s->w = execution_time;
+    s->h = 1;
+
+    switch (scheduler) {
+        case scheduler_type::ATLAS:
+            s->y = config.schedule.offset_y_u + config.schedule.ATLAS_offset_y_u;
+            break;
+        case scheduler_type::recovery:
+            s->y = config.schedule.offset_y_u + config.schedule.recovery_offset_y_u;
+            break;
+        case scheduler_type::CFS:
+            s->y = config.schedule.offset_y_u + config.schedule.CFS_offset_y_u;
+            break;
+    }
+}
+
+void calculate_render_positions() {
+
+    for (const Schedule &s: model->schedules) {
+        calculate_schedule_render_position(s);
     }
 
     /* precompute positions for deadlines */
@@ -346,30 +302,34 @@ void render_vision() {
     render_player_position();
 
     SDL_RenderPresent(renderer);
+
+    /* reset config_changed flag */
+    config.changed = false;
 }
 
-void render_schedule(const struct job_rect &schedule) {
+void render_schedule(Schedule_rect &schedule) {
     if (!schedule.visible) {
         return;
     }
     float modifier = (schedule.job_id == model->hovered_job) ? 1.0 : 0.9;
     set_color(schedule.job_id, modifier);
-    SDL_RenderFillRect(renderer, &schedule.r);
+
+    SDL_RenderFillRect(renderer, schedule.render_position());
     SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
-    SDL_RenderDrawRect(renderer, &schedule.r);
+    SDL_RenderDrawRect(renderer, schedule.render_position());
 }
 
 void render_jobs_in_schedule() {
-    for (struct job_rect s: schedule_render_positions) {
+    for (Schedule_rect &s: schedules) {
         render_schedule(s);
     }
 }
 
 void render_jobs_in_EDF_view() {
-    for (struct job_rect s: jobs_in_EDF_view_render_positions) {
+    for (Schedule_rect &s: EDF_schedules) {
         float modifier = (s.job_id == model->hovered_job) ? 1.0 : 0.9;
         set_color(s.job_id, modifier * 0.8);
-        SDL_RenderFillRect(renderer, &s.r);
+        SDL_RenderFillRect(renderer, s.render_position());
     }
 }
 
@@ -390,7 +350,28 @@ void render_deadlines() {
     }
 }
 
+void render_horizontal_player_line(float offset_y_u, int grey) {
+    SDL_Rect r;
+    r.x = config.window.margin_x_px;
+    r.y = u_to_px_h(offset_y_u) + config.window.margin_y_px;
+    r.w = u_to_px_w(model->player.max_position);
+    r.h = config.unit.height_px;
+
+    SDL_SetRenderDrawColor(renderer, grey, grey, grey, 255);
+    SDL_RenderFillRect(renderer, &r);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawLine(renderer, r.x, r.y, r.x + r.w, r.y);
+    SDL_RenderDrawLine(renderer, r.x, r.y + r.h, r.x + r.w, r.y + r.h);
+}
 void render_player() {
+    /* render lines for schedulers */
+    render_horizontal_player_line(config.schedule.ATLAS_offset_y_u + config.schedule.offset_y_u,
+                                  config.schedule.ATLAS_grey);
+    render_horizontal_player_line(config.schedule.recovery_offset_y_u + config.schedule.offset_y_u,
+                                  config.schedule.recovery_grey);
+    render_horizontal_player_line(config.schedule.CFS_offset_y_u + config.schedule.offset_y_u,
+                                  config.schedule.CFS_grey);
+
     /* render unit markings over the whole whindow */
     for (int i = 0; i <= model->player.max_position; ++i) {
         int x = config.window.margin_x_px + u_to_px_w(i);
@@ -399,6 +380,7 @@ void render_player() {
         SDL_RenderDrawLine(renderer, x, config.window.margin_y_px, x,
                            config.window.height_px - config.window.margin_y_px);
     }
+
 
 #if 0
     /* render Points of interest */
@@ -485,22 +467,22 @@ void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {
 }
 
 int get_hovered_job(int x, int y) {
-    for (struct job_rect s: jobs_in_EDF_view_render_positions) {
-        if (point_inside_rect(x, y, s.r)) {
+    for (Schedule_rect &s: EDF_schedules) {
+        if (point_inside_rect(x, y, s.render_position())) {
             return s.job_id;
         }
     }
-    for (struct job_rect s: schedule_render_positions) {
-        if (point_inside_rect(x, y, s.r)) {
+    for (Schedule_rect &s: schedules) {
+        if (point_inside_rect(x, y, s.render_position())) {
             return s.job_id;
         }
     }
     return -1;
 }
 
-bool point_inside_rect(int x, int y, const SDL_Rect &r) {
-    return x > r.x && x < r.x + r.w
-        && y > r.y && y < r.y + r.h;
+bool point_inside_rect(int x, int y, const SDL_Rect *r) {
+    return x > r->x && x < r->x + r->w
+        && y > r->y && y < r->y + r->h;
 }
 
 float position_in_player(int x, int y) {
@@ -519,6 +501,7 @@ void recompute_config() {
     config.player.width_u = model->player.max_position;
     config.unit.width_px =
         (config.window.width_px - 2 * config.window.margin_x_px) / config.player.width_u;
+    config.changed = true;
 }
 
 void update_window(int width, int height) {
@@ -541,13 +524,4 @@ float px_to_u_w(int pixel) {
 
 float px_to_u_h(int pixel) {
     return (pixel / config.unit.height_px);
-}
-
-static void scale(SDL_Rect *r) {
-    r->x *= config.unit.width_px;
-    r->x += config.window.margin_x_px;
-    r->y *= config.unit.height_px;
-    r->y += config.window.margin_y_px;
-    r->w *= config.unit.width_px;
-    r->h *= config.unit.height_px;
 }

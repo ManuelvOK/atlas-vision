@@ -3,7 +3,6 @@
 enum class change_type {
     erase = 'd', // delete
     shift = 'b', // begin
-    change_scheduler = 'c', // change scheduler
     change_execution_time = 'e' //execution time
 };
 

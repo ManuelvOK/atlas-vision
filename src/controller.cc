@@ -148,7 +148,6 @@ void read_input_from_file(std::string path) {
 
 void parse_n_cores(std::stringstream *line) {
     *line >> model->n_cores;
-    std::cout << line->str() << std::endl;
 }
 
 void parse_job(std::stringstream *line) {
@@ -168,7 +167,7 @@ void parse_schedule(std::stringstream *line) {
 void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes) {
     int schedule_id, timestamp;
     float value = -1;
-    char type, scheduler;
+    char type;
     *line >> type >> timestamp >> schedule_id;
     if (static_cast<change_type>(type) != change_type::erase) {
         *line >> value;
@@ -188,10 +187,6 @@ bool apply_schedule_change(const Schedule_change &change) {
             break;
         case change_type::shift:
             schedule->begin.emplace(change.timestamp, change.value);
-            break;
-        case change_type::change_scheduler:
-            schedule->scheduler.emplace(change.timestamp,
-                                        static_cast<scheduler_type>(change.value));
             break;
         case change_type::change_execution_time:
             schedule->execution_time.emplace(change.timestamp, change.value);

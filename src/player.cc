@@ -30,4 +30,5 @@ void Player::init(const Model *model) {
     for (const Schedule &s: model->schedules) {
         this->max_position = std::max(this->max_position, s.get_maximal_end());
     }
+    this->max_position = (this->max_position / 20 + 1) * 20;
 }

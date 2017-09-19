@@ -6,7 +6,7 @@
 enum class scheduler_type {
     ATLAS = 'a',
     recovery = 'r',
-    CFG = 'c'
+    CFS = 'c'
 };
 
 /**

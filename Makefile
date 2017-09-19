@@ -51,6 +51,11 @@ CXXFLAGS += -I$(INCDIR)
 all: export LANG=en_US.utf8
 all: $(TARGET)
 
+.PHONY: sanitized
+sanitized: CXXFLAGS += -fsanitize=address
+sanitized: LIBS += -fsanitize=address
+sanitized: all
+
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $^ $(LIBS)
 
