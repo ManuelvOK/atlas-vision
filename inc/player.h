@@ -23,7 +23,7 @@ public:
     /**
      * length of full simulation
      */
-    int max_position = 0;
+    float max_position = 0;
 
     void init(const Model *model);
 

@@ -165,7 +165,8 @@ void parse_schedule(std::stringstream *line) {
 }
 
 void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes) {
-    int schedule_id, timestamp;
+    int schedule_id;
+    float timestamp;
     float value = -1;
     char type;
     *line >> type >> timestamp >> schedule_id;

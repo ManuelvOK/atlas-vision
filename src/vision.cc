@@ -220,7 +220,8 @@ void calculate_schedule_render_position(const Schedule &schedule) {
     /* precompute positions for job in schedule view */
     Schedule_rect *s = &schedules[schedule.id];
 
-    int begin, execution_time;
+    int begin;
+    float execution_time;
     scheduler_type scheduler;
     std::tie(begin, scheduler, execution_time) = schedule.get_data_at_time(timestamp);
 

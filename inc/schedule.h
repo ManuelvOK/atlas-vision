@@ -32,45 +32,45 @@ public:
     /**
      * the scheduler this schedule is on
      */
-    std::map<int, scheduler_type> scheduler;
+    std::map<float, scheduler_type> scheduler;
 
     /**
      * time this schedule gets submittet
      */
-    int submission_time;
+    float submission_time;
 
     /**
      * start times of job execution
-     * this is a map for storing different execution times for different player states
+     * this is a map for storing different execution times for different timestamps
      */
-    std::map<int, int> begin;
+    std::map<float, float> begin;
 
     /**
      * possible end of this schedule
      */
-    int end = -1;
+    float end = -1;
 
     /**
      * time the scheduled job runs
      */
-    std::map<int, int> execution_time;
+    std::map<float, float> execution_time;
 
     /**
      * Constructor
      */
-    Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
-            int execution_time);
+    Schedule(int id, int job_id, int core, char scheduler, float submission_time, float begin,
+            float execution_time);
 
     /**
      * get relevant data for rendering for a given timestamp
      */
-    std::tuple<int, scheduler_type, int> get_data_at_time(float timestamp = 0) const;
+    std::tuple<float, scheduler_type, float> get_data_at_time(float timestamp = 0) const;
 
     /**
      * check if the schedule does exist at a given timestamp
      */
     bool exists_at_time(float timestamp) const;
 
-    int get_maximal_end() const;
+    float get_maximal_end() const;
 };
 

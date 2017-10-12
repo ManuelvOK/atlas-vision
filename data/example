@@ -72,8 +72,11 @@ s 7  0 a 7  30 2 #B4 id=12
 # timestamp 8
 s 0  0 c 8  8  5 #A1 CFS id=13
 
-# timestamp 15
-s 10 0 r 15 25 2 #X2 has a code dependency from X1 so it gets to recovery. id = 14
+# timestamp 17
+s 10 0 r 17 25 2 #X2 has a code dependency from X1 so it gets to recovery. id=14
+
+# timestamp 32
+s 3  0 c 32 32 5 #A4 CFS id=15
 
 #####################
 # altered Schedules #
@@ -97,4 +100,10 @@ a b 7 9 28 #A3 2 back
 a d 8  0 #X0 atlas schedule deleted because CFS did it
 
 #timestamp 15
-a d 15 2 #X2 has a code dependency from X1 so it gets to recovery
+a e 13.75 1 0.75 #A1 had time on CFS so its real time gets shortened
+
+#timestamp 17
+a d 17 2 #X2 has a code dependency from X1 so it gets to recovery
+
+#timestamp 37
+a e 37.75 10 0.75
