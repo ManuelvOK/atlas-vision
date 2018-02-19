@@ -5,6 +5,7 @@
 #include <job.h>
 #include <schedule.h>
 #include <schedule_change.h>
+#include <cfs_visibility.h>
 #include <player.h>
 
 /**
@@ -30,7 +31,12 @@ public:
     /**
      * list of schedules for the jobs
      */
-    std::vector<Schedule> schedules;
+    std::map<int, Schedule> schedules;
+
+    /**
+     * list of atlas schedules visibile for cfs scheduler
+     */
+    std::vector<Cfs_visibility> cfs_visibilities;
 
     /**
      * simulation player

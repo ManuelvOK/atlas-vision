@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 
+#include <SDL2/SDL2_gfxPrimitives.h>
+
 #include <model.h>
 #include <controller.h>
 #include <schedule_rect.h>
@@ -39,7 +41,9 @@ static std::vector<Schedule_rect> schedules;
 static std::vector<Schedule_rect> EDF_schedules;
 static std::vector<struct job_rect> deadlines_render_positions;
 static std::vector<struct job_rect> deadline_history_render_positions;
+static std::vector<struct job_rect> submission_render_positions;
 static std::map<int, std::vector<int>> deadlines;
+static std::map<int, std::vector<int>> submissions;
 static std::vector<unsigned> colors;
 
 /**
@@ -51,6 +55,9 @@ static std::vector<unsigned> colors;
  *   color alpha
  */
 static void set_color(int job, float modifier = 1.0);
+
+/* TODO: Documentation */
+static void get_color(int job, float modifier, int *r, int *g, int *b);
 
 /**
  * initialise color presets
@@ -85,6 +92,8 @@ static void HSV_to_RGB(float h, float s, float v,
  * This is to check mouse hovering between positioning and rendering
  */
 static void calculate_render_positions();
+/* TODO: documentation */
+static void calculate_submission_positions();
 
 /**
  * check if point is inside a SDL_Rect
@@ -123,6 +132,10 @@ static void render_jobs_in_EDF_view();
  * prepare rendering of job deadlines in EDF view
  */
 static void render_deadlines();
+
+/* TODO: documentation */
+static void render_submissions();
+static void render_visibilities();
 
 /**
  * prepare rendering for everything that concerns the simulation playing
@@ -175,6 +188,11 @@ void calculate_job_in_EDF_view(const Job &job, int offset) {
         deadlines.insert({job.deadline, std::vector<int>()});
     }
     deadlines[job.deadline].push_back(job.id);
+
+    if (submissions.find(job.submission_time) == submissions.end()) {
+        submissions.insert({job.submission_time, std::vector<int>()});
+    }
+    submissions[job.submission_time].push_back(job.id);
 }
 
 void calculate_vision() {
@@ -201,9 +219,11 @@ void calculate_vision() {
         offset += job.execution_time_estimate;
         max_deadline = std::max(max_deadline, job.deadline);
         deadline_history_render_positions.push_back({{0,0,0,0},0,true});
+        submission_render_positions.push_back({{0, 0, 0, 0}, 0, true});
     }
 
-    for (const Schedule &s: model->schedules) {
+    for (auto p: model->schedules) {
+        const Schedule &s = p.second;
         /* create SDL rects for render positions */
         schedules.emplace_back(&config, s.job_id);
     }
@@ -239,48 +259,72 @@ void calculate_schedule_render_position(const Schedule &schedule) {
             break;
         case scheduler_type::CFS:
             s->y = config.schedule.offset_y_u + config.schedule.CFS_offset_y_u;
+            if (schedule.is_active_at_time(timestamp)) {
+                s->w = timestamp - begin;
+            }
             break;
     }
 }
 
 void calculate_render_positions() {
 
-    for (const Schedule &s: model->schedules) {
+    for (auto p: model->schedules) {
+        const Schedule &s = p.second;
         calculate_schedule_render_position(s);
     }
 
     /* precompute positions for deadlines */
     int i = 0;
+    /* iterate through all deadlines. They are ordered in vectors that are mapped to a specific
+     * timestamp */
     for (std::pair<int, std::vector<int>> p: deadlines) {
+        /* x position is the timestamp the deadlines describe */
         int deadline_position_x = u_to_px_w(p.first) + config.window.margin_x_px;
+        /* create rect for position rendering. Width and Height are not neccessary since the
+         * deadlines are rendered as arrows */
         SDL_Rect *r = &deadlines_render_positions[i].r;
         r->x = deadline_position_x + u_to_px_w(config.deadline.margin_x_u);
         r->y = config.window.margin_y_px + u_to_px_w(config.deadline.margin_y_u);
-        r->w = u_to_px_w(config.deadline.width_u);
-        r->h = u_to_px_h(config.deadline.height_u);
+        //r->w = u_to_px_w(config.deadline.width_u);
+        //r->h = u_to_px_h(config.deadline.height_u);
 
-        int color_deadline_frame_width = p.second.size()
-            * u_to_px_w(config.color_deadline.width_u + config.color_deadline.spacing_u)
-            - u_to_px_w(config.color_deadline.spacing_u);
-
-        int offset = -color_deadline_frame_width / 2;
-        int it = color_deadline_frame_width / p.second.size();
+        /* TODO: get rid of magic number */
+        int offset = 7 * (p.second.size() - 1);
         for (int id: p.second) {
             r = &deadline_history_render_positions[id].r;
-            r->x = deadline_position_x + offset;
+            r->x = deadline_position_x;
             r->y = config.window.margin_y_px
                 + u_to_px_h(config.deadline.margin_y_u + config.deadline.height_u
-                            + config.color_deadline.spacing_u);
-            r->w = u_to_px_w(config.color_deadline.width_u);
-            r->h = u_to_px_h(config.color_deadline.height_u);
-            offset += it;
+                            + config.color_deadline.spacing_u)
+                + offset;
+            //r->w = u_to_px_w(config.color_deadline.width_u);
+            //r->h = u_to_px_h(config.color_deadline.height_u);
+            /* TODO: get rid of magic number */
+            offset -= 7;
         }
         ++i;
     }
 }
 
+void calculate_submission_positions() {
+    for (std::pair<int, std::vector<int>> p: submissions) {
+        int submission_position_x = u_to_px_w(p.first) + config.window.margin_x_px;
+
+        /* TODO: get rid of magic number */
+        int offset = -7 * (p.second.size() - 1);
+        for (int job: p.second) {
+            SDL_Rect *r = &submission_render_positions[job].r;
+            r->x = submission_position_x;
+            r->y = u_to_px_h(config.schedule.offset_y_u) + config.window.margin_y_px - 1 + offset;
+            /* TODO: get rid of magic number */
+            offset += 7;
+        }
+    }
+}
+
 void render_vision() {
     calculate_render_positions();
+    calculate_submission_positions();
 
     /* init colors if not happend before */
     if (colors.empty()) {
@@ -298,6 +342,9 @@ void render_vision() {
     render_jobs_in_schedule();
     render_jobs_in_EDF_view();
     render_deadlines();
+    render_submissions();
+
+    render_visibilities();
 
     /* render current position on top of all */
     render_player_position();
@@ -334,20 +381,80 @@ void render_jobs_in_EDF_view() {
     }
 }
 
+void render_submissions() {
+    short x[9] = {-10, 10, 10, 40, 50, 0, -50, -40, -10};
+    short y[9] = {0, 0, -80, -50, -60, -110, -60, -50, -80};
+
+    /* draw deadline in EDF view */
+    for (auto p: submissions) {
+        for (auto i: p.second) {
+            short pos_x[9];
+            short pos_y[9];
+            SDL_Rect r = submission_render_positions[i].r;
+            for (int j = 0; j < 9; ++j) {
+                /* TODO: get rid of magic 5 */
+                pos_x[j] = x[j] / 5.0 + r.x;
+                pos_y[j] = y[j] / 5.0 + r.y;
+            }
+            int c_r, c_g, c_b;
+            get_color(i, 1, &c_r, &c_g, &c_b);
+            filledPolygonRGBA(renderer, pos_x, pos_y, 9, c_r, c_g, c_b, 255);
+            //polygonRGBA(renderer, pos_x, pos_y, 9, 0, 0, 0, 255);
+            //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            //SDL_RenderFillRect(renderer, &r);
+        }
+    }
+}
+
+void render_visibilities() {
+    float timestamp = model->player.position;
+    for (auto v: model->cfs_visibilities) {
+        if (v.is_active_at_time(timestamp)) {
+            Schedule_rect &s = schedules[v.schedule_id];
+
+            SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+            SDL_RenderDrawLine(renderer,
+                               config.window.margin_x_px + u_to_px_w(s.x),
+                               config.window.margin_y_px +
+                               u_to_px_h(config.schedule.ATLAS_offset_y_u + config.schedule.offset_y_u + 0.5),
+                               config.window.margin_x_px + u_to_px_w(timestamp),
+                               /* TODO: get rid of magic 0.5 */
+                               config.window.margin_y_px +
+                               u_to_px_h(config.schedule.CFS_offset_y_u + config.schedule.offset_y_u + 0.5)
+                               );
+        }
+    }
+}
+
 void render_deadlines() {
     /* draw job history for each deadline */
+    /*
     for (int i = 0; i < n_jobs; ++i) {
         float modifier = (i == model->hovered_job) ? 1.0 : 0.9;
         SDL_Rect r = deadline_history_render_positions[i].r;
         set_color(i, modifier);
         SDL_RenderFillRect(renderer, &r);
     }
+    */
+    short x[9] = {-10, 10, 10, 40, 50, 0, -50, -40, -10};
+    short y[9] = {0, 0, 80, 50, 60, 110, 60, 50, 80};
 
     /* draw deadline in EDF view */
-    for (unsigned i = 0; i < deadlines.size(); ++i) {
-        SDL_Rect r = deadlines_render_positions[i].r;
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderFillRect(renderer, &r);
+    for (unsigned i = 0; i < n_jobs; ++i) {
+        short pos_x[9];
+        short pos_y[9];
+        SDL_Rect r = deadline_history_render_positions[i].r;
+        for (int j = 0; j < 9; ++j) {
+            /* TODO: get rid of magic 5 */
+            pos_x[j] = x[j] / 5.0 + r.x;
+            pos_y[j] = y[j] / 5.0 + r.y;
+        }
+        int c_r, c_g, c_b;
+        get_color(i, 1, &c_r, &c_g, &c_b);
+        filledPolygonRGBA(renderer, pos_x, pos_y, 9, c_r, c_g, c_b, 255);
+        //polygonRGBA(renderer, pos_x, pos_y, 9, 0, 0, 0, 255);
+        //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        //SDL_RenderFillRect(renderer, &r);
     }
 }
 
@@ -436,6 +543,17 @@ void set_color(int job, float modifier) {
 
     HSV_to_RGB((float)colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
     SDL_SetRenderDrawColor(renderer, r * 255, g * 255, b * 255, 255);
+}
+
+void get_color(int job, float modifier, int *r, int *g, int *b) {
+    float red = 0;
+    float green = 0;
+    float blue = 0;
+
+    HSV_to_RGB((float)colors[job], 0.7f, 0.9f * modifier, &red, &green, &blue);
+    *r = red * 255;
+    *g = green * 255;
+    *b = blue * 255;
 }
 
 void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {

@@ -51,6 +51,14 @@ static void parse_schedule(std::stringstream *line);
 static void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes);
 
 /**
+ * parse cfs visibility. This is the foremost ATLAS job that cfs can schedule
+ *
+ * @param line
+ *   line to parse with index at first parameter
+ */
+static void parse_cfs_visibility(std::stringstream *line);
+
+/**
  * add schedule change to appropriate schedule
  *
  * @param change
@@ -112,6 +120,7 @@ void parse_file(std::istream *input) {
             case 'j': parse_job(&ss);              break;
             case 's': parse_schedule(&ss);         break;
             case 'a': parse_change(&ss, &changes); break;
+            case 'v': parse_cfs_visibility(&ss);   break;
             case 0:
             case '#': break;
             default: std::cerr << "Parse error: \"" << type << "\" is not a proper type."
@@ -157,11 +166,11 @@ void parse_job(std::stringstream *line) {
 }
 
 void parse_schedule(std::stringstream *line) {
-    int job_id, core, submission_time, begin, time;
+    int id, job_id, core;
+    float submission_time, begin, time;
     char scheduler;
-    *line >> job_id >> core >> scheduler >> submission_time >> begin >> time;
-    model->schedules.emplace_back(model->schedules.size(),job_id, core, scheduler, submission_time,
-                                  begin, time);
+    *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
+    model->schedules.emplace(id, Schedule{id, job_id, core, scheduler, submission_time, begin, time});
 }
 
 void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes) {
@@ -174,6 +183,13 @@ void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes
         *line >> value;
     }
     changes->emplace_back(schedule_id, timestamp, type, value);
+}
+
+void parse_cfs_visibility(std::stringstream *line) {
+    int schedule_id;
+    float begin, end;
+    *line >> schedule_id >> begin >> end;
+    model->cfs_visibilities.emplace_back(schedule_id, begin, end);
 }
 
 bool apply_schedule_change(const Schedule_change &change) {

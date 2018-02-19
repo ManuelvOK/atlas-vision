@@ -43,6 +43,15 @@ bool Schedule::exists_at_time(float timestamp) const {
     return (this->end < 0 || this->end > timestamp) && timestamp >= this->submission_time;
 }
 
+bool Schedule::is_active_at_time(float timestamp) const {
+    int begin;
+    float execution_time;
+    scheduler_type scheduler;
+    std::tie(begin, scheduler, execution_time) = this->get_data_at_time(timestamp);
+
+    return (begin <= timestamp && begin + execution_time >= timestamp);
+}
+
 float Schedule::get_maximal_end() const {
     float begin = 0;
     for (std::pair<float, float> b: this->begin) {

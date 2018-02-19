@@ -38,7 +38,7 @@ vpath %.d $(DEPDIR)
 vpath %.h $(INCDIR)
 
 TARGET = visualisation
-LIBS   = -lSDL2
+LIBS   = -lSDL2 -lSDL2_gfx
 
 SRC	= $(notdir $(wildcard $(SRCDIR)/*.cc))
 OBJ = $(SRC:%.cc=%.o)

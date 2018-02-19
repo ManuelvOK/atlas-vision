@@ -71,6 +71,11 @@ public:
      */
     bool exists_at_time(float timestamp) const;
 
+    /**
+     * check if the schedule gets executed at a given timestamp
+     */
+    bool is_active_at_time(float timestamp) const;
+
     float get_maximal_end() const;
 };
 
