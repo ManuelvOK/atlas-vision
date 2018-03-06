@@ -8,6 +8,7 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 
 #include <model.h>
+#include <viewmodel.h>
 #include <controller.h>
 #include <schedule_rect.h>
 #include <vision_config.h>
@@ -27,6 +28,8 @@ static SDL_Renderer *renderer;
  */
 static const Model *model = nullptr;
 
+static Viewmodel viewmodel;
+
 Vision_config config;
 
 struct job_rect {
@@ -35,16 +38,6 @@ struct job_rect {
     bool visible;
 };
 
-static int n_jobs;
-static int n_schedules;
-static std::vector<Schedule_rect> schedules;
-static std::vector<Schedule_rect> EDF_schedules;
-static std::vector<struct job_rect> deadlines_render_positions;
-static std::vector<struct job_rect> deadline_history_render_positions;
-static std::vector<struct job_rect> submission_render_positions;
-static std::map<int, std::vector<int>> deadlines;
-static std::map<int, std::vector<int>> submissions;
-static std::vector<unsigned> colors;
 
 /**
  * set render color to preset colors have to be initialised first
@@ -182,12 +175,15 @@ void init_graphics(const Model *_model) {
 }
 
 void calculate_job_in_EDF_view(const Job &job, int offset) {
-    EDF_schedules.emplace_back(&config, job.id, offset, 0, job.execution_time_estimate, 1);
+    viewmodel.EDF_schedules.emplace_back(&config, job.id, offset, 0, job.execution_time_estimate, 1);
+    auto &deadlines = viewmodel.deadlines;
 
     if (deadlines.find(job.deadline) == deadlines.end()) {
         deadlines.insert({job.deadline, std::vector<int>()});
     }
     deadlines[job.deadline].push_back(job.id);
+
+    auto &submissions = viewmodel.submissions;
 
     if (submissions.find(job.submission_time) == submissions.end()) {
         submissions.insert({job.submission_time, std::vector<int>()});
@@ -196,8 +192,8 @@ void calculate_job_in_EDF_view(const Job &job, int offset) {
 }
 
 void calculate_vision() {
-    n_jobs = model->jobs.size();
-    n_schedules = model->schedules.size();
+    viewmodel.n_jobs = model->jobs.size();
+    viewmodel.n_schedules = model->schedules.size();
 
     /* the order of the job list can't be changed because the jobs are handled by id, which is the
      * position inside the list. That means we have to sort another list */
@@ -218,18 +214,18 @@ void calculate_vision() {
         calculate_job_in_EDF_view(job, offset);
         offset += job.execution_time_estimate;
         max_deadline = std::max(max_deadline, job.deadline);
-        deadline_history_render_positions.push_back({{0,0,0,0},0,true});
-        submission_render_positions.push_back({{0, 0, 0, 0}, 0, true});
+        viewmodel.deadline_history_render_positions.push_back({{0,0,0,0},0,true});
+        viewmodel.submission_render_positions.push_back({{0, 0, 0, 0}, 0, true});
     }
 
     for (auto p: model->schedules) {
         const Schedule &s = p.second;
         /* create SDL rects for render positions */
-        schedules.emplace_back(&config, s.job_id);
+        viewmodel.schedules.emplace_back(&config, s.job_id);
     }
     /* create SDL rects for deadline render positions */
-    for (unsigned i = 0; i < deadlines.size(); ++i) {
-        deadlines_render_positions.push_back({{0,0,0,0},0,0});
+    for (unsigned i = 0; i < viewmodel.deadlines.size(); ++i) {
+        viewmodel.deadlines_render_positions.push_back({{0,0,0,0},0,0});
     }
     config.player.width_u = std::max(offset,max_deadline);
     recompute_config();
@@ -238,7 +234,7 @@ void calculate_vision() {
 void calculate_schedule_render_position(const Schedule &schedule) {
     float timestamp = model->player.position;
     /* precompute positions for job in schedule view */
-    Schedule_rect *s = &schedules[schedule.id];
+    Schedule_rect *s = &viewmodel.schedules[schedule.id];
 
     int begin;
     float execution_time;
@@ -277,12 +273,12 @@ void calculate_render_positions() {
     int i = 0;
     /* iterate through all deadlines. They are ordered in vectors that are mapped to a specific
      * timestamp */
-    for (std::pair<int, std::vector<int>> p: deadlines) {
+    for (std::pair<int, std::vector<int>> p: viewmodel.deadlines) {
         /* x position is the timestamp the deadlines describe */
         int deadline_position_x = u_to_px_w(p.first) + config.window.margin_x_px;
         /* create rect for position rendering. Width and Height are not neccessary since the
          * deadlines are rendered as arrows */
-        SDL_Rect *r = &deadlines_render_positions[i].r;
+        SDL_Rect *r = &viewmodel.deadlines_render_positions[i].r;
         r->x = deadline_position_x + u_to_px_w(config.deadline.margin_x_u);
         r->y = config.window.margin_y_px + u_to_px_w(config.deadline.margin_y_u);
         //r->w = u_to_px_w(config.deadline.width_u);
@@ -291,7 +287,7 @@ void calculate_render_positions() {
         /* TODO: get rid of magic number */
         int offset = 7 * (p.second.size() - 1);
         for (int id: p.second) {
-            r = &deadline_history_render_positions[id].r;
+            r = &viewmodel.deadline_history_render_positions[id].r;
             r->x = deadline_position_x;
             r->y = config.window.margin_y_px
                 + u_to_px_h(config.deadline.margin_y_u + config.deadline.height_u
@@ -307,13 +303,13 @@ void calculate_render_positions() {
 }
 
 void calculate_submission_positions() {
-    for (std::pair<int, std::vector<int>> p: submissions) {
+    for (std::pair<int, std::vector<int>> p: viewmodel.submissions) {
         int submission_position_x = u_to_px_w(p.first) + config.window.margin_x_px;
 
         /* TODO: get rid of magic number */
         int offset = -7 * (p.second.size() - 1);
         for (int job: p.second) {
-            SDL_Rect *r = &submission_render_positions[job].r;
+            SDL_Rect *r = &viewmodel.submission_render_positions[job].r;
             r->x = submission_position_x;
             r->y = u_to_px_h(config.schedule.offset_y_u) + config.window.margin_y_px - 1 + offset;
             /* TODO: get rid of magic number */
@@ -327,7 +323,7 @@ void render_vision() {
     calculate_submission_positions();
 
     /* init colors if not happend before */
-    if (colors.empty()) {
+    if (viewmodel.colors.empty()) {
         init_colors(model->jobs.size());
     }
 
@@ -368,13 +364,13 @@ void render_schedule(Schedule_rect &schedule) {
 }
 
 void render_jobs_in_schedule() {
-    for (Schedule_rect &s: schedules) {
+    for (Schedule_rect &s: viewmodel.schedules) {
         render_schedule(s);
     }
 }
 
 void render_jobs_in_EDF_view() {
-    for (Schedule_rect &s: EDF_schedules) {
+    for (Schedule_rect &s: viewmodel.EDF_schedules) {
         float modifier = (s.job_id == model->hovered_job) ? 1.0 : 0.9;
         set_color(s.job_id, modifier * 0.8);
         SDL_RenderFillRect(renderer, s.render_position());
@@ -386,11 +382,11 @@ void render_submissions() {
     short y[9] = {0, 0, -80, -50, -60, -110, -60, -50, -80};
 
     /* draw deadline in EDF view */
-    for (auto p: submissions) {
+    for (auto p: viewmodel.submissions) {
         for (auto i: p.second) {
             short pos_x[9];
             short pos_y[9];
-            SDL_Rect r = submission_render_positions[i].r;
+            SDL_Rect r = viewmodel.submission_render_positions[i].r;
             for (int j = 0; j < 9; ++j) {
                 /* TODO: get rid of magic 5 */
                 pos_x[j] = x[j] / 5.0 + r.x;
@@ -410,7 +406,7 @@ void render_visibilities() {
     float timestamp = model->player.position;
     for (auto v: model->cfs_visibilities) {
         if (v.is_active_at_time(timestamp)) {
-            Schedule_rect &s = schedules[v.schedule_id];
+            Schedule_rect &s = viewmodel.schedules[v.schedule_id];
 
             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
             SDL_RenderDrawLine(renderer,
@@ -440,10 +436,10 @@ void render_deadlines() {
     short y[9] = {0, 0, 80, 50, 60, 110, 60, 50, 80};
 
     /* draw deadline in EDF view */
-    for (unsigned i = 0; i < n_jobs; ++i) {
+    for (unsigned i = 0; i < viewmodel.n_jobs; ++i) {
         short pos_x[9];
         short pos_y[9];
-        SDL_Rect r = deadline_history_render_positions[i].r;
+        SDL_Rect r = viewmodel.deadline_history_render_positions[i].r;
         for (int j = 0; j < 9; ++j) {
             /* TODO: get rid of magic 5 */
             pos_x[j] = x[j] / 5.0 + r.x;
@@ -521,6 +517,7 @@ void render_player_position() {
 }
 
 void init_colors(int n_jobs) {
+    auto &colors = viewmodel.colors;
     std::vector<unsigned> c;
     for (int i = 0; i < n_jobs; ++i) {
         c.push_back((360 / (n_jobs)) * i);
@@ -541,7 +538,7 @@ void set_color(int job, float modifier) {
     float g = 0;
     float b = 0;
 
-    HSV_to_RGB((float)colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
+    HSV_to_RGB((float)viewmodel.colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
     SDL_SetRenderDrawColor(renderer, r * 255, g * 255, b * 255, 255);
 }
 
@@ -550,7 +547,7 @@ void get_color(int job, float modifier, int *r, int *g, int *b) {
     float green = 0;
     float blue = 0;
 
-    HSV_to_RGB((float)colors[job], 0.7f, 0.9f * modifier, &red, &green, &blue);
+    HSV_to_RGB((float)viewmodel.colors[job], 0.7f, 0.9f * modifier, &red, &green, &blue);
     *r = red * 255;
     *g = green * 255;
     *b = blue * 255;
@@ -586,12 +583,12 @@ void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) {
 }
 
 int get_hovered_job(int x, int y) {
-    for (Schedule_rect &s: EDF_schedules) {
+    for (Schedule_rect &s: viewmodel.EDF_schedules) {
         if (point_inside_rect(x, y, s.render_position())) {
             return s.job_id;
         }
     }
-    for (Schedule_rect &s: schedules) {
+    for (Schedule_rect &s: viewmodel.schedules) {
         if (point_inside_rect(x, y, s.render_position())) {
             return s.job_id;
         }
