@@ -1,6 +1,6 @@
 #pragma once
 
-class Vision_config {
+class ViewConfig {
 public:
     class {
         public:
@@ -55,5 +55,5 @@ public:
 
     bool changed = false;
 
-    Vision_config() : window(), unit(), job(), schedule(), deadline(), color_deadline(), player() {}
+    ViewConfig() : window(), unit(), job(), schedule(), deadline(), color_deadline(), player() {}
 };
