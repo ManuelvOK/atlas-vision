@@ -14,7 +14,13 @@ void Frame::draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y)
         this->height
     };
     SDL_RenderSetClipRect(renderer, &clip_rect);
-    this->draw_this(renderer, global_offset_x, global_offset_y);
+
+    /* draw everything for this frame */
+    for (Drawable *drawable: this->drawables) {
+        drawable.draw(renderer, global_offset_x, global_offset_y);
+    }
+
+    /* draw every child */
     for (Frame *child: this->childs) {
         child->draw(renderer, global_offset_x, global_offset_y);
     }

@@ -28,7 +28,47 @@ View::View(const Model *model) {
         exit(EXIT_FAILURE);
     }
     on_exit(exit_SDL_DestroyRenderer, this->renderer);
+
+    this->viewmodel = Viewmodel();
+
+    this->create_frame_hierarchy();
 }
+
+void View::create_frame_hierarchy() {
+    /* TODO: get magic offset values from config */
+    this->window_frame = new WindowFrame(nullptr, &this->viewmodel, 0, 0);
+    PlayerFrame *player_frame = new PlayerFrame(this->window_frame, &this->viewmodel, 10, 10);
+    SidebarFrame *sidebar_frame = new SidebarFrame(this->window_frame, &this->viewmodel, 600, 0);
+
+    this->window_frame.add_child(player_frame);
+    this->window_frame.add_child(sidebar_frame);
+
+    SchedulerBackgroundFrame *scheduler_background_frame =
+        new SchedulerBackgroundFrame(player_frame, &this->viewmodel, 0, 100);
+    PlayerGridFrame *player_grid_frame = new PlayerGridFrame(player_frame, &this->viewmodel, 0, 0);
+    DeadlineFrame *deadline_frame = new DeadlineFrame(player_frame, &this->viewmodel, 0, 0);
+    SchedulerFrame *ATLAS_frame = new SchedulerFrame(player_frame, &this->viewmodel, 0, 100);
+    SchedulerFrame *recovery_frame = new SchedulerFrame(player_frame, &this->viewmodel, 0, 130);
+    SchedulerFrame *CFS_frame = new SchedulerFrame(player_frame, &this->viewmodel, 0, 160);
+    VisibilityFrame *visibility_frame = new VisbilityFrame(player_frame, &this->viewmodel, 0, 100);
+    PlayerPositionFrame *player_position_frame =
+        new PlayerPositionFrame(player_frame, &this->viewmodel, 0, 0);
+
+    player_frame.add_child(scheduler_background_frame);
+    player_frame.add_child(player_grid_frame);
+    player_frame.add_child(deadline_frame);
+    player_frame.add_child(ATLAS_frame);
+    player_frame.add_child(recovery_frame);
+    player_frame.add_child(CFS_frame);
+    player_frame.add_child(visibility_frame);
+    player_frame.add_child(player_position_frame);
+
+    DependencyFrame *dependency_frame = new DependencyFrame(sidebar_frame, &this->viewmodel, 0, 0);
+    EventFrame *event_frame = new EventFrame(sidebar_frame, &this->viewmodel, 0, 400);
+
+    sidebar_frame.add_child(dependency_frame);
+    sidebar_frame.add_child(event_frame);
+};
 
 
 void View::calculate() {

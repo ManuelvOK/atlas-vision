@@ -12,6 +12,7 @@ class View {
     WindowFrame window_frame;
     const Model *model;
 
+    void create_frame_hierarchy();
 public:
 
     /**
