@@ -1,3 +1,4 @@
+#pragma once
 #include <drawable.h>
 #include <rgb.h>
 
@@ -28,12 +29,12 @@ class SubmissionArrow : public Arrow {
 };
 
 class Rect : public Drawable {
+public:
     SDL_Rect rect = {0,0,0,0};
     RGB color;
     RGB border_color;
     bool border = false;
 
-public:
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
 };
 

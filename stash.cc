@@ -11,11 +11,6 @@
 #include <schedule_rect.h>
 #include <vision_config.h>
 
-struct job_rect {
-    SDL_Rect r;
-    int job_id;
-    bool visible;
-};
 
 /**
  * calculate render positions for all jobs.
@@ -194,4 +189,101 @@ void render_player_position() {
     float x = config.window.margin_x_px + u_to_px_w(model->player.position);
     SDL_RenderDrawLine(renderer, x, config.window.margin_y_px / 2, x,
                        config.window.height_px - config.window.margin_y_px / 2);
+}
+void DeadlineFrame::update_submission_positions() {
+    for (std::pair<int, std::vector<int>> p: this->viewmodel.submissions) {
+        int submission_position_x = u_to_px_w(p.first) + this->viewmodel.config.window.margin_x_px;
+
+        /* TODO: get rid of magic number */
+        int offset = -7 * (p.second.size() - 1);
+        for (int job: p.second) {
+            SDL_Rect *r = &this->viewmodel.submission_render_positions[job].r;
+            r->x = submission_position_x;
+            r->y = u_to_px_h(this->viewmodel.config.schedule.offset_y_u)
+                   + this->viewmodel.config.window.margin_y_px - 1 + offset;
+            /* TODO: get rid of magic number */
+            offset += 7;
+        }
+    }
+}
+
+void SchedulerFrame::update_schedule_render_position(const Model *model, const Schedule &schedule) {
+    float timestamp = model->player.position;
+    /* precompute positions for job in schedule view */
+    Schedule_rect *s = &this->viewmodel.schedules[schedule.id];
+
+    int begin;
+    float execution_time;
+    scheduler_type scheduler;
+    std::tie(begin, scheduler, execution_time) = schedule.get_data_at_time(timestamp);
+
+    s->visible = schedule.exists_at_time(timestamp);
+    s->x = begin;
+    s->w = execution_time;
+    s->h = 1;
+
+    switch (scheduler) {
+        case scheduler_type::ATLAS:
+            s->y = this->viewmodel.config.schedule.offset_y_u
+                + this->viewmodel.config.schedule.ATLAS_offset_y_u;
+            break;
+        case scheduler_type::recovery:
+            s->y = this->viewmodel.config.schedule.offset_y_u
+                + this->viewmodel.config.schedule.recovery_offset_y_u;
+            break;
+        case scheduler_type::CFS:
+            s->y = this->viewmodel.config.schedule.offset_y_u
+                + this->viewmodel.config.schedule.CFS_offset_y_u;
+            if (schedule.is_active_at_time(timestamp)) {
+                s->w = timestamp - begin;
+            }
+            break;
+    }
+}
+
+void View::calculate() {
+    /* TODO: this should be done recursively over the frame tree */
+    this->window_frame.precompute();
+#if 0
+    this->viewmodel.n_jobs = this->model->jobs.size();
+    this->viewmodel.n_schedules = this->model->schedules.size();
+
+    /* the order of the job list can't be changed because the jobs are handled by id, which is the
+     * position inside the list. That means we have to sort another list */
+    std::vector<int> EDF_sorted_jobs;
+    EDF_sorted_jobs.reserve(this->model->jobs.size());
+    for (unsigned i = 0; i < this->model->jobs.size(); ++i) {
+        EDF_sorted_jobs.push_back(i);
+    }
+    std::sort(EDF_sorted_jobs.begin(), EDF_sorted_jobs.end(), [](int a, int b) {
+            return this->model->jobs.at(a).deadline < this->model->jobs.at(b).deadline;
+        });
+
+    /* calculate jobs in EDF view */
+    /* TODO: is this needed any longer? */
+#if 0
+    int max_deadline = 0;
+    int offset = 0;
+    for (int i: EDF_sorted_jobs) {
+        const Job &job = this->model->jobs.at(i);
+        calculate_job_in_EDF_view(job, offset);
+        offset += job.execution_time_estimate;
+        max_deadline = std::max(max_deadline, job.deadline);
+        viewmodel.deadline_history_render_positions.push_back({{0,0,0,0},0,true});
+        viewmodel.submission_render_positions.push_back({{0, 0, 0, 0}, 0, true});
+    }
+#endif
+
+    for (auto p: model->schedules) {
+        const Schedule &s = p.second;
+        /* create SDL rects for render positions */
+        viewmodel.schedules.emplace_back(&config, s.job_id);
+    }
+    /* create SDL rects for deadline render positions */
+    for (unsigned i = 0; i < viewmodel.deadlines.size(); ++i) {
+        viewmodel.deadlines_render_positions.push_back({{0,0,0,0},0,0});
+    }
+    config.player.width_u = std::max(offset,max_deadline);
+    recompute_config();
+#endif
 }

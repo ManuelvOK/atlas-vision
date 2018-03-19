@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 
 #include <model.h>
-#include <vision.h>
+//#include <vision.h>
 
 /**
  * handle a pressed key
@@ -52,10 +52,12 @@ void read_input(struct input *input) {
             case SDL_WINDOWEVENT: handle_window_event(event.window, input);
             default: break;
         }
+#if 0
         if (mouse_down) {
             input->player.position =
                 position_in_player(input->mouse_position_x, input->mouse_position_y);
         }
+#endif
     }
 }
 

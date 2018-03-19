@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 
 #include <model.h>
-#include <vision.h>
+#include <view.h>
 #include <input.h>
 #include <controller.h>
 
@@ -19,7 +19,7 @@ enum magic_numbers {
 int main(int argc, char *argv[]) {
     init_SDL();
     const Model *model = init_model();
-    init_graphics(model);
+    View view(model);
 
     if (argc > 1) {
         read_input_from_file(argv[1]);
@@ -30,14 +30,12 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    calculate_vision();
-
     struct input input = {0, 0, 0, {0, 0, 0}, {0, 0, 0}};
     while (model->running) {
         read_input(&input);
         handle_input(&input);
         control();
-        render_vision();
+        view.render();
         SDL_Delay(MAGIC_33);
     }
 

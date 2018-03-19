@@ -1,3 +1,5 @@
+#include <schedule_rect.h>
+#if 0
 
 int get_hovered_job(int x, int y) {
     for (Schedule_rect &s: viewmodel.EDF_schedules) {
@@ -34,4 +36,4 @@ void update_window(int width, int height) {
     recompute_config();
 }
 
-
+#endif

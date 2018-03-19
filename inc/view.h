@@ -4,13 +4,16 @@
 
 #include <controller.h>
 #include <frames.h>
+#include <viewmodel.h>
 
 class View {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
 
-    WindowFrame window_frame;
-    const Model *model;
+    WindowFrame *window_frame = nullptr;
+    const Model *model = nullptr;
+
+    Viewmodel *viewmodel = nullptr;
 
     void create_frame_hierarchy();
 public:

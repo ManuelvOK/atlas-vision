@@ -1,6 +1,6 @@
 #include <schedule_rect.h>
 
-#include <vision_config.h>
+#include <view_config.h>
 
 SDL_Rect *Schedule_rect::render_position() {
     if (this->changed || this->config->changed) {

@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include <model.h>
-#include <vision.h>
+#include <view.h>
 
 /**
  * parse input data from ifstream
@@ -95,13 +95,14 @@ void handle_input(const struct input *input) {
     if (input->player.position >= 0) {
         model->player.set(input->player.position);
     }
-
+#if 0
     /* window changed */
     if (input->window.changed) {
         update_window(input->window.width, input->window.height);
     }
     /* hovered job */
     model->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y);
+#endif
 }
 
 void read_input_from_stdin() {

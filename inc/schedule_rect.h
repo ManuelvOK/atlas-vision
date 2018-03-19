@@ -4,7 +4,7 @@
 
 #include <SDL2/SDL.h>
 
-#include <vision_config.h>
+#include <view_config.h>
 
 class Dependency_class {
 protected:
@@ -32,7 +32,7 @@ public:
 
 class Schedule_rect : public Dependency_class {
     SDL_Rect m_render_position = {0, 0, 0, 0};
-    const Vision_config *config;
+    const ViewConfig *config;
 
 public:
     int job_id;
@@ -42,7 +42,7 @@ public:
     Dependency_value<float> h;
     bool visible = true;
 
-    Schedule_rect(const Vision_config *config, int job_id, float x = 0.0, float y = 0.0,
+    Schedule_rect(const ViewConfig *config, int job_id, float x = 0.0, float y = 0.0,
                   float w = 0.0, float h = 0.0)
         : config(config), job_id(job_id), x(this, x), y(this, y), w(this, w), h(this, h) {}
 

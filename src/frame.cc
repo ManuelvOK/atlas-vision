@@ -1,5 +1,8 @@
 #include <frame.h>
 
+#include <iostream>
+
+
 void Frame::add_child(Frame *child) {
     this->childs.push_back(child);
 }
@@ -15,9 +18,10 @@ void Frame::draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y)
     };
     SDL_RenderSetClipRect(renderer, &clip_rect);
 
+    this->draw_this(renderer, global_offset_x, global_offset_y);
     /* draw everything for this frame */
     for (Drawable *drawable: this->drawables) {
-        drawable.draw(renderer, global_offset_x, global_offset_y);
+        drawable->draw(renderer, global_offset_x, global_offset_y);
     }
 
     /* draw every child */

@@ -6,7 +6,14 @@
 #include <SDL2/SDL.h>
 
 #include <schedule_rect.h>
-#include <vision_config.h>
+#include <view_config.h>
+#include <model.h>
+
+struct job_rect {
+    SDL_Rect r;
+    int job_id;
+    bool visible;
+};
 
 class Viewmodel {
     bool colors_initialised = false;
@@ -93,7 +100,7 @@ class Viewmodel {
      * @return
      *   true if Point is inside SDL_Rect. Otherwise False
      */
-    bool point_inside_rect(int x, int y, const SDL_Rect *r);
+    bool point_inside_rect(int x, int y, const SDL_Rect *r) const;
 
     int u_to_px_w(float unit) const;
     int u_to_px_h(float unit) const;
