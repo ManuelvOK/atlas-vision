@@ -2,6 +2,14 @@
 
 #include <iostream>
 
+Frame::~Frame() {
+    for (Drawable *d: this->drawables) {
+        delete d;
+    }
+    for (Frame *f: this->childs) {
+        delete f;
+    }
+}
 
 void Frame::add_child(Frame *child) {
     this->childs.push_back(child);
@@ -28,6 +36,11 @@ void Frame::draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y)
     for (Frame *child: this->childs) {
         child->draw(renderer, global_offset_x, global_offset_y);
     }
+}
+void Frame::draw_this(SDL_Renderer *renderer, int global_offset_x, int global_offset_y) const {
+    (void) renderer;
+    (void) global_offset_x;
+    (void) global_offset_y;
 }
 
 void Frame::update(const Model *model) {

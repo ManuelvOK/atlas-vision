@@ -23,6 +23,8 @@ public:
      */
     View(const Model *model);
 
+    ~View();
+
     /**
      * render a frame from a given model.
      *

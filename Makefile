@@ -44,7 +44,7 @@ SRC	= $(notdir $(wildcard $(SRCDIR)/*.cc))
 OBJ = $(SRC:%.cc=%.o)
 DEP = $(SRC:%.cc=$(DEPDIR)/%.d)
 
-CXXFLAGS  = -std=c++17 -Wall -Wextra -Wpedantic -Weffc++ -g `sdl2-config --cflags`
+CXXFLAGS  = -std=c++17 -O2 -Wall -Wextra -Wpedantic -g `sdl2-config --cflags`
 CXXFLAGS += -I$(INCDIR)
 
 .PHONY: all
@@ -55,6 +55,10 @@ all: $(TARGET)
 sanitized: CXXFLAGS += -fsanitize=address
 sanitized: LIBS += -fsanitize=address
 sanitized: all
+
+.PHONY: effective
+effective: CXXFLAGS += -Weffc++
+effective: all
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $^ $(LIBS)

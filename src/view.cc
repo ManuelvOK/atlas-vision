@@ -31,11 +31,15 @@ View::View(const Model *model) {
     }
     on_exit(exit_SDL_DestroyRenderer, this->renderer);
 
-    this->viewmodel = new Viewmodel();
+    this->viewmodel = new Viewmodel(this->model);
 
     //viewmodel->init_colors(model->jobs.size());
 
     this->create_frame_hierarchy();
+}
+
+View::~View() {
+    delete this->window_frame;
 }
 
 void View::create_frame_hierarchy() {
@@ -74,10 +78,10 @@ void View::create_frame_hierarchy() {
 
     sidebar_frame->add_child(dependency_frame);
     sidebar_frame->add_child(event_frame);
-};
+}
 
 void View::render() {
-
+    this->window_frame->update(this->model);
     this->window_frame->draw(renderer, 0, 0);
     SDL_RenderPresent(renderer);
 

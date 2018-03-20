@@ -19,7 +19,6 @@ enum magic_numbers {
 int main(int argc, char *argv[]) {
     init_SDL();
     const Model *model = init_model();
-    View view(model);
 
     if (argc > 1) {
         read_input_from_file(argv[1]);
@@ -30,6 +29,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    View view(model);
     struct input input = {0, 0, 0, {0, 0, 0}, {0, 0, 0}};
     while (model->running) {
         read_input(&input);

@@ -48,5 +48,5 @@ public:
      */
     int hovered_job = -1;
 
-    Model() : jobs(), schedules(), player() {}
+    Model() : jobs(), schedules(), cfs_visibilities(), player() {}
 };

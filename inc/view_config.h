@@ -51,6 +51,8 @@ public:
         const float grid_height_small_u = 1.0/6;
         const float poi_max_height_u = 2.0/3;
         const float poi_width_u = 1.0/3;
+        const int grid_grey = 150;
+        const int grid_dark_grey = 100;
     } player;
 
     bool changed = false;

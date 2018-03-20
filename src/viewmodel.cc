@@ -1,12 +1,24 @@
 #include <viewmodel.h>
 
+#include <iostream>
+#include <algorithm>
+
+Viewmodel::Viewmodel(const Model *model) :
+    config(), EDF_sorted_jobs(), schedules(), EDF_schedules(), deadlines(), submissions(), colors() {
+    this->n_jobs = model->jobs.size();
+    this->n_schedules = model->schedules.size();
+    this->init_colors();
+    this->init_EDF_sorted_jobs(model);
+    this->init_submissions(model);
+}
+
 void Viewmodel::init_colors() {
     std::vector<unsigned> c;
-    for (int i = 0; i < n_jobs; ++i) {
-        c.push_back((360 / (n_jobs)) * i);
+    for (int i = 0; i < this->n_jobs; ++i) {
+        c.push_back((360 / (this->n_jobs)) * i);
     }
     int half = c.size() / 2;
-    this->colors.reserve(n_jobs);
+    this->colors.reserve(this->n_jobs);
     for (int i = 0; i < half; ++i) {
         this->colors.push_back(c[half + i]);
         this->colors.push_back(c[i]);
@@ -14,30 +26,39 @@ void Viewmodel::init_colors() {
     if (c.size() % 2 == 1) {
         this->colors.push_back(c.back());
     }
-    this->colors_initialised = true;
 }
 
-void Viewmodel::set_color(int job, float modifier) {
-    if (not this->colors_initialised) {
-        return;
+void Viewmodel::init_EDF_sorted_jobs(const Model *model) {
+    /* the order of the job list can't be changed because the jobs are handled by id, which is the
+     * position inside the list. That means we have to sort our own list */
+    this->EDF_sorted_jobs.reserve(this->n_jobs);
+    for (int i = 0; i < this->n_jobs; ++i) {
+        EDF_sorted_jobs.push_back(i);
     }
-    float r = 0;
-    float g = 0;
-    float b = 0;
-
-    this->HSV_to_RGB((float)this->colors[job], 0.7f, 0.9f * modifier, &r, &g, &b);
-    SDL_SetRenderDrawColor(this->renderer, r * 255, g * 255, b * 255, 255);
+    std::sort(EDF_sorted_jobs.begin(), EDF_sorted_jobs.end(), [model](int a, int b) {
+            return model->jobs.at(a).deadline < model->jobs.at(b).deadline;
+        });
 }
 
-void Viewmodel::get_color(int job, float modifier, int *r, int *g, int *b) const {
+void Viewmodel::init_submissions(const Model *model) {
+    /* iterate over every job and insert submission */
+    for (int job_id: this->EDF_sorted_jobs) {
+        const Job &job = model->jobs.at(job_id);
+
+        if (this->submissions.find(job.submission_time) == this->submissions.end()) {
+            this->submissions.insert({job.submission_time, std::vector<int>()});
+        }
+        this->submissions[job.submission_time].push_back(job.id);
+    }
+}
+
+RGB Viewmodel::get_color(int job, float modifier) const {
     float red = 0;
     float green = 0;
     float blue = 0;
 
     HSV_to_RGB((float)this->colors[job], 0.7f, 0.9f * modifier, &red, &green, &blue);
-    *r = red * 255;
-    *g = green * 255;
-    *b = blue * 255;
+    return RGB(red * 255, green * 255, blue * 255);
 }
 
 void Viewmodel::HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) const {

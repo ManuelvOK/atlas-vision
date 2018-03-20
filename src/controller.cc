@@ -194,7 +194,7 @@ void parse_cfs_visibility(std::stringstream *line) {
 }
 
 bool apply_schedule_change(const Schedule_change &change) {
-    if (change.schedule_id >= model->schedules.size()) {
+    if (static_cast<unsigned>(change.schedule_id) >= model->schedules.size()) {
         std::cerr << "input error: validity\t- There is no Schedule with id " << change.schedule_id
                   << " to change" << std::endl;
     }

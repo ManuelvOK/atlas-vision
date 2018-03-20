@@ -8,18 +8,9 @@
 #include <schedule_rect.h>
 #include <view_config.h>
 #include <model.h>
-
-struct job_rect {
-    SDL_Rect r;
-    int job_id;
-    bool visible;
-};
+#include <rgb.h>
 
 class Viewmodel {
-    bool colors_initialised = false;
-
-    ViewConfig config;
-
     /**
      * convert HSV color values to RGB ones
      *
@@ -38,23 +29,6 @@ class Viewmodel {
      */
     void HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) const;
 
-  public:
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-
-    int n_jobs;
-    int n_schedules;
-    std::vector<Schedule_rect> schedules;
-    std::vector<Schedule_rect> EDF_schedules;
-    std::vector<struct job_rect> deadlines_render_positions;
-    std::vector<struct job_rect> deadline_history_render_positions;
-    std::vector<struct job_rect> submission_render_positions;
-    std::map<int, std::vector<int>> deadlines;
-    std::map<int, std::vector<int>> submissions;
-    std::vector<unsigned> colors;
-
-    Viewmodel() : config() {}
-
     /**
      * initialise color presets
      *
@@ -64,14 +38,31 @@ class Viewmodel {
     void init_colors();
 
     /**
-     * set render color to preset colors have to be initialised first
-     *
-     * @param job
-     *   job number
-     * @param modifier
-     *   color alpha
+     * TODO: documentation
      */
-    void set_color(int job, float modifier = 1.0);
+    void init_EDF_sorted_jobs(const Model *model);
+
+    /**
+     * TODO: documentation
+     */
+    void init_submissions(const Model *model);
+
+  public:
+    ViewConfig config;
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
+
+    int n_jobs = 0;
+    int n_schedules = 0;
+    std::vector<int> EDF_sorted_jobs;
+    std::vector<Schedule_rect> schedules;
+    std::vector<Schedule_rect> EDF_schedules;
+    std::map<int, std::vector<int>> deadlines;
+    std::map<int, std::vector<int>> submissions;
+    std::vector<unsigned> colors;
+
+    Viewmodel(const Model *model);
+
 
     /**
      * get rgb values of the color for a given job
@@ -80,14 +71,10 @@ class Viewmodel {
      *   number of job to get color for
      * @param modifier
      *   color alpha
-     * @param[out] r
-     *   red value to fill
-     * @param[out] g
-     *   g value to fill
-     * @param[out] b
-     *   b value to fill
+     *
+     * @return RGB color object of job color
      */
-    void get_color(int job, float modifier, int *r, int *g, int *b) const;
+    RGB get_color(int job, float modifier = 1.0) const;
 
     /**
      * check if point is inside a SDL_Rect
