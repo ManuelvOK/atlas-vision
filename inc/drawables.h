@@ -3,7 +3,9 @@
 #include <rgb.h>
 
 #include <array>
+#include <schedule.h>
 
+class Viewmodel;
 class Arrow : public Drawable {
 
     const std::array<short,9> arrow_coords_x;
@@ -21,6 +23,7 @@ public:
 };
 
 class DeadlineArrow : public Arrow {
+public:
     DeadlineArrow(int x, int y) : Arrow({-10, 10, 10, 40, 50, 0, -50, -40, -10},
                                         {0, 0, 80, 50, 60, 110, 60, 50, 80},
                                         x, y) {};
@@ -44,7 +47,18 @@ public:
 };
 
 class ScheduleRect : public Rect {
+public:
+    SchedulerType scheduler = SchedulerType::CFS;
+    int begin = 0;
+    int time = 0;
+    bool visible = false;
+    const Viewmodel *viewmodel;
 
+    ScheduleRect(const Viewmodel *viewmodel);
+
+    virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
+
+    void recalculate_position();
 };
 
 class SchedulerRect : public Rect {
@@ -62,5 +76,14 @@ public:
     Line() = default;
     Line(int begin_x, int begin_y, int end_x, int end_y)
         : begin_x(begin_x), begin_y(begin_y), end_x(end_x), end_y(end_y) {}
+    virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
+};
+
+class VisibilityLine : public Line {
+public:
+    bool visible = false;
+    const Viewmodel *viewmodel;
+
+    VisibilityLine(Viewmodel *viewmodel) : viewmodel(viewmodel) {}
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
 };

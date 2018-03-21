@@ -36,6 +36,7 @@ public:
 
 class DeadlineFrame : public Frame {
     unsigned max_n_submissions;
+    unsigned max_n_deadlines;
 public:
     DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                   int height);
@@ -43,18 +44,20 @@ public:
 };
 
 class SchedulerFrame : public Frame {
+    SchedulerType scheduler;
 public:
     SchedulerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
-                   int height)
-        : Frame(parent, viewmodel, offset_x, offset_y, width, height) {}
+                   int height, SchedulerType scheduler)
+        : Frame(parent, viewmodel, offset_x, offset_y, width, height), scheduler(scheduler) {}
+    virtual ~SchedulerFrame();
     virtual void update_this(const Model *model);
 };
 
 class VisibilityFrame : public Frame {
 public:
     VisibilityFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
-            int height)
-        : Frame(parent, viewmodel, offset_x, offset_y, width, height) {}
+                    int height);
+    virtual ~VisibilityFrame();
     virtual void update_this(const Model *model);
 };
 

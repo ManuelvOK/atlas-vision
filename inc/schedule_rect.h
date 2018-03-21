@@ -5,6 +5,8 @@
 #include <SDL2/SDL.h>
 
 #include <view_config.h>
+#include <schedule.h>
+#include <drawables.h>
 
 class Dependency_class {
 protected:
@@ -40,17 +42,20 @@ public:
     Dependency_value<float> y;
     Dependency_value<float> w;
     Dependency_value<float> h;
+    Dependency_value<SchedulerType> scheduler;
     bool visible = true;
 
-    Schedule_rect(const ViewConfig *config, int job_id, float x = 0.0, float y = 0.0,
-                  float w = 0.0, float h = 0.0)
-        : config(config), job_id(job_id), x(this, x), y(this, y), w(this, w), h(this, h) {}
+    Schedule_rect(const ViewConfig *config, int job_id, SchedulerType scheduler, float x = 0.0,
+                  float y = 0.0, float w = 0.0, float h = 0.0)
+        : config(config), job_id(job_id), x(this, x), y(this, y), w(this, w), h(this, h),
+          scheduler(this, scheduler) {}
 
     Schedule_rect(Schedule_rect &&o) noexcept
         : config(std::move(o.config)), job_id(std::move(o.job_id)), x(this, std::move(o.x)),
-          y(this, std::move(o.y)), w(this, std::move(o.w)), h(this, std::move(o.h)) {}
+          y(this, std::move(o.y)), w(this, std::move(o.w)), h(this, std::move(o.h)),
+          scheduler(this, std::move(o.scheduler)) {}
 
-    SDL_Rect *render_position();
+    ScheduleRect *drawable();
     void calculate_render_position();
 
 };

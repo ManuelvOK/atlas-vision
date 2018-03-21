@@ -4,12 +4,15 @@
 #include <algorithm>
 
 Viewmodel::Viewmodel(const Model *model) :
-    config(), EDF_sorted_jobs(), schedules(), EDF_schedules(), deadlines(), submissions(), colors() {
+    config(), EDF_sorted_jobs(), schedules(), deadlines(), submissions(), colors() {
     this->n_jobs = model->jobs.size();
     this->n_schedules = model->schedules.size();
     this->init_colors();
     this->init_EDF_sorted_jobs(model);
     this->init_submissions(model);
+    this->init_deadlines(model);
+    this->init_schedules(model);
+    this->init_visibilities(model);
 }
 
 void Viewmodel::init_colors() {
@@ -49,6 +52,34 @@ void Viewmodel::init_submissions(const Model *model) {
             this->submissions.insert({job.submission_time, std::vector<int>()});
         }
         this->submissions[job.submission_time].push_back(job.id);
+    }
+}
+
+void Viewmodel::init_deadlines(const Model *model) {
+    /* iterate over every job and insert deadline */
+    for (int job_id: this->EDF_sorted_jobs) {
+        const Job &job = model->jobs.at(job_id);
+
+        if (this->deadlines.find(job.deadline) == this->deadlines.end()) {
+            this->deadlines.insert({job.deadline, std::vector<int>()});
+        }
+        this->deadlines[job.deadline].push_back(job.id);
+    }
+}
+
+void Viewmodel::init_schedules(const Model *model) {
+    /* create schedule rect for every schedule */
+    this->schedules.reserve(model->schedules.size());
+    for (std::pair<int, Schedule> s: model->schedules) {
+        this->schedules.emplace_back(this);
+        this->schedules.back().color = this->get_color(s.second.job_id);
+    }
+}
+
+void Viewmodel::init_visibilities(const Model *model) {
+    this->visibilities.reserve(model->cfs_visibilities.size());
+    for (unsigned i = 0; i < model->cfs_visibilities.size(); ++i) {
+        this->visibilities.emplace_back(this);
     }
 }
 

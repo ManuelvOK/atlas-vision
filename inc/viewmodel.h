@@ -47,6 +47,21 @@ class Viewmodel {
      */
     void init_submissions(const Model *model);
 
+    /**
+     * TODO: documentation
+     */
+    void init_deadlines(const Model *model);
+
+    /**
+     * TODO: documentation
+     */
+    void init_schedules(const Model *model);
+
+    /**
+     * TODO: documentation
+     */
+    void init_visibilities(const Model *model);
+
   public:
     ViewConfig config;
     SDL_Window *window = nullptr;
@@ -55,14 +70,13 @@ class Viewmodel {
     int n_jobs = 0;
     int n_schedules = 0;
     std::vector<int> EDF_sorted_jobs;
-    std::vector<Schedule_rect> schedules;
-    std::vector<Schedule_rect> EDF_schedules;
+    std::vector<ScheduleRect> schedules;
     std::map<int, std::vector<int>> deadlines;
     std::map<int, std::vector<int>> submissions;
+    std::vector<VisibilityLine> visibilities;
     std::vector<unsigned> colors;
 
     Viewmodel(const Model *model);
-
 
     /**
      * get rgb values of the color for a given job

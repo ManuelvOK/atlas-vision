@@ -16,6 +16,10 @@ class View {
     Viewmodel *viewmodel = nullptr;
 
     void create_frame_hierarchy();
+
+    void update_schedules();
+
+    void update_visibilities();
 public:
 
     /**

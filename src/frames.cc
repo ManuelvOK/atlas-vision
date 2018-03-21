@@ -81,6 +81,12 @@ DeadlineFrame::DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, 
             std::max(this->max_n_submissions, static_cast<unsigned>(submissions.second.size()));
     }
 
+    /* get maximal deadline count */
+    for (std::pair<int, std::vector<int>> deadlines: this->viewmodel->deadlines) {
+        this->max_n_deadlines =
+            std::max(this->max_n_deadlines, static_cast<unsigned>(deadlines.second.size()));
+    }
+
     /* create submissions */
     for (std::pair<int, std::vector<int>> submissions: this->viewmodel->submissions) {
         int submission_position_x = this->viewmodel->u_to_px_w(submissions.first);
@@ -95,14 +101,51 @@ DeadlineFrame::DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, 
             offset += 7;
         }
     }
+    /* create deadlines */
+    for (std::pair<int, std::vector<int>> deadlines: this->viewmodel->deadlines) {
+        int deadline_position_x = this->viewmodel->u_to_px_w(deadlines.first);
+
+        /* TODO: get rid of magic number */
+        int offset = 7 * (deadlines.second.size() - 1);
+        for (int job: deadlines.second) {
+            DeadlineArrow *a = new DeadlineArrow(deadline_position_x, offset - 1);
+            a->color = this->viewmodel->get_color(job);
+            this->drawables.push_back(a);
+            /* TODO: get rid of magic number */
+            offset -= 7;
+        }
+    }
 }
 
 void DeadlineFrame::update_this(const Model *model) {
     (void) model;
 }
 
+SchedulerFrame::~SchedulerFrame() {
+    this->drawables.clear();
+}
+
 void SchedulerFrame::update_this(const Model *model) {
     (void) model;
+
+    this->drawables.clear();
+    for (ScheduleRect &r: this->viewmodel->schedules) {
+        if (r.scheduler == this->scheduler) {
+            this->drawables.push_back(&r);
+        }
+    }
+}
+
+VisibilityFrame::VisibilityFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
+                                 int width, int height) :
+    Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    for (VisibilityLine &l: this->viewmodel->visibilities) {
+        this->drawables.push_back(&l);
+    }
+}
+
+VisibilityFrame::~VisibilityFrame() {
+    this->drawables.clear();
 }
 
 void VisibilityFrame::update_this(const Model *model) {

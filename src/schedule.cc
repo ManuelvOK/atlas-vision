@@ -5,12 +5,12 @@
 Schedule::Schedule(int id, int job_id, int core, char scheduler, float submission_time, float begin,
         float execution_time)
     : id(id), job_id(job_id), core(core), scheduler(), submission_time(submission_time), begin(), execution_time() {
-    this->scheduler.emplace(submission_time, static_cast<scheduler_type>(scheduler));
+    this->scheduler.emplace(submission_time, static_cast<SchedulerType>(scheduler));
     this->begin.emplace(submission_time, begin);
     this->execution_time.emplace(submission_time, execution_time);
 }
 
-std::tuple<float, scheduler_type, float> Schedule::get_data_at_time(float timestamp) const {
+std::tuple<float, SchedulerType, float> Schedule::get_data_at_time(float timestamp) const {
     float begin_index = this->submission_time;
     for (std::pair<float, float> b: this->begin) {
         if (timestamp < b.first) {
@@ -21,7 +21,7 @@ std::tuple<float, scheduler_type, float> Schedule::get_data_at_time(float timest
 
     /* since the scheduler is not an int, we cannot directly set it and have to use the index */
     float scheduler_index = submission_time;
-    for (std::pair<float, scheduler_type> s: this->scheduler) {
+    for (std::pair<float, SchedulerType> s: this->scheduler) {
         if (timestamp < s.first) {
             break;
         }
@@ -46,7 +46,7 @@ bool Schedule::exists_at_time(float timestamp) const {
 bool Schedule::is_active_at_time(float timestamp) const {
     int begin;
     float execution_time;
-    scheduler_type scheduler;
+    SchedulerType scheduler;
     std::tie(begin, scheduler, execution_time) = this->get_data_at_time(timestamp);
 
     return (begin <= timestamp && begin + execution_time >= timestamp);

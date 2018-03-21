@@ -3,7 +3,7 @@
 #include <map>
 #include <tuple>
 
-enum class scheduler_type {
+enum class SchedulerType {
     ATLAS = 'a',
     recovery = 'r',
     CFS = 'c'
@@ -32,7 +32,7 @@ public:
     /**
      * the scheduler this schedule is on
      */
-    std::map<float, scheduler_type> scheduler;
+    std::map<float, SchedulerType> scheduler;
 
     /**
      * time this schedule gets submittet
@@ -64,7 +64,7 @@ public:
     /**
      * get relevant data for rendering for a given timestamp
      */
-    std::tuple<float, scheduler_type, float> get_data_at_time(float timestamp = 0) const;
+    std::tuple<float, SchedulerType, float> get_data_at_time(float timestamp = 0) const;
 
     /**
      * check if the schedule does exist at a given timestamp

@@ -2,7 +2,7 @@
 
 #include <view_config.h>
 
-SDL_Rect *Schedule_rect::render_position() {
+ScheduleRect *drawable() {
     if (this->changed || this->config->changed) {
         this->calculate_render_position();
     }

@@ -13,6 +13,10 @@ protected:
     Viewmodel *viewmodel;
     int offset_x;
     int offset_y;
+    int margin_left = 0;
+    int margin_top = 0;
+    int margin_right = 0;
+    int margin_bottom = 0;
     std::vector<Drawable *> drawables;
     std::vector<Frame *> childs;
 
@@ -27,6 +31,11 @@ public:
           width(width), height(height) {}
 
     virtual ~Frame();
+
+    void set_margin(int left);
+    void set_margin(int left, int top);
+    void set_margin(int left, int top, int right);
+    void set_margin(int left, int top, int right, int bottom);
 
     virtual void add_child(Frame *child);
     virtual void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y) const;

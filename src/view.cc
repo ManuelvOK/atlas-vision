@@ -24,7 +24,8 @@ View::View(const Model *model) {
     }
     on_exit(exit_SDL_DestroyWindow, this->window);
 
-    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    this->renderer =
+        SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (this->renderer == NULL) {
         std::cerr << "unable to create renderer: " << SDL_GetError() << std::endl;
         exit(EXIT_FAILURE);
@@ -45,24 +46,31 @@ View::~View() {
 void View::create_frame_hierarchy() {
     /* TODO: get magic offset values from config */
     this->window_frame = new WindowFrame(nullptr, this->viewmodel, 0, 0, 800, 600);
-    PlayerFrame *player_frame = new PlayerFrame(this->window_frame, this->viewmodel, 10, 10, 590, 580);
-    SidebarFrame *sidebar_frame = new SidebarFrame(this->window_frame, this->viewmodel, 600, 0, 190, 580);
+    PlayerFrame *player_frame =
+        new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, 580, 580);
+    SidebarFrame *sidebar_frame =
+        new SidebarFrame(this->window_frame, this->viewmodel, 600, 0, 190, 580);
 
     this->window_frame->add_child(player_frame);
     this->window_frame->add_child(sidebar_frame);
 
     SchedulerBackgroundFrame *scheduler_background_frame =
-        new SchedulerBackgroundFrame(player_frame, this->viewmodel, 0, 100, 590, 110);
-    PlayerGridFrame *player_grid_frame = new PlayerGridFrame(player_frame, this->viewmodel, 0, 0, 590, 580);
-    DeadlineFrame *deadline_frame = new DeadlineFrame(player_frame, this->viewmodel, 0, 0, 590, 100);
-    SchedulerFrame *ATLAS_frame = new SchedulerFrame(player_frame, this->viewmodel, 0, 100, 590, 30);
-    ATLAS_frame->width = 100;
-    ATLAS_frame->height = 20;
-    SchedulerFrame *recovery_frame = new SchedulerFrame(player_frame, this->viewmodel, 0, 140, 590, 30);
-    SchedulerFrame *CFS_frame = new SchedulerFrame(player_frame, this->viewmodel, 0, 180, 590, 30);
-    VisibilityFrame *visibility_frame = new VisibilityFrame(player_frame, this->viewmodel, 0, 100, 590, 110);
+        new SchedulerBackgroundFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
+    PlayerGridFrame *player_grid_frame =
+        new PlayerGridFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
+    DeadlineFrame *deadline_frame =
+        new DeadlineFrame(player_frame, this->viewmodel, 0, 0, 580, 100);
+    deadline_frame->set_margin(10);
+    SchedulerFrame *ATLAS_frame =
+        new SchedulerFrame(player_frame, this->viewmodel, 0, 100, 580, 20, SchedulerType::ATLAS);
+    SchedulerFrame *recovery_frame =
+        new SchedulerFrame(player_frame, this->viewmodel, 0, 126, 580, 20, SchedulerType::recovery);
+    SchedulerFrame *CFS_frame =
+        new SchedulerFrame(player_frame, this->viewmodel, 0, 152, 580, 20, SchedulerType::CFS);
+    VisibilityFrame *visibility_frame =
+        new VisibilityFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
     PlayerPositionFrame *player_position_frame =
-        new PlayerPositionFrame(player_frame, this->viewmodel, 0, 0, 590, 580);
+        new PlayerPositionFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
 
     player_frame->add_child(scheduler_background_frame);
     player_frame->add_child(player_grid_frame);
@@ -73,15 +81,64 @@ void View::create_frame_hierarchy() {
     player_frame->add_child(visibility_frame);
     player_frame->add_child(player_position_frame);
 
-    DependencyFrame *dependency_frame = new DependencyFrame(sidebar_frame, this->viewmodel, 0, 0, 190, 400);
+    DependencyFrame *dependency_frame =
+        new DependencyFrame(sidebar_frame, this->viewmodel, 0, 0, 190, 400);
     EventFrame *event_frame = new EventFrame(sidebar_frame, this->viewmodel, 0, 400, 190, 170);
 
     sidebar_frame->add_child(dependency_frame);
     sidebar_frame->add_child(event_frame);
 }
 
+void View::update_schedules() {
+    float timestamp = this->model->player.position;
+    for (std::pair<int, Schedule> s: this->model->schedules) {
+        ScheduleRect &schedule_rect = this->viewmodel->schedules[s.first];
+
+        int begin;
+        float execution_time;
+        SchedulerType scheduler;
+        std::tie(begin, scheduler, execution_time) = s.second.get_data_at_time(timestamp);
+
+        schedule_rect.begin = begin;
+        if (scheduler == SchedulerType::CFS && s.second.is_active_at_time(timestamp)) {
+            schedule_rect.time = timestamp - begin;
+        } else {
+            schedule_rect.time = execution_time;
+        }
+        schedule_rect.scheduler = scheduler;
+        schedule_rect.visible = s.second.exists_at_time(timestamp);
+        schedule_rect.recalculate_position();
+    }
+}
+
+void View::update_visibilities() {
+    float timestamp = this->model->player.position;
+    for (unsigned i = 0; i < this->model->cfs_visibilities.size(); ++i) {
+        Cfs_visibility visibility = this->model->cfs_visibilities[i];
+        VisibilityLine &line = this->viewmodel->visibilities[i];
+        if (not visibility.is_active_at_time(timestamp)) {
+            line.visible = false;
+            continue;
+        }
+        ScheduleRect schedule = this->viewmodel->schedules[visibility.schedule_id];
+        line.begin_x = this->viewmodel->u_to_px_w(schedule.begin);
+        /* TODO: get rid of magic number */
+        line.begin_y = 10;
+        line.end_x = this->viewmodel->u_to_px_w(timestamp);
+        line.end_y = 62;
+        line.visible = true;
+    }
+}
+
 void View::render() {
+    /* update viewmodel */
+    this->update_schedules();
+    this->update_visibilities();
+
+    /* update frames */
     this->window_frame->update(this->model);
+
+    /* render frames */
     this->window_frame->draw(renderer, 0, 0);
     SDL_RenderPresent(renderer);
 

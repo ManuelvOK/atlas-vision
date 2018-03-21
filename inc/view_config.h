@@ -11,7 +11,7 @@ public:
     } window;
     class {
         public:
-        float width_px = 30;
+        float width_px = 12;
         float height_px = 20;
     } unit;
     class {
