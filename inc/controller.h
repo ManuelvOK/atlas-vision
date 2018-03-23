@@ -8,8 +8,9 @@
 #include <job.h>
 #include <schedule.h>
 #include <schedule_change.h>
+#include <model.h>
 
-
+class View;
 
 /**
  * initialises the application model.
@@ -25,7 +26,7 @@ const Model *init_model(void);
  * @param input
  *   object with input data
  */
-void handle_input(const struct input *input);
+void handle_input(const struct input *input, View *view);
 
 /**
  * parse data from stdin

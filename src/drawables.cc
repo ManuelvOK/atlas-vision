@@ -7,7 +7,8 @@
 
 #include <viewmodel.h>
 
-Arrow::Arrow(std::array<short,9> arrow_coords_x, std::array<short,9> arrow_coords_y, int x, int y) :
+Arrow::Arrow(const Viewmodel *viewmodel, std::array<short,9> arrow_coords_x, std::array<short,9> arrow_coords_y, int x, int y) :
+    Drawable(viewmodel),
     arrow_coords_x(arrow_coords_x), arrow_coords_y(arrow_coords_y), x(x), y(y) {
 }
 
@@ -17,11 +18,12 @@ void Arrow::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
     short pos_y[std::tuple_size<decltype(this->arrow_coords_x)>::value];
     for (unsigned j = 0; j < this->arrow_coords_x.size(); ++j) {
         /* TODO: get rid of magic 5 */
-        pos_x[j] = this->arrow_coords_x[j] / 5.0 + this->x + offset_x;
+        pos_x[j] = this->arrow_coords_x[j] / 5.0 + this->viewmodel->u_to_px_w(this->x) + offset_x;
+        /* TODO: y coord should go through viewmodel, too */
         pos_y[j] = this->arrow_coords_y[j] / 5.0 + this->y + offset_y;
     }
-    filledPolygonRGBA(renderer, pos_x, pos_y, this->arrow_coords_x.size(), this->color.r, this->color.g,
-                      this->color.b, 255);
+    filledPolygonRGBA(renderer, pos_x, pos_y, this->arrow_coords_x.size(), this->color.r,
+                      this->color.g, this->color.b, 255);
 }
 
 void Rect::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
@@ -48,7 +50,7 @@ void Line::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
     SDL_RenderDrawLine(renderer, this->begin_x + offset_x, this->begin_y + offset_y,
                        this->end_x + offset_x, this->end_y + offset_y);
 }
-ScheduleRect::ScheduleRect(const Viewmodel *viewmodel) : viewmodel(viewmodel) {
+ScheduleRect::ScheduleRect(const Viewmodel *viewmodel) : Rect(viewmodel) {
     this->border = true;
     /* TODO: get rid of magic number */
     this->border_color = RGB(110);

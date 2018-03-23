@@ -68,3 +68,8 @@ void Frame::update(const Model *model) {
         child->update(model);
     }
 }
+
+Position Frame::global_position() const {
+    Position local_position(this->offset_x, this->offset_y);
+    return (this->parent) ? this->parent->global_position() + local_position : local_position;
+}

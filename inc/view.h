@@ -11,6 +11,18 @@ class View {
     SDL_Renderer *renderer = nullptr;
 
     WindowFrame *window_frame = nullptr;
+    PlayerFrame *player_frame = nullptr;
+    SidebarFrame *sidebar_frame = nullptr;
+    SchedulerBackgroundFrame *scheduler_background_frame = nullptr;
+    PlayerGridFrame *player_grid_frame = nullptr;
+    DeadlineFrame *deadline_frame = nullptr;
+    SchedulerFrame *ATLAS_frame = nullptr;
+    SchedulerFrame *recovery_frame = nullptr;
+    SchedulerFrame *CFS_frame = nullptr;
+    VisibilityFrame *visibility_frame = nullptr;
+    PlayerPositionFrame *player_position_frame = nullptr;
+    DependencyFrame *dependency_frame = nullptr;
+    EventFrame *event_frame = nullptr;
     const Model *model = nullptr;
 
     Viewmodel *viewmodel = nullptr;
@@ -77,7 +89,7 @@ public:
      * @return
      *   player position unter mouse pointer
      */
-    float position_in_player(int x, int y);
+    float position_in_player(int x, int y) const;
 
     /**
      * The Window size has changed, that means the rendering has to adjust scaling.
@@ -88,4 +100,6 @@ public:
      *   window height
      */
     void update_window(int width, int height);
+
+    void rescale(float factor);
 };

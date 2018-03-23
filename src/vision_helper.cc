@@ -18,15 +18,6 @@ int get_hovered_job(int x, int y) {
 
 
 float position_in_player(int x, int y) {
-    (void) y;
-    x -= config.window.margin_x_px;
-    if (x < 0) {
-        return 0;
-    }
-    if (x > u_to_px_w(config.player.width_u)) {
-        return model->player.max_position;
-    }
-    return x * 1.0f / u_to_px_w(config.player.width_u) * model->player.max_position;
 }
 
 

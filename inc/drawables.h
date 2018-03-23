@@ -16,7 +16,7 @@ public:
     int x;
     int y;
 
-    Arrow(std::array<short,9> arrow_coords_x, std::array<short,9> arrow_coords_y, int x = 0,
+    Arrow(const Viewmodel *viewmodel, std::array<short,9> arrow_coords_x, std::array<short,9> arrow_coords_y, int x = 0,
           int y = 0);
 
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
@@ -24,16 +24,20 @@ public:
 
 class DeadlineArrow : public Arrow {
 public:
-    DeadlineArrow(int x, int y) : Arrow({-10, 10, 10, 40, 50, 0, -50, -40, -10},
-                                        {0, 0, 80, 50, 60, 110, 60, 50, 80},
-                                        x, y) {};
+    DeadlineArrow(const Viewmodel *viewmodel, int x, int y)
+        : Arrow(viewmodel,
+                {-10, 10, 10, 40, 50, 0, -50, -40, -10},
+                {0, 0, 80, 50, 60, 110, 60, 50, 80},
+                x, y) {};
 };
 
 class SubmissionArrow : public Arrow {
 public:
-    SubmissionArrow(int x, int y) : Arrow({-10, 10, 10, 40, 50, 0, -50, -40, -10},
-                                          {0, 0, -80, -50, -60, -110, -60, -50, -80},
-                                          x, y) {};
+    SubmissionArrow(const Viewmodel *viewmodel, int x, int y) :
+        Arrow(viewmodel,
+              {-10, 10, 10, 40, 50, 0, -50, -40, -10},
+              {0, 0, -80, -50, -60, -110, -60, -50, -80},
+              x, y) {};
 };
 
 class Rect : public Drawable {
@@ -43,6 +47,8 @@ public:
     RGB border_color;
     bool border = false;
 
+    Rect(const Viewmodel *viewmodel) : Drawable(viewmodel) {}
+
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
 };
 
@@ -50,9 +56,8 @@ class ScheduleRect : public Rect {
 public:
     SchedulerType scheduler = SchedulerType::CFS;
     int begin = 0;
-    int time = 0;
+    float time = 0.;
     bool visible = false;
-    const Viewmodel *viewmodel;
 
     ScheduleRect(const Viewmodel *viewmodel);
 
@@ -62,6 +67,8 @@ public:
 };
 
 class SchedulerRect : public Rect {
+public:
+    SchedulerRect(const Viewmodel *viewmodel) : Rect(viewmodel) {}
 
 };
 
@@ -73,9 +80,9 @@ public:
     int end_y = 0;
 
     RGB color;
-    Line() = default;
-    Line(int begin_x, int begin_y, int end_x, int end_y)
-        : begin_x(begin_x), begin_y(begin_y), end_x(end_x), end_y(end_y) {}
+    Line(const Viewmodel *viewmodel) : Drawable(viewmodel) {}
+    Line(const Viewmodel *viewmodel, int begin_x, int begin_y, int end_x, int end_y)
+        : Drawable(viewmodel), begin_x(begin_x), begin_y(begin_y), end_x(end_x), end_y(end_y) {}
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
 };
 
@@ -84,6 +91,6 @@ public:
     bool visible = false;
     const Viewmodel *viewmodel;
 
-    VisibilityLine(Viewmodel *viewmodel) : viewmodel(viewmodel) {}
+    VisibilityLine(Viewmodel *viewmodel) : Line(viewmodel) {}
     virtual void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const;
 };

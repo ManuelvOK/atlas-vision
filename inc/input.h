@@ -1,5 +1,7 @@
 #pragma once
+#include <view.h>
 
+class View;
 class Model;
 /**
  * Struct to save input data to
@@ -16,6 +18,7 @@ struct input {
         int rewind;
         float position;
     } player;
+    float rescale;
     struct {
         int changed;
         int width;
@@ -30,4 +33,4 @@ struct input {
  * @param input
  *   Struct to save input data to
  */
-void read_input(struct input *input);
+void read_input(struct input *input, const View *view);

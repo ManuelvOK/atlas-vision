@@ -80,7 +80,7 @@ const Model *init_model(void) {
     return model;
 }
 
-void handle_input(const struct input *input) {
+void handle_input(const struct input *input, View *view) {
     if (input->quit) {
         model->running = 0;
         return;
@@ -95,6 +95,7 @@ void handle_input(const struct input *input) {
     if (input->player.position >= 0) {
         model->player.set(input->player.position);
     }
+    view->rescale(input->rescale);
 #if 0
     /* window changed */
     if (input->window.changed) {

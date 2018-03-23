@@ -5,6 +5,8 @@
 
 Viewmodel::Viewmodel(const Model *model) :
     config(), EDF_sorted_jobs(), schedules(), deadlines(), submissions(), colors() {
+    this->unit_w = this->config.unit.width_px;
+    this->unit_h = this->config.unit.height_px;
     this->n_jobs = model->jobs.size();
     this->n_schedules = model->schedules.size();
     this->init_colors();
@@ -127,19 +129,19 @@ bool Viewmodel::point_inside_rect(int x, int y, const SDL_Rect *r) const {
 }
 
 int Viewmodel::u_to_px_w(float unit) const {
-    return (unit * this->config.unit.width_px);
+    return (unit * this->unit_w);
 }
 
 int Viewmodel::u_to_px_h(float unit) const {
-    return (unit * this->config.unit.height_px);
+    return (unit * this->unit_h);
 }
 
 float Viewmodel::px_to_u_w(int pixel) const {
-    return (pixel / this->config.unit.width_px);
+    return (pixel / this->unit_w);
 }
 
 float Viewmodel::px_to_u_h(int pixel) const {
-    return (pixel / this->config.unit.height_px);
+    return (pixel / this->unit_h);
 }
 
 void Viewmodel::recompute_config(const Model *model) {

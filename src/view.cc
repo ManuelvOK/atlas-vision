@@ -46,47 +46,41 @@ View::~View() {
 void View::create_frame_hierarchy() {
     /* TODO: get magic offset values from config */
     this->window_frame = new WindowFrame(nullptr, this->viewmodel, 0, 0, 800, 600);
-    PlayerFrame *player_frame =
-        new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, 580, 580);
-    SidebarFrame *sidebar_frame =
-        new SidebarFrame(this->window_frame, this->viewmodel, 600, 0, 190, 580);
+    this->player_frame = new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, 580, 580);
+    this->sidebar_frame = new SidebarFrame(this->window_frame, this->viewmodel, 600, 0, 190, 580);
 
     this->window_frame->add_child(player_frame);
     this->window_frame->add_child(sidebar_frame);
 
-    SchedulerBackgroundFrame *scheduler_background_frame =
+    this->scheduler_background_frame =
         new SchedulerBackgroundFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
-    PlayerGridFrame *player_grid_frame =
-        new PlayerGridFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
-    DeadlineFrame *deadline_frame =
-        new DeadlineFrame(player_frame, this->viewmodel, 0, 0, 580, 100);
-    deadline_frame->set_margin(10);
-    SchedulerFrame *ATLAS_frame =
+    this->player_grid_frame = new PlayerGridFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
+    this->deadline_frame = new DeadlineFrame(player_frame, this->viewmodel, 0, 0, 580, 100);
+    this->deadline_frame->set_margin(10);
+    this->ATLAS_frame =
         new SchedulerFrame(player_frame, this->viewmodel, 0, 100, 580, 20, SchedulerType::ATLAS);
-    SchedulerFrame *recovery_frame =
+    this->recovery_frame =
         new SchedulerFrame(player_frame, this->viewmodel, 0, 126, 580, 20, SchedulerType::recovery);
-    SchedulerFrame *CFS_frame =
+    this->CFS_frame =
         new SchedulerFrame(player_frame, this->viewmodel, 0, 152, 580, 20, SchedulerType::CFS);
-    VisibilityFrame *visibility_frame =
-        new VisibilityFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
-    PlayerPositionFrame *player_position_frame =
+    this->visibility_frame = new VisibilityFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
+    this->player_position_frame =
         new PlayerPositionFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
 
-    player_frame->add_child(scheduler_background_frame);
-    player_frame->add_child(player_grid_frame);
-    player_frame->add_child(deadline_frame);
-    player_frame->add_child(ATLAS_frame);
-    player_frame->add_child(recovery_frame);
-    player_frame->add_child(CFS_frame);
-    player_frame->add_child(visibility_frame);
-    player_frame->add_child(player_position_frame);
+    this->player_frame->add_child(scheduler_background_frame);
+    this->player_frame->add_child(player_grid_frame);
+    this->player_frame->add_child(deadline_frame);
+    this->player_frame->add_child(ATLAS_frame);
+    this->player_frame->add_child(recovery_frame);
+    this->player_frame->add_child(CFS_frame);
+    this->player_frame->add_child(visibility_frame);
+    this->player_frame->add_child(player_position_frame);
 
-    DependencyFrame *dependency_frame =
-        new DependencyFrame(sidebar_frame, this->viewmodel, 0, 0, 190, 400);
-    EventFrame *event_frame = new EventFrame(sidebar_frame, this->viewmodel, 0, 400, 190, 170);
+    this->dependency_frame = new DependencyFrame(sidebar_frame, this->viewmodel, 0, 0, 190, 400);
+    this->event_frame = new EventFrame(sidebar_frame, this->viewmodel, 0, 400, 190, 170);
 
-    sidebar_frame->add_child(dependency_frame);
-    sidebar_frame->add_child(event_frame);
+    this->sidebar_frame->add_child(dependency_frame);
+    this->sidebar_frame->add_child(event_frame);
 }
 
 void View::update_schedules() {
@@ -146,4 +140,23 @@ void View::render() {
     /* reset config_changed flag */
     config.changed = false;
 #endif
+}
+
+float View::position_in_player(int x, int y) const {
+    (void) y;
+    float shown_player_part =
+        this->player_frame->width * 1.0 / this->viewmodel->u_to_px_w(this->model->player.max_position);
+    float max_visible_player_position = shown_player_part * this->model->player.max_position;
+    x -= this->player_frame->global_position().x;
+    if (x < 0) {
+        return 0;
+    }
+    if (x > this->player_frame->width) {
+        return max_visible_player_position;
+    }
+    return x * 1.0f / this->player_frame->width * max_visible_player_position;
+}
+void View::rescale(float factor) {
+    this->viewmodel->unit_w *= factor;
+    this->viewmodel->rescaled = true;
 }

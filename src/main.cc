@@ -30,10 +30,10 @@ int main(int argc, char *argv[]) {
     }
 
     View view(model);
-    struct input input = {0, 0, 0, {0, 0, 0}, {0, 0, 0}};
+    struct input input = {0, 0, 0, {0, 0, 0}, 1, {0, 0, 0}};
     while (model->running) {
-        read_input(&input);
-        handle_input(&input);
+        read_input(&input, &view);
+        handle_input(&input, &view);
         control();
         view.render();
         SDL_Delay(MAGIC_33);

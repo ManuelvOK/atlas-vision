@@ -67,6 +67,11 @@ class Viewmodel {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
 
+    float unit_w;
+    float unit_h;
+
+    bool rescaled = false;
+
     int n_jobs = 0;
     int n_schedules = 0;
     std::vector<int> EDF_sorted_jobs;

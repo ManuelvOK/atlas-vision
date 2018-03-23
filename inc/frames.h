@@ -13,6 +13,7 @@ public:
 };
 
 class PlayerFrame : public Frame {
+    int shift = 0;
 public:
     PlayerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                 int height)
@@ -28,10 +29,12 @@ public:
 };
 
 class PlayerGridFrame : public Frame {
+    int n_lines;
 public:
     PlayerGridFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                     int height);
     virtual void update_this(const Model *model);
+    void rescale();
 };
 
 class DeadlineFrame : public Frame {

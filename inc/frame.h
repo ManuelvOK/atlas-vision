@@ -7,6 +7,17 @@
 #include <viewmodel.h>
 #include <drawable.h>
 
+class Position {
+public:
+    int x;
+    int y;
+
+    Position(int x, int y) : x(x), y(y) {}
+    Position operator+(Position &p) {
+        return Position(this->x + p.x, this->y + p.y);
+    }
+};
+
 class Frame {
 protected:
     Frame *parent;
@@ -40,4 +51,5 @@ public:
     virtual void add_child(Frame *child);
     virtual void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y) const;
     virtual void update(const Model *model);
+    virtual Position global_position() const;
 };
