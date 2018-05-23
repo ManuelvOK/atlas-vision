@@ -69,7 +69,7 @@ PlayerGridFrame::PlayerGridFrame(Frame *parent, Viewmodel *viewmodel, int offset
         this->drawables.push_back(l);
     }
 
-    for (std::pair<const int, std::vector<int>> &s: viewmodel->submissions) {
+    for (std::pair<const int, std::vector<int>> &s: this->viewmodel->submissions) {
         Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(s.first), 0,
                            this->viewmodel->u_to_px_w(s.first), this->height);
         l->color = RGB(0, 255, 0);
@@ -86,11 +86,19 @@ void PlayerGridFrame::update_this(const Model *model) {
 }
 
 void PlayerGridFrame::rescale() {
-    for (int i = 0; i <= this->n_lines; ++i) {
+    int i = 0;
+    for (; i <= this->n_lines; ++i) {
         Line *l = static_cast<Line *>(this->drawables[i]);
         /* TODO: get rid of magic 1000 */
         l->begin_x = this->viewmodel->u_to_px_w(i * 1000);
         l->end_x = this->viewmodel->u_to_px_w(i * 1000);
+    }
+
+    for (std::pair<const int, std::vector<int>> &s: this->viewmodel->submissions) {
+        Line *l = static_cast<Line *>(this->drawables[i]);
+        l->begin_x = this->viewmodel->u_to_px_w(s.first);
+        l->end_x = this->viewmodel->u_to_px_w(s.first);
+        ++i;
     }
 }
 
