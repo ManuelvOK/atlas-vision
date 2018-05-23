@@ -33,87 +33,87 @@ c 1
 # JOBS #
 ########
 
-j 18 2 2 0 #A1 id=0
-j 25 1 1 0 #A2 id=1
-j 32 2 2 5 #A3 id=2
-j 39 2 2 5 #A4 id=3
+j 18000 2000 2000 0000 #A1 id=0
+j 25000 1000 1000 0000 #A2 id=1
+j 32000 2000 2000 5000 #A3 id=2
+j 39000 2000 2000 5000 #A4 id=3
 
-j 20 1 1 0 #B1 id=4
-j 24 2 2 2 #B2 id=5
-j 28 1 1 2 #B3 id=6
-j 32 2 2 7 #B4 id=7
+j 20000 1000 1000 0000 #B1 id=4
+j 24000 2000 2000 2000 #B2 id=5
+j 28000 1000 1000 2000 #B3 id=6
+j 32000 2000 2000 7000 #B4 id=7
 
-j 16 2 2 0 #X0 id=8
-j 24 3 3 0 #X1 id=9
-j 20 2 2 0 #X2 id=10
-j 22 1 1 7 #X3 id=11
+j 16000 2000 2000 0000 #X0 id=8
+j 24000 3000 3000 0000 #X1 id=9
+j 20000 2000 2000 0000 #X2 id=10
+j 22000 1000 1000 7000 #X3 id=11
 
 #############
 # schedules #
 #############
 
 # timestamp 0
-s 0 8  0 a 0  13 2 #X0 id=0
-v 0 0 8 # Schedule for X0 is visible for CFS from 0 to 8
-s 1 0  0 a 0  15 2 #A1 id=1
-s 2 10 0 a 0  17 2 #X2 id=2
-s 3 4  0 a 0  19 1 #B1 id=3
-s 4 9  0 a 0  21 3 #X1 id=4
-s 5 1  0 a 0  24 1 #A2 id=5
-s 6 8  0 c 0  0  8 #X0 CFS id=6
+s 0  8  0 a 0000  13000 2000 #X0 id=0
+v 0  0000 8000 # Schedule for X0 is visible for CFS from 0 to 8
+s 1  0  0 a 0000  15000 2000 #A1 id=1
+s 2  10 0 a 0000  17000 2000 #X2 id=2
+s 3  4  0 a 0000  19000 1000 #B1 id=3
+s 4  9  0 a 0000  21000 3000 #X1 id=4
+s 5  1  0 a 0000  24000 1000 #A2 id=5
+s 6  8  0 c 0000  00000 8000 #X0 CFS id=6
 
-# timestamp 2
-s 7 5  0 a 2  22 2 #B2 id=7
-s 8 6  0 a 2  27 1 #B3 id=8
+# timestamp 2000
+s 7  5  0 a 2000  22000 2000 #B2 id=7
+s 8  6  0 a 2000  27000 1000 #B3 id=8
 
-# timestamp 5
-s 9 2  0 a 5  30 2 #A3 id=9
-s 10 3  0 a 5  37 2 #A4 id=10
+# timestamp 5000
+s 9  2  0 a 5000  30000 2000 #A3 id=9
+s 10 3  0 a 5000  37000 2000 #A4 id=10
 
-# timestamp 7
-s 11 11 0 a 7  18 1 #X3 id=11
-s 12 7  0 a 7  30 2 #B4 id=12
+# timestamp 7000
+s 11 11 0 a 7000  18000 1000 #X3 id=11
+s 12 7  0 a 7000  30000 2000 #B4 id=12
 
-# timestamp 8
-s 13 0  0 c 8  8  5 #A1 CFS id=13
-v 1 8 13 # Schedule for A1 is visible for CFS from 8 to 13
+# timestamp 8000
+s 13 0  0 c 8000  8000  5000 #A1 CFS id=13
+v 1 8000 13000 # Schedule for A1 is visible for CFS from 8 to 13
 
-# timestamp 13
-v 2 13.75 15 # Schedule for X2 is visible for CFS from 8 to 13
+# timestamp 13000
+v 2 13750 15000 # Schedule for X2 is visible for CFS from 8 to 13
 
-# timestamp 17
-s 14 10 0 r 17 25 2 #X2 has a code dependency from X1 so it gets to recovery. id=14
+# timestamp 17000
+s 14 10 0 r 17000 25000 2000 #X2 has a code dependency from X1 so it gets to recovery. id=14
 
-# timestamp 32
-s 15 3  0 c 32 32 5 #A4 CFS id=15
-v 10 32 37 # Schedule for A4 is visible for CFS from 32 to 37
+# timestamp 32000
+s 15 3  0 c 32000 32000 5000 #A4 CFS id=15
+v 10 32000 37000 # Schedule for A4 is visible for CFS from 32 to 37
 
 #####################
 # altered Schedules #
 #####################
 
-# timestamp 2
-a b 2 0  12 #X0 1 back
-a b 2 1  14 #A1 1 back
-a b 2 2  16 #X2 1 back
-a b 2 3  18 #B1 1 back
-a b 2 4  19 #X1 2 back
+# timestamp 2000
+a b 2000 0  12000 #X0 1 back
+a b 2000 1  14000 #A1 1 back
+a b 2000 2  16000 #X2 1 back
+a b 2000 3  18000 #B1 1 back
+a b 2000 4  19000 #X1 2 back
 
-# timestamp 7
-a b 7 0 11 #X0 1 back
-a b 7 1 13 #A1 1 back
-a b 7 2 15 #X2 1 back
-a b 7 3 17 #B1 1 back
-a b 7 9 28 #A3 2 back
+# timestamp 7000
+a b 7000 0 11000 #X0 1 back
+a b 7000 1 13000 #A1 1 back
+a b 7000 2 15000 #X2 1 back
+a b 7000 3 17000 #B1 1 back
+a b 7000 9 28000 #A3 2 back
 
-# timestamp 8
-a d 8  0 #X0 atlas schedule deleted because CFS did it
+# timestamp 8000
+a d 8000 0 #X0 atlas schedule deleted because CFS did it
 
-#timestamp 13
-a e 13.75 1 0.75 #A1 had time on CFS so its real time gets shortened
+#timestamp 13750
+a e 13750 1 750 #A1 had time on CFS so its real time gets shortened
 
-#timestamp 17
-a d 17 2 #X2 has a code dependency from X1 so it gets to recovery
+#timestamp 17000
+a d 17000 2 #X2 has a code dependency from X1 so it gets to recovery
 
-#timestamp 37
-a e 37.75 10 0.75
+#timestamp 37750
+a e 37750 10 750
