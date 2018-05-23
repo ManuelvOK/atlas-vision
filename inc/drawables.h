@@ -56,7 +56,7 @@ class ScheduleRect : public Rect {
 public:
     SchedulerType scheduler = SchedulerType::CFS;
     int begin = 0;
-    float time = 0.;
+    int time = 0;
     bool visible = false;
 
     ScheduleRect(const Viewmodel *viewmodel);

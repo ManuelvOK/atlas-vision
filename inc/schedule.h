@@ -32,50 +32,50 @@ public:
     /**
      * the scheduler this schedule is on
      */
-    std::map<float, SchedulerType> scheduler;
+    std::map<int, SchedulerType> scheduler;
 
     /**
      * time this schedule gets submittet
      */
-    float submission_time;
+    int submission_time;
 
     /**
      * start times of job execution
      * this is a map for storing different execution times for different timestamps
      */
-    std::map<float, float> begin;
+    std::map<int, int> begin;
 
     /**
      * possible end of this schedule
      */
-    float end = -1;
+    int end = -1;
 
     /**
      * time the scheduled job runs
      */
-    std::map<float, float> execution_time;
+    std::map<int, int> execution_time;
 
     /**
      * Constructor
      */
-    Schedule(int id, int job_id, int core, char scheduler, float submission_time, float begin,
-            float execution_time);
+    Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
+            int execution_time);
 
     /**
      * get relevant data for rendering for a given timestamp
      */
-    std::tuple<float, SchedulerType, float> get_data_at_time(float timestamp = 0) const;
+    std::tuple<int, SchedulerType, int> get_data_at_time(int timestamp = 0) const;
 
     /**
      * check if the schedule does exist at a given timestamp
      */
-    bool exists_at_time(float timestamp) const;
+    bool exists_at_time(int timestamp) const;
 
     /**
      * check if the schedule gets executed at a given timestamp
      */
-    bool is_active_at_time(float timestamp) const;
+    bool is_active_at_time(int timestamp) const;
 
-    float get_maximal_end() const;
+    int get_maximal_end() const;
 };
 

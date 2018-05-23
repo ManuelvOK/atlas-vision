@@ -13,7 +13,7 @@ void Player::rewind() {
     this->position = 0;
 }
 
-void Player::set(float position) {
+void Player::set(int position) {
     this->position = position;
 }
 

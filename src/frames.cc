@@ -59,12 +59,20 @@ PlayerGridFrame::PlayerGridFrame(Frame *parent, Viewmodel *viewmodel, int offset
                                  int width, int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     /* add verticle lines */
-    this->n_lines = this->viewmodel->px_to_u_w(this->width);
+    /* TODO: get rid of magic 1000 */
+    this->n_lines = this->viewmodel->px_to_u_w(this->width) / 1000;
     for (int i = 0; i <= n_lines; ++i) {
         int color = (i % 5 == 0) ? this->viewmodel->config.player.grid_dark_grey : this->viewmodel->config.player.grid_grey;
-        Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(i), 0,
-                           this->viewmodel->u_to_px_w(i), this->height);
+        Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(i * 1000), 0,
+                           this->viewmodel->u_to_px_w(i * 1000), this->height);
         l->color = RGB(color);
+        this->drawables.push_back(l);
+    }
+
+    for (std::pair<const int, std::vector<int>> &s: viewmodel->submissions) {
+        Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(s.first), 0,
+                           this->viewmodel->u_to_px_w(s.first), this->height);
+        l->color = RGB(0, 255, 0);
         this->drawables.push_back(l);
     }
 }
@@ -80,8 +88,9 @@ void PlayerGridFrame::update_this(const Model *model) {
 void PlayerGridFrame::rescale() {
     for (int i = 0; i <= this->n_lines; ++i) {
         Line *l = static_cast<Line *>(this->drawables[i]);
-        l->begin_x = this->viewmodel->u_to_px_w(i);
-        l->end_x = this->viewmodel->u_to_px_w(i);
+        /* TODO: get rid of magic 1000 */
+        l->begin_x = this->viewmodel->u_to_px_w(i * 1000);
+        l->end_x = this->viewmodel->u_to_px_w(i * 1000);
     }
 }
 

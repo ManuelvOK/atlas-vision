@@ -169,7 +169,7 @@ void parse_job(std::stringstream *line) {
 
 void parse_schedule(std::stringstream *line) {
     int id, job_id, core;
-    float submission_time, begin, time;
+    int submission_time, begin, time;
     char scheduler;
     *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
     model->schedules.emplace(id, Schedule{id, job_id, core, scheduler, submission_time, begin, time});
@@ -177,8 +177,8 @@ void parse_schedule(std::stringstream *line) {
 
 void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes) {
     int schedule_id;
-    float timestamp;
-    float value = -1;
+    int timestamp;
+    int value = -1;
     char type;
     *line >> type >> timestamp >> schedule_id;
     if (static_cast<change_type>(type) != change_type::erase) {
@@ -189,7 +189,7 @@ void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes
 
 void parse_cfs_visibility(std::stringstream *line) {
     int schedule_id;
-    float begin, end;
+    int begin, end;
     *line >> schedule_id >> begin >> end;
     model->cfs_visibilities.emplace_back(schedule_id, begin, end);
 }

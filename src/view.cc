@@ -84,12 +84,12 @@ void View::create_frame_hierarchy() {
 }
 
 void View::update_schedules() {
-    float timestamp = this->model->player.position;
+    int timestamp = this->model->player.position;
     for (std::pair<int, Schedule> s: this->model->schedules) {
         ScheduleRect &schedule_rect = this->viewmodel->schedules[s.first];
 
         int begin;
-        float execution_time;
+        int execution_time;
         SchedulerType scheduler;
         std::tie(begin, scheduler, execution_time) = s.second.get_data_at_time(timestamp);
 
@@ -106,7 +106,7 @@ void View::update_schedules() {
 }
 
 void View::update_visibilities() {
-    float timestamp = this->model->player.position;
+    int timestamp = this->model->player.position;
     for (unsigned i = 0; i < this->model->cfs_visibilities.size(); ++i) {
         Cfs_visibility visibility = this->model->cfs_visibilities[i];
         VisibilityLine &line = this->viewmodel->visibilities[i];
@@ -142,11 +142,11 @@ void View::render() {
 #endif
 }
 
-float View::position_in_player(int x, int y) const {
+int View::position_in_player(int x, int y) const {
     (void) y;
     float shown_player_part =
         this->player_frame->width * 1.0 / this->viewmodel->u_to_px_w(this->model->player.max_position);
-    float max_visible_player_position = shown_player_part * this->model->player.max_position;
+    int max_visible_player_position = shown_player_part * this->model->player.max_position;
     x -= this->player_frame->global_position().x;
     if (x < 0) {
         return 0;

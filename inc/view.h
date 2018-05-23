@@ -89,7 +89,7 @@ public:
      * @return
      *   player position unter mouse pointer
      */
-    float position_in_player(int x, int y) const;
+    int position_in_player(int x, int y) const;
 
     /**
      * The Window size has changed, that means the rendering has to adjust scaling.

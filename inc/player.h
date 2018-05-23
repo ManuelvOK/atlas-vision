@@ -15,21 +15,21 @@ public:
     /**
      * this value gets added to the position every tick
      */
-    float speed = 0.04f;
+    int speed = 200;
     /**
      * current position of player
      */
-    float position = 0;
+    int position = 0;
     /**
      * length of full simulation
      */
-    float max_position = 0;
+    int max_position = 0;
 
     void init(const Model *model);
 
     void toggle();
     void rewind();
-    void set(float position);
+    void set(int position);
     void tick();
 
 };

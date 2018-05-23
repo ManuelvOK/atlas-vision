@@ -16,7 +16,7 @@ struct input {
     struct {
         int toggle_play;
         int rewind;
-        float position;
+        int position;
     } player;
     float rescale;
     struct {

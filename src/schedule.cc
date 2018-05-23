@@ -2,17 +2,17 @@
 
 #include <iostream>
 
-Schedule::Schedule(int id, int job_id, int core, char scheduler, float submission_time, float begin,
-        float execution_time)
+Schedule::Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
+        int execution_time)
     : id(id), job_id(job_id), core(core), scheduler(), submission_time(submission_time), begin(), execution_time() {
     this->scheduler.emplace(submission_time, static_cast<SchedulerType>(scheduler));
     this->begin.emplace(submission_time, begin);
     this->execution_time.emplace(submission_time, execution_time);
 }
 
-std::tuple<float, SchedulerType, float> Schedule::get_data_at_time(float timestamp) const {
-    float begin_index = this->submission_time;
-    for (std::pair<float, float> b: this->begin) {
+std::tuple<int, SchedulerType, int> Schedule::get_data_at_time(int timestamp) const {
+    int begin_index = this->submission_time;
+    for (std::pair<int, int> b: this->begin) {
         if (timestamp < b.first) {
             break;
         }
@@ -20,16 +20,16 @@ std::tuple<float, SchedulerType, float> Schedule::get_data_at_time(float timesta
     }
 
     /* since the scheduler is not an int, we cannot directly set it and have to use the index */
-    float scheduler_index = submission_time;
-    for (std::pair<float, SchedulerType> s: this->scheduler) {
+    int scheduler_index = submission_time;
+    for (std::pair<int, SchedulerType> s: this->scheduler) {
         if (timestamp < s.first) {
             break;
         }
         scheduler_index = s.first;
     }
 
-    float execution_time_index = submission_time;
-    for (std::pair<float, float> e: this->execution_time) {
+    int execution_time_index = submission_time;
+    for (std::pair<int, int> e: this->execution_time) {
         if (timestamp < e.first) {
             break;
         }
@@ -39,22 +39,22 @@ std::tuple<float, SchedulerType, float> Schedule::get_data_at_time(float timesta
             this->execution_time.at(execution_time_index)};
 }
 
-bool Schedule::exists_at_time(float timestamp) const {
+bool Schedule::exists_at_time(int timestamp) const {
     return (this->end < 0 || this->end > timestamp) && timestamp >= this->submission_time;
 }
 
-bool Schedule::is_active_at_time(float timestamp) const {
+bool Schedule::is_active_at_time(int timestamp) const {
     int begin;
-    float execution_time;
+    int execution_time;
     SchedulerType scheduler;
     std::tie(begin, scheduler, execution_time) = this->get_data_at_time(timestamp);
 
     return (begin <= timestamp && begin + execution_time >= timestamp);
 }
 
-float Schedule::get_maximal_end() const {
-    float begin = 0;
-    for (std::pair<float, float> b: this->begin) {
+int Schedule::get_maximal_end() const {
+    int begin = 0;
+    for (std::pair<int, int> b: this->begin) {
         begin = std::max(begin, b.second);
     }
     /* I guess the execution time will not get worse for now

@@ -17,7 +17,7 @@ int get_hovered_job(int x, int y) {
 
 
 
-float position_in_player(int x, int y) {
+int position_in_player(int x, int y) {
 }
 
 
