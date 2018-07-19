@@ -155,6 +155,9 @@ void read_input_from_file(std::string path) {
     }
     parse_file(&input_file);
     input_file.close();
+    /* sort jobs id wise */
+    std::sort(model->jobs.begin(), model->jobs.end(),
+            [](const Job &a, const Job &b) -> bool {return a.id < b.id;});
 }
 
 void parse_n_cores(std::stringstream *line) {
@@ -162,9 +165,9 @@ void parse_n_cores(std::stringstream *line) {
 }
 
 void parse_job(std::stringstream *line) {
-    int deadline, time_estimate, time, submission;
-    *line >> deadline >> time_estimate >> time >> submission;
-    model->jobs.emplace_back(model->jobs.size(), deadline, time_estimate, time, submission);
+    int id, deadline, time_estimate, time, submission;
+    *line >> id >> deadline >> time_estimate >> time >> submission;
+    model->jobs.emplace_back(id, deadline, time_estimate, time, submission);
 }
 
 void parse_schedule(std::stringstream *line) {
@@ -222,6 +225,3 @@ bool check_model() {
 void control() {
     model->player.tick();
 }
-
-
-
