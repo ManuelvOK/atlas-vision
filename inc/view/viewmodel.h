@@ -5,10 +5,10 @@
 
 #include <SDL2/SDL.h>
 
-#include <schedule_rect.h>
-#include <view_config.h>
-#include <model.h>
-#include <rgb.h>
+#include <model/model.h>
+#include <model/rgb.h>
+#include <view/schedule_rect.h>
+#include <view/view_config.h>
 
 class Viewmodel {
     /**

@@ -4,7 +4,7 @@
 
 #include <SDL2/SDL.h>
 
-#include <model.h>
+#include <model/model.h>
 
 /**
  * handle a pressed key
@@ -39,27 +39,38 @@ static void reset_input(struct input *input);
 /**
  * to save whether mouse is clicked
  */
-static int mouse_down = 0;
+static int mouse_down = -1;
 
 void read_input(struct input *input, const View *view) {
     reset_input(input);
-    SDL_GetMouseState(&input->mouse_position_x, &input->mouse_position_y);
+    int pos_x, pos_y;
+    SDL_GetMouseState(&pos_x, &pos_y);
+    input->mouse_offset_x = input->mouse_position_x - pos_x;
+    input->mouse_offset_y = input->mouse_position_y - pos_y;
+    input->mouse_position_x = pos_x;
+    input->mouse_position_y = pos_y;
 
     SDL_Event event;
     while (0 != SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_KEYDOWN: handle_key_press(event.key, input); break;
             case SDL_KEYUP: handle_key_release(event.key); break;
-            case SDL_MOUSEBUTTONDOWN: mouse_down = 1; break;
-            case SDL_MOUSEBUTTONUP: mouse_down = 0; break;
+            case SDL_MOUSEBUTTONDOWN: mouse_down = event.button.button; break;
+            case SDL_MOUSEBUTTONUP: mouse_down = -1; break;
             case SDL_WINDOWEVENT: handle_window_event(event.window, input); break;
             case SDL_MOUSEWHEEL: handle_scrolling(event.wheel, input); break;
             default: break;
         }
-        if (mouse_down) {
+    }
+    switch (mouse_down) {
+        case SDL_BUTTON_LEFT:
             input->player.position =
                 view->position_in_player(input->mouse_position_x, input->mouse_position_y);
-        }
+            break;
+        case SDL_BUTTON_RIGHT:
+            input->player.offset = input->mouse_offset_x;
+            break;
+        default: break;
     }
 }
 
@@ -101,5 +112,6 @@ void reset_input(struct input *input) {
     input->player.toggle_play = 0;
     input->player.rewind = 0;
     input->player.position = -1;
+    input->player.offset = 0;
     input->window.changed = 0;
 }

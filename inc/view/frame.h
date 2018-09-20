@@ -3,9 +3,9 @@
 
 #include <SDL2/SDL.h>
 
-#include <model.h>
-#include <viewmodel.h>
-#include <drawable.h>
+#include <model/model.h>
+#include <view/viewmodel.h>
+#include <view/drawable.h>
 
 class Position {
 public:
@@ -24,6 +24,8 @@ protected:
     Viewmodel *viewmodel;
     int offset_x;
     int offset_y;
+    int shift_offset_x = 0;
+    int shift_offset_y = 0;
     int margin_left = 0;
     int margin_top = 0;
     int margin_right = 0;
@@ -52,4 +54,5 @@ public:
     virtual void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y) const;
     virtual void update(const Model *model);
     virtual Position global_position() const;
+    virtual void shift_x(int offset);
 };

@@ -1,8 +1,8 @@
-#include <frames.h>
+#include <view/frames.h>
 
 #include <iostream>
 
-#include <drawables.h>
+#include <view/drawables.h>
 
 void WindowFrame::draw_this(SDL_Renderer *renderer, int global_offset_x, int global_offset_y) const {
     (void) global_offset_x;

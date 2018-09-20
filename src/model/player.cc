@@ -1,8 +1,8 @@
-#include <player.h>
+#include <model/player.h>
 
 #include <iostream>
 
-#include <model.h>
+#include <model/model.h>
 
 void Player::toggle() {
     this->running = !this->running;

@@ -2,8 +2,8 @@
 
 #include <SDL2/SDL.h>
 
-#include <model.h>
-#include <view.h>
+#include <model/model.h>
+#include <view/view.h>
 #include <input.h>
 #include <controller.h>
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     }
 
     View view(model);
-    struct input input = {0, 0, 0, {0, 0, 0}, 1, {0, 0, 0}};
+    struct input input = {0, 0, 0, 0, 0, {0, 0, 0, 0}, 1, {0, 0, 0}};
     while (model->running) {
         read_input(&input, &view);
         handle_input(&input, &view);

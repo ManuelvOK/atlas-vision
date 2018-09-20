@@ -2,11 +2,11 @@
 
 #include <map>
 
-#include <job.h>
-#include <schedule.h>
-#include <schedule_change.h>
-#include <cfs_visibility.h>
-#include <player.h>
+#include <model/job.h>
+#include <model/schedule.h>
+#include <model/schedule_change.h>
+#include <model/cfs_visibility.h>
+#include <model/player.h>
 
 /**
  * Representation of the application data

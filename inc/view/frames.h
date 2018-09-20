@@ -1,7 +1,7 @@
 #pragma once
 
-#include <frame.h>
-#include <drawables.h>
+#include <view/frame.h>
+#include <view/drawables.h>
 
 class WindowFrame : public Frame {
 public:
@@ -13,7 +13,6 @@ public:
 };
 
 class PlayerFrame : public Frame {
-    int shift = 0;
 public:
     PlayerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                 int height)

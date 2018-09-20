@@ -1,5 +1,5 @@
 #pragma once
-#include <view.h>
+#include <view/view.h>
 
 class View;
 class Model;
@@ -12,11 +12,14 @@ class Model;
 struct input {
     int mouse_position_x;
     int mouse_position_y;
+    int mouse_offset_x;
+    int mouse_offset_y;
     int quit;
     struct {
         int toggle_play;
         int rewind;
         int position;
+        int offset;
     } player;
     float rescale;
     struct {

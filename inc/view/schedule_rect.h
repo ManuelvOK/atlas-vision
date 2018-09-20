@@ -4,9 +4,9 @@
 
 #include <SDL2/SDL.h>
 
-#include <view_config.h>
-#include <schedule.h>
-#include <drawables.h>
+#include <model/schedule.h>
+#include <view/drawables.h>
+#include <view/view_config.h>
 
 class Dependency_class {
 protected:

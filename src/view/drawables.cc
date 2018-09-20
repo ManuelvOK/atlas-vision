@@ -1,11 +1,11 @@
-#include <drawables.h>
+#include <view/drawables.h>
 
 #include <iostream>
 #include <algorithm>
 
 #include <SDL2/SDL2_gfxPrimitives.h>
 
-#include <viewmodel.h>
+#include <view/viewmodel.h>
 
 Arrow::Arrow(const Viewmodel *viewmodel, std::array<short,9> arrow_coords_x, std::array<short,9> arrow_coords_y, int x, int y) :
     Drawable(viewmodel),

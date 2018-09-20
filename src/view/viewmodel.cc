@@ -1,4 +1,4 @@
-#include <viewmodel.h>
+#include <view/viewmodel.h>
 
 #include <iostream>
 #include <algorithm>

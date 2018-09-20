@@ -1,4 +1,4 @@
-#include <view.h>
+#include <view/view.h>
 
 #include <iostream>
 
@@ -159,4 +159,8 @@ int View::position_in_player(int x, int y) const {
 void View::rescale(float factor) {
     this->viewmodel->unit_w *= factor;
     this->viewmodel->rescaled = true;
+}
+
+void View::shift_player(int offset) {
+    this->player_frame->shift_x(offset);
 }

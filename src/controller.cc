@@ -7,8 +7,8 @@
 #include <cstdio>
 #include <algorithm>
 
-#include <model.h>
-#include <view.h>
+#include <model/model.h>
+#include <view/view.h>
 
 /**
  * parse input data from ifstream
@@ -94,6 +94,9 @@ void handle_input(const struct input *input, View *view) {
     }
     if (input->player.position >= 0) {
         model->player.set(input->player.position);
+    }
+    if (input->player.offset != 0) {
+        view->shift_player(input->player.offset);
     }
     view->rescale(input->rescale);
 #if 0

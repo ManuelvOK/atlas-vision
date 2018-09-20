@@ -1,4 +1,4 @@
-#include <frame.h>
+#include <view/frame.h>
 
 #include <iostream>
 
@@ -48,7 +48,8 @@ void Frame::draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y)
     this->draw_this(renderer, global_offset_x, global_offset_y);
     /* draw everything for this frame */
     for (Drawable *drawable: this->drawables) {
-        drawable->draw(renderer, global_offset_x, global_offset_y);
+        drawable->draw(renderer, global_offset_y + this->shift_offset_x,
+                       global_offset_y + this->shift_offset_y);
     }
 
     /* draw every child */
@@ -71,5 +72,13 @@ void Frame::update(const Model *model) {
 
 Position Frame::global_position() const {
     Position local_position(this->offset_x, this->offset_y);
-    return (this->parent) ? this->parent->global_position() + local_position : local_position;
+    Position local_position_with_shift = Position{this->shift_offset_x, this->shift_offset_y} + local_position;
+    return (this->parent) ? this->parent->global_position() + local_position : local_position_with_shift;
+}
+
+void Frame::shift_x(int offset) {
+    this->shift_offset_x -= offset;
+    for (Frame *child: this->childs) {
+        child->shift_x(offset);
+    }
 }

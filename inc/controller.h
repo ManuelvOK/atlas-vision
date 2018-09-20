@@ -1,14 +1,14 @@
 #pragma once
 
-#include <input.h>
 #include <vector>
 #include <string>
 #include <map>
 
-#include <job.h>
-#include <schedule.h>
-#include <schedule_change.h>
-#include <model.h>
+#include <input.h>
+#include <model/job.h>
+#include <model/model.h>
+#include <model/schedule.h>
+#include <model/schedule_change.h>
 
 class View;
 

@@ -3,8 +3,8 @@
 #include <SDL2/SDL.h>
 
 #include <controller.h>
-#include <frames.h>
-#include <viewmodel.h>
+#include <view/frames.h>
+#include <view/viewmodel.h>
 
 class View {
     SDL_Window *window = nullptr;
@@ -102,4 +102,6 @@ public:
     void update_window(int width, int height);
 
     void rescale(float factor);
+
+    void shift_player(int offset);
 };

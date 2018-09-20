@@ -1,9 +1,10 @@
 #pragma once
-#include <drawable.h>
-#include <rgb.h>
 
 #include <array>
-#include <schedule.h>
+
+#include <view/drawable.h>
+#include <model/rgb.h>
+#include <model/schedule.h>
 
 class Viewmodel;
 class Arrow : public Drawable {
