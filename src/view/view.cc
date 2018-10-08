@@ -46,7 +46,7 @@ View::~View() {
 void View::create_frame_hierarchy() {
     /* TODO: get magic offset values from config */
     this->window_frame = new WindowFrame(nullptr, this->viewmodel, 0, 0, 800, 600);
-    this->player_frame = new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, 580, 580);
+    this->player_frame = new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, this->viewmodel->config.player.width_px, this->viewmodel->config.player.height_px);
     this->sidebar_frame = new SidebarFrame(this->window_frame, this->viewmodel, 600, 0, 190, 580);
 
     this->window_frame->add_child(player_frame);
@@ -55,8 +55,8 @@ void View::create_frame_hierarchy() {
     this->scheduler_background_frame =
         new SchedulerBackgroundFrame(player_frame, this->viewmodel, 0, 100, 580, 110);
     this->player_grid_frame = new PlayerGridFrame(player_frame, this->viewmodel, 0, 0, 580, 580);
-    this->deadline_frame = new DeadlineFrame(player_frame, this->viewmodel, 0, 0, 580, 100);
-    this->deadline_frame->set_margin(10);
+    this->deadline_frame = new DeadlineFrame(this->model, player_frame, this->viewmodel, 0, 0, 580, 100);
+    this->deadline_frame->set_margin(10, 0, 10);
     this->ATLAS_frame =
         new SchedulerFrame(player_frame, this->viewmodel, 0, 100, 580, 20, SchedulerType::ATLAS);
     this->recovery_frame =
@@ -131,9 +131,10 @@ void View::render() {
 
     /* update frames */
     this->window_frame->update(this->model);
+    this->viewmodel->rescaled = false;
 
     /* render frames */
-    this->window_frame->draw(renderer, 0, 0);
+    this->window_frame->draw(renderer, 0, 0, nullptr);
     SDL_RenderPresent(renderer);
 
 #if 0
@@ -147,20 +148,26 @@ int View::position_in_player(int x, int y) const {
     float shown_player_part =
         this->player_frame->width * 1.0 / this->viewmodel->u_to_px_w(this->model->player.max_position);
     int max_visible_player_position = shown_player_part * this->model->player.max_position;
-    x -= this->player_frame->global_position().x;
+    x -= this->player_frame->global_position().x -this->player_frame->get_shift_position();
     if (x < 0) {
         return 0;
     }
+    /* CONTINUE:
+     * Clicking doesnt work with zooming. */
     if (x > this->player_frame->width) {
         return max_visible_player_position;
     }
     return x * 1.0f / this->player_frame->width * max_visible_player_position;
 }
+
 void View::rescale(float factor) {
-    this->viewmodel->unit_w *= factor;
+    if (factor == 1.0) {
+        return;
+    }
+    this->viewmodel->unit_w = std::max(this->viewmodel->unit_w * factor, this->viewmodel->unit_w_min);
     this->viewmodel->rescaled = true;
 }
 
 void View::shift_player(int offset) {
-    this->player_frame->shift_x(offset);
+    this->player_frame->shift(offset);
 }

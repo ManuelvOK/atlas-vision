@@ -63,11 +63,11 @@ void read_input(struct input *input, const View *view) {
         }
     }
     switch (mouse_down) {
-        case SDL_BUTTON_LEFT:
+        case SDL_BUTTON_RIGHT:
             input->player.position =
                 view->position_in_player(input->mouse_position_x, input->mouse_position_y);
             break;
-        case SDL_BUTTON_RIGHT:
+        case SDL_BUTTON_LEFT:
             input->player.offset = input->mouse_offset_x;
             break;
         default: break;

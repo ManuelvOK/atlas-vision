@@ -5,7 +5,9 @@
 
 Viewmodel::Viewmodel(const Model *model) :
     config(), EDF_sorted_jobs(), schedules(), deadlines(), submissions(), colors() {
-    this->unit_w = this->config.unit.width_px;
+    float player_width_px = this->get_player_width_px();
+    this->unit_w_min = player_width_px / model->player.max_position;
+    this->unit_w = this->unit_w_min;
     this->unit_h = this->config.unit.height_px;
     this->n_jobs = model->jobs.size();
     this->n_schedules = model->schedules.size();
@@ -72,16 +74,16 @@ void Viewmodel::init_deadlines(const Model *model) {
 void Viewmodel::init_schedules(const Model *model) {
     /* create schedule rect for every schedule */
     this->schedules.reserve(model->schedules.size());
-    for (std::pair<int, Schedule> s: model->schedules) {
-        this->schedules.emplace_back(this);
+    for (std::pair<int, const Schedule &> s: model->schedules) {
+        this->schedules.emplace_back(this, &s.second);
         this->schedules.back().color = this->get_color(s.second.job_id);
     }
 }
 
 void Viewmodel::init_visibilities(const Model *model) {
     this->visibilities.reserve(model->cfs_visibilities.size());
-    for (unsigned i = 0; i < model->cfs_visibilities.size(); ++i) {
-        this->visibilities.emplace_back(this);
+    for (const Cfs_visibility &v: model->cfs_visibilities) {
+        this->visibilities.emplace_back(this, nullptr);
     }
 }
 
@@ -92,6 +94,10 @@ RGB Viewmodel::get_color(int job, float modifier) const {
 
     HSV_to_RGB((float)this->colors[job], 0.7f, 0.9f * modifier, &red, &green, &blue);
     return RGB(red * 255, green * 255, blue * 255);
+}
+
+int Viewmodel::get_player_width_px() const {
+    return this->config.player.width_px;
 }
 
 void Viewmodel::HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) const {

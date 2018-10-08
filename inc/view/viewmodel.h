@@ -68,6 +68,7 @@ class Viewmodel {
     SDL_Renderer *renderer = nullptr;
 
     float unit_w;
+    float unit_w_min;
     float unit_h;
 
     bool rescaled = false;
@@ -114,4 +115,5 @@ class Viewmodel {
     float px_to_u_h(int pixel) const;
 
     void recompute_config(const Model *model);
+    int get_player_width_px() const;
 };

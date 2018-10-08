@@ -15,6 +15,15 @@ void Player::rewind() {
 
 void Player::set(int position) {
     this->position = position;
+    /* check if over end of simulation */
+    if (this->position > this->max_position) {
+        this->position = this->max_position;
+        this->running = false;
+    }
+    /* check if before start of simulation */
+    if (this->position < 0) {
+        this->position = 0;
+    }
 }
 
 void Player::tick() {
@@ -22,6 +31,11 @@ void Player::tick() {
         return;
     }
     this->position += this->speed;
+    /* check if at end of simulation */
+    if (this->position > this->max_position) {
+        this->position = this->max_position;
+        this->running = false;
+    }
 }
 
 void Player::init(const Model *model) {

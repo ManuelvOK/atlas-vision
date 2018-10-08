@@ -17,8 +17,64 @@ void WindowFrame::update_this(const Model *model) {
     (void) model;
 }
 
+PlayerFrame::PlayerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
+                         int height) :
+    Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    this->shift_x_max = this->viewmodel->get_player_width_px();
+}
+
 void PlayerFrame::update_this(const Model *model) {
-    (void) model;
+    /* TODO: mouse following while zooming */
+    float player_position = model->player.position;
+    int player_position_offset = this->viewmodel->u_to_px_w(player_position);
+    int player_width_px = this->viewmodel->get_player_width_px();
+
+    /* CONTINUE:
+     * this does not work as intended.*/
+    /* follow player */
+    /* TODO: get rid of magic 20 */
+    if (player_position_offset - this->shift_x > player_width_px) {
+        std::cout << "ppo: " << player_position_offset
+                  << "sft: " << this->shift_x
+                  << std::endl;
+        this->shift_x = player_position_offset - player_width_px;
+    }
+
+    if (this->viewmodel->rescaled) {
+        this->shift_x = player_position_offset - (player_width_px / 2);
+        this->repair_shift();
+    }
+}
+
+void PlayerFrame::shift(int x) {
+    this->shift_x += x;
+    this->repair_shift();
+}
+
+void PlayerFrame::repair_shift() {
+    int player_width_px = this->viewmodel->get_player_width_px();
+    float scale = this->viewmodel->unit_w / this->viewmodel->unit_w_min;
+    if (this->shift_x < this->shift_x_min) {
+        this->shift_x = this->shift_x_min;
+    } else if (this->shift_x > this->shift_x_max * scale - player_width_px) {
+        this->shift_x = this->shift_x_max * scale - player_width_px;
+    }
+}
+
+int PlayerFrame::get_shift_position() const {
+    return this->shift_x;
+}
+
+void PlayerFrame::draw_drawables(SDL_Renderer *renderer, int global_offset_x, int global_offset_y) const {
+    for (Drawable *drawable: this->drawables) {
+        drawable->draw(renderer, global_offset_x - this->shift_x, global_offset_y);
+    }
+}
+
+void PlayerFrame::draw_childs(SDL_Renderer *renderer, int global_offset_x, int global_offset_y, SDL_Rect *clip_rect) const {
+    for (Frame *child: this->childs) {
+        child->draw(renderer, global_offset_x, global_offset_y, shift_x, 0, clip_rect);
+    }
 }
 
 SchedulerBackgroundFrame::SchedulerBackgroundFrame(Frame *parent, Viewmodel *viewmodel,
@@ -55,16 +111,20 @@ void SchedulerBackgroundFrame::update_this(const Model *model) {
     (void) model;
 }
 
+void SchedulerBackgroundFrame::draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y, int shift_x, int shift_y, SDL_Rect *parent_clip_rect) const {
+    Frame::draw(renderer, local_offset_x, local_offset_y, parent_clip_rect);
+}
+
 PlayerGridFrame::PlayerGridFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
                                  int width, int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     /* add verticle lines */
-    /* TODO: get rid of magic 1000 */
-    this->n_lines = this->viewmodel->px_to_u_w(this->width) / 1000;
+    int player_width_px = this->viewmodel->get_player_width_px();
+    this->n_lines = this->viewmodel->px_to_u_w(this->width) / player_width_px;
     for (int i = 0; i <= n_lines; ++i) {
         int color = (i % 5 == 0) ? this->viewmodel->config.player.grid_dark_grey : this->viewmodel->config.player.grid_grey;
-        Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(i * 1000), 0,
-                           this->viewmodel->u_to_px_w(i * 1000), this->height);
+        Line *l = new Line(this->viewmodel, this->viewmodel->u_to_px_w(i * player_width_px), 0,
+                           this->viewmodel->u_to_px_w(i * player_width_px), this->height);
         l->color = RGB(color);
         this->drawables.push_back(l);
     }
@@ -87,11 +147,11 @@ void PlayerGridFrame::update_this(const Model *model) {
 
 void PlayerGridFrame::rescale() {
     int i = 0;
+    float player_width_px = this->viewmodel->get_player_width_px();
     for (; i <= this->n_lines; ++i) {
         Line *l = static_cast<Line *>(this->drawables[i]);
-        /* TODO: get rid of magic 1000 */
-        l->begin_x = this->viewmodel->u_to_px_w(i * 1000);
-        l->end_x = this->viewmodel->u_to_px_w(i * 1000);
+        l->begin_x = this->viewmodel->u_to_px_w(i * player_width_px);
+        l->end_x = this->viewmodel->u_to_px_w(i * player_width_px);
     }
 
     for (std::pair<const int, std::vector<int>> &s: this->viewmodel->submissions) {
@@ -102,8 +162,8 @@ void PlayerGridFrame::rescale() {
     }
 }
 
-DeadlineFrame::DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
-                             int width, int height) :
+DeadlineFrame::DeadlineFrame(const Model *model, Frame *parent, Viewmodel *viewmodel, int offset_x,
+                             int offset_y, int width, int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     /* get maximal submission count */
     for (std::pair<int, std::vector<int>> submissions: this->viewmodel->submissions) {
@@ -124,8 +184,9 @@ DeadlineFrame::DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, 
         /* TODO: get rid of magic number */
         int offset = this->height - 7 * (submissions.second.size() - 1);
         for (int job: submissions.second) {
+            const Job *job_ref = &model->jobs[job];
             SubmissionArrow *a =
-                new SubmissionArrow(this->viewmodel, submission_position_x, offset - 1);
+                new SubmissionArrow(this->viewmodel, job_ref, submission_position_x, offset - 1);
             a->color = this->viewmodel->get_color(job);
             this->drawables.push_back(a);
             /* TODO: get rid of magic number */
@@ -139,7 +200,8 @@ DeadlineFrame::DeadlineFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, 
         /* TODO: get rid of magic number */
         int offset = 7 * (deadlines.second.size() - 1);
         for (int job: deadlines.second) {
-            DeadlineArrow *a = new DeadlineArrow(this->viewmodel, deadline_position_x, offset - 1);
+            const Job *job_ref = &model->jobs[job];
+            DeadlineArrow *a = new DeadlineArrow(this->viewmodel, job_ref, deadline_position_x, offset - 1);
             a->color = this->viewmodel->get_color(job);
             this->drawables.push_back(a);
             /* TODO: get rid of magic number */

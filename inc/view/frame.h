@@ -24,8 +24,6 @@ protected:
     Viewmodel *viewmodel;
     int offset_x;
     int offset_y;
-    int shift_offset_x = 0;
-    int shift_offset_y = 0;
     int margin_left = 0;
     int margin_top = 0;
     int margin_right = 0;
@@ -50,9 +48,11 @@ public:
     void set_margin(int left, int top, int right);
     void set_margin(int left, int top, int right, int bottom);
 
-    virtual void add_child(Frame *child);
-    virtual void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y) const;
-    virtual void update(const Model *model);
-    virtual Position global_position() const;
-    virtual void shift_x(int offset);
+    void add_child(Frame *child);
+    virtual void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y, int shift_x, int shift_y, SDL_Rect *parent_clip_rect) const;
+    void draw(SDL_Renderer *renderer, int local_offset_x, int local_offset_y, SDL_Rect *parent_clip_rect) const;
+    virtual void draw_drawables(SDL_Renderer *renderer, int global_offset_x, int global_offset_y) const;
+    virtual void draw_childs(SDL_Renderer *renderer, int global_offset_x, int global_offset_y, SDL_Rect *clip_rect) const;
+    void update(const Model *model);
+    Position global_position() const;
 };

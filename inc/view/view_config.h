@@ -46,7 +46,9 @@ public:
         public:
         const int offset_y_u = 10;
         int width_u = 0; // this gets computed later
+        const int width_px = 580;
         const int height_u = 1;
+        const int height_px = 580;
         const float grid_height_big_u = 1.0/2;
         const float grid_height_small_u = 1.0/6;
         const float poi_max_height_u = 2.0/3;
