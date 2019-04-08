@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <model/model.h>
 #include <view/view.h>
@@ -11,6 +12,8 @@
  * Initialise SDL for video output
  */
 void init_SDL();
+
+void quit_SDL();
 
 enum magic_numbers {
     MAGIC_33 = 33
@@ -46,5 +49,14 @@ void init_SDL() {
         std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
         exit(EXIT_FAILURE);
     }
-    atexit(SDL_Quit);
+    if (0 != TTF_Init()) {
+        std::cout << "TTF_Init Error: " << TTF_GetError() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    atexit(quit_SDL);
+}
+
+void quit_SDL() {
+    TTF_Quit();
+    SDL_Quit();
 }

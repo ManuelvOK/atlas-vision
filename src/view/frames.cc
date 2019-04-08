@@ -267,6 +267,15 @@ void DependencyFrame::update_this(const Model *model) {
     (void) model;
 }
 
+EventFrame::EventFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
+                       int height) :
+    Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    for (Message &m: viewmodel->messages) {
+        MessageText *message_text = new MessageText(this->viewmodel, &m);
+        this->drawables.push_back(message_text);
+    }
+}
+
 void EventFrame::update_this(const Model *model) {
     (void) model;
 }

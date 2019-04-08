@@ -50,7 +50,7 @@ CXXFLAGS     += -I$(INCDIR)
 
 CXXFLAGSTAGS := -I/home/morion/.vim/tags
 
-LIBS         := -lSDL2 -lSDL2_gfx
+LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf
 
 vpath %.h $(dir $(SRCSHABS))
 vpath %.cc $(dir $(SRCSCCABS))

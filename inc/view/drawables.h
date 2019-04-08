@@ -3,9 +3,10 @@
 #include <array>
 
 #include <view/drawable.h>
+#include <model/job.h>
+#include <model/message.h>
 #include <model/rgb.h>
 #include <model/schedule.h>
-#include <model/job.h>
 
 class Viewmodel;
 class Arrow : public Drawable {
@@ -103,6 +104,17 @@ public:
     const Viewmodel *viewmodel;
 
     VisibilityLine(Viewmodel *viewmodel, const Schedule *schedule) : Line(viewmodel), schedule(schedule) {}
+    void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
+
+    bool is_visible(int timestamp) const override;
+};
+
+class MessageText : public Drawable {
+    const Message *message;
+    SDL_Surface *surface;
+public:
+    MessageText(Viewmodel *viewmodel, const Message *message);
+    ~MessageText();
     void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
 
     bool is_visible(int timestamp) const override;

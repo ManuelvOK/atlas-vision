@@ -17,6 +17,8 @@ Viewmodel::Viewmodel(const Model *model) :
     this->init_deadlines(model);
     this->init_schedules(model);
     this->init_visibilities(model);
+    this->init_ttf(model);
+    this->messages = model->messages;
 }
 
 void Viewmodel::init_colors() {
@@ -84,6 +86,15 @@ void Viewmodel::init_visibilities(const Model *model) {
     this->visibilities.reserve(model->cfs_visibilities.size());
     for (const Cfs_visibility &v: model->cfs_visibilities) {
         this->visibilities.emplace_back(this, nullptr);
+    }
+}
+
+void Viewmodel::init_ttf(const Model *model) {
+    (void) model;
+    /* TODO: get rid of magic string */
+    this->font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 20);
+    if (!this->font) {
+        std::cerr << "TTF_Error: " << TTF_GetError() << std::endl;
     }
 }
 

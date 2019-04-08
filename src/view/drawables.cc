@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <view/viewmodel.h>
 
@@ -100,4 +101,26 @@ void VisibilityLine::draw(SDL_Renderer *renderer, int offset_x, int offset_y) co
 
 bool VisibilityLine::is_visible(int timestamp) const {
     return this->schedule->is_active_at_time(timestamp);
+}
+
+MessageText::MessageText(Viewmodel *viewmodel, const Message *message) :
+    Drawable(viewmodel), message(message) {
+    SDL_Color color = {255, 255, 255, 255};
+    this->surface = TTF_RenderText_Solid(this->viewmodel->font, this->message->message.c_str(), color);
+}
+
+void MessageText::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, this->surface);
+    SDL_Rect dstrect{offset_x, offset_y, this->surface->w, this->surface->h};
+    SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+    SDL_DestroyTexture(texture);
+}
+
+MessageText::~MessageText() {
+    SDL_FreeSurface(this->surface);
+}
+
+bool MessageText::is_visible(int timestamp) const {
+    (void) timestamp;
+    return true;
 }

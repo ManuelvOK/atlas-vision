@@ -4,6 +4,7 @@
 #include <map>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <model/model.h>
 #include <model/rgb.h>
@@ -62,10 +63,16 @@ class Viewmodel {
      */
     void init_visibilities(const Model *model);
 
+    /**
+     * init TTF related stuff
+     */
+    void init_ttf(const Model *model);
+
   public:
     ViewConfig config;
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
+    TTF_Font *font = nullptr;
 
     float unit_w;
     float unit_w_min;
@@ -79,6 +86,7 @@ class Viewmodel {
     std::vector<ScheduleRect> schedules;
     std::map<int, std::vector<int>> deadlines;
     std::map<int, std::vector<int>> submissions;
+    std::vector<Message> messages;
     std::vector<VisibilityLine> visibilities;
     std::vector<unsigned> colors;
 

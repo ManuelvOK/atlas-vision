@@ -97,7 +97,6 @@ public:
 class EventFrame : public Frame {
 public:
     EventFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
-               int height)
-        : Frame(parent, viewmodel, offset_x, offset_y, width, height) {}
+               int height);
     void update_this(const Model *model) override;
 };
