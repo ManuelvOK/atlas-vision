@@ -2,11 +2,12 @@
 
 #include <map>
 
+#include <model/cfs_visibility.h>
 #include <model/job.h>
+#include <model/message.h>
+#include <model/player.h>
 #include <model/schedule.h>
 #include <model/schedule_change.h>
-#include <model/cfs_visibility.h>
-#include <model/player.h>
 
 /**
  * Representation of the application data
@@ -37,6 +38,11 @@ public:
      * list of atlas schedules visibile for cfs scheduler
      */
     std::vector<Cfs_visibility> cfs_visibilities;
+
+    /**
+     * messages to display at a given timestamp
+     */
+    std::vector<Message> messages;
 
     /**
      * simulation player

@@ -26,6 +26,9 @@
 #
 # schedule visible to CFS
 # > v schedule_id begin end
+#
+# message
+# > m timestamp message
 
 c 1
 
@@ -55,6 +58,7 @@ j 11 22000 1000 1000 7000 #X3 id=11
 # timestamp 0
 s 0  8  0 a 0000  13000 2000 #X0 id=0
 v 0  0000 8000 # Schedule for X0 is visible for CFS from 0 to 8
+m 0  Schedule for job 0 is visible for CFS
 s 1  0  0 a 0000  15000 2000 #A1 id=1
 s 2  4  0 a 0000  17000 1000 #B1 id=2
 s 3  10 0 a 0000  18000 2000 #X2 id=3

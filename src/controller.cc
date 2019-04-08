@@ -59,6 +59,15 @@ static void parse_change(std::stringstream *line, std::vector<Schedule_change> *
 static void parse_cfs_visibility(std::stringstream *line);
 
 /**
+ *
+ * parse message
+ *
+ * @param line
+ *   line to parse with index at begin of message
+ */
+static void parse_message(std::stringstream *line);
+
+/**
  * add schedule change to appropriate schedule
  *
  * @param change
@@ -126,6 +135,7 @@ void parse_file(std::istream *input) {
             case 's': parse_schedule(&ss);         break;
             case 'a': parse_change(&ss, &changes); break;
             case 'v': parse_cfs_visibility(&ss);   break;
+            case 'm': parse_message(&ss);          break;
             case 0:
             case '#': break;
             default: std::cerr << "Parse error: \"" << type << "\" is not a proper type."
@@ -198,6 +208,16 @@ void parse_cfs_visibility(std::stringstream *line) {
     int begin, end;
     *line >> schedule_id >> begin >> end;
     model->cfs_visibilities.emplace_back(schedule_id, begin, end);
+}
+
+void parse_message(std::stringstream *line) {
+    int timestamp;
+    *line >> timestamp;
+    int pos = line->tellg();
+    std::string message = line->str();
+    message = message.substr(message.find_first_not_of(" ", pos));
+    model->messages.emplace_back(timestamp, message);
+
 }
 
 bool apply_schedule_change(const Schedule_change &change) {
