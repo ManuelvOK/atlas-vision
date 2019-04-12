@@ -91,8 +91,8 @@ void Viewmodel::init_visibilities(const Model *model) {
 
 void Viewmodel::init_ttf(const Model *model) {
     (void) model;
-    /* TODO: get rid of magic string */
-    this->font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 20);
+    /* TODO: get rid of magic string and magic number */
+    this->font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 15);
     if (!this->font) {
         std::cerr << "TTF_Error: " << TTF_GetError() << std::endl;
     }

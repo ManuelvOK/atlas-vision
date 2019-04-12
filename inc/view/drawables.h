@@ -112,10 +112,15 @@ public:
 class MessageText : public Drawable {
     const Message *message;
     SDL_Surface *surface;
+    SDL_Surface *surface_active;
+    SDL_Surface *surface_inactive;
+    int offset_y;
 public:
-    MessageText(Viewmodel *viewmodel, const Message *message);
+    MessageText(Viewmodel *viewmodel, const Message *message, int width, int offset_y);
     ~MessageText();
+    void update(const Model *model) override;
     void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
+    int height() const;
 
     bool is_visible(int timestamp) const override;
 };

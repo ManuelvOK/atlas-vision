@@ -81,6 +81,7 @@ s 12 7  0 a 7000  28000 2000 #B4 id=12
 # timestamp 8000
 s 13 0  0 c 8000  8000  4000 #A1 CFS id=13
 v 1 8000 12000 # Schedule for A1 is visible for CFS from 8 to 12
+m 8000  Schedule for job 1 is visible for CFS
 
 # timestamp 13000
 s 14 4  0 c 13000 13000 1000 # B1 CFS id = 14

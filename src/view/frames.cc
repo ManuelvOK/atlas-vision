@@ -270,12 +270,16 @@ void DependencyFrame::update_this(const Model *model) {
 EventFrame::EventFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                        int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    int text_offset_y = 0;
     for (Message &m: viewmodel->messages) {
-        MessageText *message_text = new MessageText(this->viewmodel, &m);
+        MessageText *message_text = new MessageText(this->viewmodel, &m, width, text_offset_y);
+        text_offset_y += message_text->height();
         this->drawables.push_back(message_text);
     }
 }
 
 void EventFrame::update_this(const Model *model) {
-    (void) model;
+    for (Drawable *d: this->drawables) {
+        d->update(model);
+    }
 }

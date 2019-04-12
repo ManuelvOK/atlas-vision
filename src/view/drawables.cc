@@ -1,6 +1,7 @@
 #include <view/drawables.h>
 
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 
 #include <SDL2/SDL2_gfxPrimitives.h>
@@ -103,24 +104,44 @@ bool VisibilityLine::is_visible(int timestamp) const {
     return this->schedule->is_active_at_time(timestamp);
 }
 
-MessageText::MessageText(Viewmodel *viewmodel, const Message *message) :
-    Drawable(viewmodel), message(message) {
+MessageText::MessageText(Viewmodel *viewmodel, const Message *message, int width, int offset_y) :
+    Drawable(viewmodel), message(message), offset_y(offset_y) {
+    std::stringstream ss;
+    ss << this->message->timestamp << ": " << this->message->message;
+    /* TODO: get color from viewmodel */
     SDL_Color color = {255, 255, 255, 255};
-    this->surface = TTF_RenderText_Solid(this->viewmodel->font, this->message->message.c_str(), color);
+    this->surface_active = TTF_RenderText_Blended_Wrapped(this->viewmodel->font, ss.str().c_str(), color, width);
+    /* TODO: get color from viewmodel */
+    color = {255, 255, 255, 180};
+    this->surface_inactive = TTF_RenderText_Blended_Wrapped(this->viewmodel->font, ss.str().c_str(), color, width);
+    this->surface = this->surface_inactive;
+}
+
+void MessageText::update(const Model *model) {
+    if (model->player.position >= this->message->timestamp) {
+        this->surface = this->surface_active;
+    } else {
+        this->surface = this->surface_inactive;
+    }
 }
 
 void MessageText::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, this->surface);
-    SDL_Rect dstrect{offset_x, offset_y, this->surface->w, this->surface->h};
+    SDL_Rect dstrect{offset_x, offset_y + this->offset_y, this->surface->w, this->surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &dstrect);
     SDL_DestroyTexture(texture);
 }
 
 MessageText::~MessageText() {
-    SDL_FreeSurface(this->surface);
+    SDL_FreeSurface(this->surface_active);
+    SDL_FreeSurface(this->surface_inactive);
 }
 
 bool MessageText::is_visible(int timestamp) const {
     (void) timestamp;
     return true;
+}
+
+int MessageText::height() const {
+    return this->surface->h;
 }
