@@ -10,6 +10,7 @@ Viewmodel::Viewmodel(const Model *model) :
     this->unit_w = this->unit_w_min;
     this->unit_h = this->config.unit.height_px;
     this->n_jobs = model->jobs.size();
+    this->jobs = &model->jobs;
     this->n_schedules = model->schedules.size();
     this->init_colors();
     this->init_EDF_sorted_jobs(model);
@@ -78,7 +79,6 @@ void Viewmodel::init_schedules(const Model *model) {
     this->schedules.reserve(model->schedules.size());
     for (std::pair<int, const Schedule &> s: model->schedules) {
         this->schedules.emplace_back(this, &s.second);
-        this->schedules.back().color = this->get_color(s.second.job_id);
     }
 }
 
@@ -92,7 +92,7 @@ void Viewmodel::init_visibilities(const Model *model) {
 void Viewmodel::init_ttf(const Model *model) {
     (void) model;
     /* TODO: get rid of magic string and magic number */
-    this->font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 15);
+    this->font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", 12);
     if (!this->font) {
         std::cerr << "TTF_Error: " << TTF_GetError() << std::endl;
     }

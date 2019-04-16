@@ -1,5 +1,6 @@
 #include <view/frames.h>
 
+#include <algorithm>
 #include <iostream>
 
 #include <view/drawables.h>
@@ -261,6 +262,41 @@ void PlayerPositionFrame::update_this(const Model *model) {
 
 void SidebarFrame::update_this(const Model *model) {
     (void) model;
+}
+
+DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
+                                 int width, int height) :
+    Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    std::vector<SimpleText *> index_texts;
+    /* generate job id texts */
+    for (const Job &j: *viewmodel->jobs) {
+        SimpleText *t = new SimpleText(this->viewmodel, std::to_string(j.id), 0, 0);
+        index_texts.push_back(t);
+    }
+    /* align job id texts */
+    auto max_width_text = std::max_element(index_texts.begin(), index_texts.end(),
+            [](Text *t1, Text *t2){ return t1->width() < t2->width(); });
+    int max_width = (*max_width_text)->width();
+
+    for (SimpleText *t: index_texts) {
+        t->set_offset_x(max_width - t->width());
+    }
+    /* generate job rects */
+    int job_offset_y = 0;
+    int i = 0;
+    for (const Job &j: *viewmodel->jobs) {
+        JobRect *r = new JobRect(this->viewmodel, &j, max_width, job_offset_y);
+        /* directly insert job rects */
+        this->drawables.push_back(r);
+        /* align index texts */
+        index_texts[i]->set_offset_y(job_offset_y);
+        job_offset_y += r->rect.h;
+        ++i;
+    }
+    /* insert index texts into drawables structure */
+    for (Drawable *d: index_texts) {
+        this->drawables.push_back(d);
+    }
 }
 
 void DependencyFrame::update_this(const Model *model) {

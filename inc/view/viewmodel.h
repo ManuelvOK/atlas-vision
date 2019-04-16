@@ -82,6 +82,7 @@ class Viewmodel {
 
     int n_jobs = 0;
     int n_schedules = 0;
+    const std::vector<Job> *jobs;
     std::vector<int> EDF_sorted_jobs;
     std::vector<ScheduleRect> schedules;
     std::map<int, std::vector<int>> deadlines;

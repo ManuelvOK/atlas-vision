@@ -81,6 +81,14 @@ public:
 
 };
 
+class JobRect : public Rect {
+    const Job *job;
+public:
+    JobRect(const Viewmodel *viewmodel, const Job *job, int offset_x = 0, int offset_y = 0);
+    void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
+    bool is_visible(int timestamp) const override;
+};
+
 class Line : public Drawable {
 public:
     int begin_x = 0;
@@ -109,18 +117,38 @@ public:
     bool is_visible(int timestamp) const override;
 };
 
-class MessageText : public Drawable {
+class Text : public Drawable {
+protected:
+    SDL_Surface *surface = nullptr;
+    int offset_x;
+    int offset_y;
+public:
+    Text(Viewmodel *viewmodel, int offset_x, int offset_y);
+    void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
+
+    int width() const;
+    int height() const;
+};
+
+class SimpleText : public Text {
+    const std::string text;
+public:
+    SimpleText(Viewmodel *viewmodel, const std::string text, int offset_x, int offset_y);
+    ~SimpleText();
+    bool is_visible(int timestamp) const override;
+
+    void set_offset_x(int offset_x);
+    void set_offset_y(int offset_y);
+};
+
+class MessageText : public Text {
     const Message *message;
-    SDL_Surface *surface;
     SDL_Surface *surface_active;
     SDL_Surface *surface_inactive;
-    int offset_y;
 public:
     MessageText(Viewmodel *viewmodel, const Message *message, int width, int offset_y);
     ~MessageText();
     void update(const Model *model) override;
-    void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
-    int height() const;
 
     bool is_visible(int timestamp) const override;
 };

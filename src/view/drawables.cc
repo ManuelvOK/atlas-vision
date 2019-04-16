@@ -1,5 +1,6 @@
 #include <view/drawables.h>
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -60,6 +61,7 @@ ScheduleRect::ScheduleRect(const Viewmodel *viewmodel, const Schedule *schedule)
     Rect(viewmodel),
     schedule(schedule) {
     this->border = true;
+    this->color = this->viewmodel->get_color(schedule->job_id);
     /* TODO: get rid of magic number */
     this->border_color = RGB(110);
 }
@@ -80,6 +82,27 @@ void ScheduleRect::recalculate_position() {
     this->rect.w = this->viewmodel->u_to_px_w(this->time);
     this->rect.h = this->viewmodel->u_to_px_h(1) - 1;
 
+}
+
+JobRect::JobRect(const Viewmodel *viewmodel, const Job *job, int offset_x, int offset_y) :
+    Rect(viewmodel), job(job) {
+        this->rect.x = offset_x;
+        this->rect.y = offset_y;
+        this->rect.w = this->viewmodel->u_to_px_w(1000) - 1;
+        this->rect.h = this->viewmodel->u_to_px_h(1) - 1;
+        this->color = this->viewmodel->get_color(job->id);
+        /* TODO: get rid of magic number */
+        this->border_color = RGB(110);
+}
+
+void JobRect::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
+    Rect::draw(renderer, offset_x, offset_y);
+
+}
+
+bool JobRect::is_visible(int timestamp) const {
+    (void) timestamp;
+    return true;
 }
 
 void Line::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
@@ -104,8 +127,53 @@ bool VisibilityLine::is_visible(int timestamp) const {
     return this->schedule->is_active_at_time(timestamp);
 }
 
+Text::Text(Viewmodel *viewmodel, int offset_x, int offset_y) :
+    Drawable(viewmodel), offset_x(offset_x), offset_y(offset_y) {
+}
+
+void Text::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
+    assert(this->surface != nullptr);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, this->surface);
+    SDL_Rect dstrect{offset_x + this->offset_x, offset_y + this->offset_y, this->surface->w, this->surface->h};
+    SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+    SDL_DestroyTexture(texture);
+}
+
+int Text::width() const {
+    assert(this->surface != nullptr);
+    return this->surface->w;
+}
+
+int Text::height() const {
+    assert(this->surface != nullptr);
+    return this->surface->h;
+}
+
+SimpleText::SimpleText(Viewmodel *viewmodel, std::string text, int offset_x, int offset_y) :
+    Text(viewmodel, offset_x, offset_y), text(text) {
+    SDL_Color color = {255, 255, 255, 255};
+    this->surface = TTF_RenderText_Blended(this->viewmodel->font, this->text.c_str(), color);
+}
+
+SimpleText::~SimpleText() {
+    SDL_FreeSurface(this->surface);
+}
+
+void SimpleText::set_offset_x(int offset_x) {
+    this->offset_x = offset_x;
+}
+
+void SimpleText::set_offset_y(int offset_y) {
+    this->offset_y = offset_y;
+}
+
+bool SimpleText::is_visible(int timestamp) const {
+    (void) timestamp;
+    return true;
+}
+
 MessageText::MessageText(Viewmodel *viewmodel, const Message *message, int width, int offset_y) :
-    Drawable(viewmodel), message(message), offset_y(offset_y) {
+    Text(viewmodel, 0, offset_y), message(message) {
     std::stringstream ss;
     ss << this->message->timestamp << ": " << this->message->message;
     /* TODO: get color from viewmodel */
@@ -125,13 +193,6 @@ void MessageText::update(const Model *model) {
     }
 }
 
-void MessageText::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, this->surface);
-    SDL_Rect dstrect{offset_x, offset_y + this->offset_y, this->surface->w, this->surface->h};
-    SDL_RenderCopy(renderer, texture, NULL, &dstrect);
-    SDL_DestroyTexture(texture);
-}
-
 MessageText::~MessageText() {
     SDL_FreeSurface(this->surface_active);
     SDL_FreeSurface(this->surface_inactive);
@@ -142,6 +203,3 @@ bool MessageText::is_visible(int timestamp) const {
     return true;
 }
 
-int MessageText::height() const {
-    return this->surface->h;
-}
