@@ -21,6 +21,7 @@ class View {
     SchedulerFrame *CFS_frame = nullptr;
     VisibilityFrame *visibility_frame = nullptr;
     PlayerPositionFrame *player_position_frame = nullptr;
+    LegendFrame *legend_frame = nullptr;
     DependencyFrame *dependency_frame = nullptr;
     EventFrame *event_frame = nullptr;
     const Model *model = nullptr;

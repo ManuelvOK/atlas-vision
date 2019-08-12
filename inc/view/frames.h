@@ -86,6 +86,13 @@ public:
     void update_this(const Model *model) override;
 };
 
+class LegendFrame : public Frame {
+public:
+    LegendFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
+                    int height);
+    void update_this(const Model *model) override;
+};
+
 class DependencyFrame : public Frame {
 public:
     DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,

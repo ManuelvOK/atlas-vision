@@ -264,8 +264,8 @@ void SidebarFrame::update_this(const Model *model) {
     (void) model;
 }
 
-DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
-                                 int width, int height) :
+LegendFrame::LegendFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
+                         int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     std::vector<SimpleText *> index_texts;
     /* generate job id texts */
@@ -296,6 +296,27 @@ DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset
     /* insert index texts into drawables structure */
     for (Drawable *d: index_texts) {
         this->drawables.push_back(d);
+    }
+}
+
+void LegendFrame::update_this(const Model *model) {
+    (void) model;
+}
+
+DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y,
+                                 int width, int height) :
+    Frame(parent, viewmodel, offset_x, offset_y, width, height) {
+    std::map<int, std::vector<const Job *>> dependency_ordered_jobs;
+    for (const Job *j: *viewmodel->jobs) {
+        dependency_ordered_jobs[j->dependency_level].push_back(j);
+    }
+    for (std::pair<int, std::vector<const Job *>> jobs: dependency_ordered_jobs) {
+        int i = 0;
+        for (const Job * job: jobs.second) {
+            JobRect *r = new JobRect(this->viewmodel, job, i * 21, jobs.first * 21);
+            this->drawables.push_back(r);
+            ++i;
+        }
     }
 }
 

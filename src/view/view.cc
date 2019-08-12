@@ -76,9 +76,11 @@ void View::create_frame_hierarchy() {
     this->player_frame->add_child(visibility_frame);
     this->player_frame->add_child(player_position_frame);
 
-    this->dependency_frame = new DependencyFrame(sidebar_frame, this->viewmodel, 0, 0, 190, 400);
+    this->legend_frame = new LegendFrame(sidebar_frame, this->viewmodel, 0, 0, 40, 400);
+    this->dependency_frame = new DependencyFrame(sidebar_frame, this->viewmodel, 40, 0, 150, 400);
     this->event_frame = new EventFrame(sidebar_frame, this->viewmodel, 0, 400, 190, 170);
 
+    this->sidebar_frame->add_child(legend_frame);
     this->sidebar_frame->add_child(dependency_frame);
     this->sidebar_frame->add_child(event_frame);
 }

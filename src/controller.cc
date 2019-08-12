@@ -101,6 +101,12 @@ void parse_file(std::istream *input) {
         succ = succ && apply_schedule_change(change);
     }
 
+    /* calculate dependency level */
+    for (Job *job: model->jobs) {
+        job->calculate_dependency_level();
+        std::cerr << "dependency level of job " << job->id << ": " << job->dependency_level << std::endl;
+    };
+
 
     /* check for validity of input */
     if (!check_model()) {
