@@ -105,6 +105,13 @@ public:
     bool is_visible(int timestamp) const override;
 };
 
+class JobDependencyLine : public Line {
+public:
+    JobRect *r1;
+    JobRect *r2;
+    JobDependencyLine(const Viewmodel *viewmodel, JobRect *r1, JobRect *r2);
+};
+
 class VisibilityLine : public Line {
     const Schedule *schedule;
 public:

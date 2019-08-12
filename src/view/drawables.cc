@@ -111,6 +111,18 @@ void Line::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
                        this->end_x + offset_x, this->end_y + offset_y);
 }
 
+JobDependencyLine::JobDependencyLine(const Viewmodel *viewmodel, JobRect *r1, JobRect *r2) :
+    Line(viewmodel), r1(r1), r2(r2) {
+    this->begin_x = this->r1->rect.x + this->r1->rect.w / 2;
+    this->begin_y = this->r1->rect.y;
+    this->end_x = this->r2->rect.x + this->r2->rect.w / 2;
+    this->end_y = this->r2->rect.y + this->r2->rect.h;
+
+    /* TODO: get rid of magic number */
+    this->color = RGB(110);
+}
+
+
 bool Line::is_visible(int timestamp) const {
     (void) timestamp;
     return true;

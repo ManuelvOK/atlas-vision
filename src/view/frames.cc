@@ -307,15 +307,27 @@ DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset
                                  int width, int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     std::map<int, std::vector<const Job *>> dependency_ordered_jobs;
+    std::vector<JobRect *> job_rects;
     for (const Job *j: *viewmodel->jobs) {
         dependency_ordered_jobs[j->dependency_level].push_back(j);
+        JobRect *r = new JobRect(this->viewmodel, j, 0, 0);
+        job_rects.push_back(r);
     }
     for (std::pair<int, std::vector<const Job *>> jobs: dependency_ordered_jobs) {
         int i = 0;
         for (const Job * job: jobs.second) {
-            JobRect *r = new JobRect(this->viewmodel, job, i * 21, jobs.first * 21);
+            JobRect *r = job_rects[job->id];
+            /* TODO: get rid of magic numbers */
+            r->rect.x = i * 31;
+            r->rect.y = jobs.first * 31;
             this->drawables.push_back(r);
             ++i;
+        }
+    }
+    for (const Job *j: *viewmodel->jobs) {
+        for (const Job *dependency: j->known_dependencies) {
+            JobDependencyLine *l = new JobDependencyLine(this->viewmodel, job_rects[j->id], job_rects[dependency->id]);
+            this->drawables.push_back(l);
         }
     }
 }
