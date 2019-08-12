@@ -1,19 +1,19 @@
 #pragma once
 
-enum class change_type {
+enum class ChangeType {
     erase = 'd', // delete
     shift = 'b', // begin
     change_execution_time = 'e' //execution time
 };
 
-class Schedule_change {
+class ScheduleChange {
 public:
     int schedule_id;
     int timestamp;
-    change_type type;
+    ChangeType type;
     int value;
 
-    Schedule_change(int schedule_id, int timestamp, char type, int value)
-        : schedule_id(schedule_id), timestamp(timestamp), type(static_cast<change_type>(type)),
+    ScheduleChange(int schedule_id, int timestamp, char type, int value)
+        : schedule_id(schedule_id), timestamp(timestamp), type(static_cast<ChangeType>(type)),
           value(value) {}
 };

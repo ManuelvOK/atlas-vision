@@ -41,9 +41,9 @@ void Player::tick() {
 void Player::init(const Model *model) {
     /* set max position */
     this->max_position = 0;
-    for (auto p: model->schedules) {
-        const Schedule &s = p.second;
-        this->max_position = std::max(this->max_position, s.get_maximal_end());
+    for (std::pair<int, Schedule *> p: model->schedules) {
+        const Schedule *s = p.second;
+        this->max_position = std::max(this->max_position, s->get_maximal_end());
     }
     this->max_position = (this->max_position / 20 + 1) * 20;
 }

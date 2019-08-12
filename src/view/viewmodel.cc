@@ -46,45 +46,45 @@ void Viewmodel::init_EDF_sorted_jobs(const Model *model) {
         EDF_sorted_jobs.push_back(i);
     }
     std::sort(EDF_sorted_jobs.begin(), EDF_sorted_jobs.end(), [model](int a, int b) {
-            return model->jobs.at(a).deadline < model->jobs.at(b).deadline;
+            return model->jobs.at(a)->deadline < model->jobs.at(b)->deadline;
         });
 }
 
 void Viewmodel::init_submissions(const Model *model) {
     /* iterate over every job and insert submission */
     for (int job_id: this->EDF_sorted_jobs) {
-        const Job &job = model->jobs.at(job_id);
+        const Job *job = model->jobs.at(job_id);
 
-        if (this->submissions.find(job.submission_time) == this->submissions.end()) {
-            this->submissions.insert({job.submission_time, std::vector<int>()});
+        if (this->submissions.find(job->submission_time) == this->submissions.end()) {
+            this->submissions.insert({job->submission_time, std::vector<int>()});
         }
-        this->submissions[job.submission_time].push_back(job.id);
+        this->submissions[job->submission_time].push_back(job->id);
     }
 }
 
 void Viewmodel::init_deadlines(const Model *model) {
     /* iterate over every job and insert deadline */
     for (int job_id: this->EDF_sorted_jobs) {
-        const Job &job = model->jobs.at(job_id);
+        const Job *job = model->jobs.at(job_id);
 
-        if (this->deadlines.find(job.deadline) == this->deadlines.end()) {
-            this->deadlines.insert({job.deadline, std::vector<int>()});
+        if (this->deadlines.find(job->deadline) == this->deadlines.end()) {
+            this->deadlines.insert({job->deadline, std::vector<int>()});
         }
-        this->deadlines[job.deadline].push_back(job.id);
+        this->deadlines[job->deadline].push_back(job->id);
     }
 }
 
 void Viewmodel::init_schedules(const Model *model) {
     /* create schedule rect for every schedule */
     this->schedules.reserve(model->schedules.size());
-    for (std::pair<int, const Schedule &> s: model->schedules) {
-        this->schedules.emplace_back(this, &s.second);
+    for (std::pair<int, const Schedule *> s: model->schedules) {
+        this->schedules.emplace_back(this, s.second);
     }
 }
 
 void Viewmodel::init_visibilities(const Model *model) {
     this->visibilities.reserve(model->cfs_visibilities.size());
-    for (const Cfs_visibility &v: model->cfs_visibilities) {
+    for (const CfsVisibility *v: model->cfs_visibilities) {
         this->visibilities.emplace_back(this, nullptr);
     }
 }

@@ -85,22 +85,22 @@ void View::create_frame_hierarchy() {
 
 void View::update_schedules() {
     int timestamp = this->model->player.position;
-    for (std::pair<int, Schedule> s: this->model->schedules) {
+    for (std::pair<int, Schedule *> s: this->model->schedules) {
         ScheduleRect &schedule_rect = this->viewmodel->schedules[s.first];
 
         int begin;
         int execution_time;
         SchedulerType scheduler;
-        std::tie(begin, scheduler, execution_time) = s.second.get_data_at_time(timestamp);
+        std::tie(begin, scheduler, execution_time) = s.second->get_data_at_time(timestamp);
 
         schedule_rect.begin = begin;
-        if (scheduler == SchedulerType::CFS && s.second.is_active_at_time(timestamp)) {
+        if (scheduler == SchedulerType::CFS && s.second->is_active_at_time(timestamp)) {
             schedule_rect.time = timestamp - begin;
         } else {
             schedule_rect.time = execution_time;
         }
         schedule_rect.scheduler = scheduler;
-        schedule_rect.visible = s.second.exists_at_time(timestamp);
+        schedule_rect.visible = s.second->exists_at_time(timestamp);
         schedule_rect.recalculate_position();
     }
 }
@@ -108,13 +108,13 @@ void View::update_schedules() {
 void View::update_visibilities() {
     int timestamp = this->model->player.position;
     for (unsigned i = 0; i < this->model->cfs_visibilities.size(); ++i) {
-        Cfs_visibility visibility = this->model->cfs_visibilities[i];
+        CfsVisibility *visibility = this->model->cfs_visibilities[i];
         VisibilityLine &line = this->viewmodel->visibilities[i];
-        if (not visibility.is_active_at_time(timestamp)) {
+        if (not visibility->is_active_at_time(timestamp)) {
             line.visible = false;
             continue;
         }
-        ScheduleRect schedule = this->viewmodel->schedules[visibility.schedule_id];
+        ScheduleRect schedule = this->viewmodel->schedules[visibility->schedule_id];
         line.begin_x = this->viewmodel->u_to_px_w(schedule.begin);
         /* TODO: get rid of magic number */
         line.begin_y = 10;

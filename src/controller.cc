@@ -8,6 +8,7 @@
 #include <algorithm>
 
 #include <model/model.h>
+#include <parser.h>
 #include <view/view.h>
 
 /**
@@ -15,73 +16,27 @@
  */
 static void parse_file(std::istream *input);
 
-/**
- * parse number of cores from input line
- *
- * @param line
- *   line to parse with index at first parameter
- */
-static void parse_n_cores(std::stringstream *line);
-
-/**
- * parse job from input line
- *
- * @param line
- *   line to parse with index at first parameter
- */
-static void parse_job(std::stringstream *line);
-
-/**
- * parse schedule from input line
- *
- * @param line
- *   line to parse with index at first parameter
- */
-static void parse_schedule(std::stringstream *line);
-
-/**
- * parse schedule altering from input line
- * changes are only parsed to apply them later
- *
- * @param line
- *   line to parse with index at first parameter
- * @param changes
- *   vector to put Schedule_change object to
- */
-static void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes);
-
-/**
- * parse cfs visibility. This is the foremost ATLAS job that cfs can schedule
- *
- * @param line
- *   line to parse with index at first parameter
- */
-static void parse_cfs_visibility(std::stringstream *line);
-
-/**
- *
- * parse message
- *
- * @param line
- *   line to parse with index at begin of message
- */
-static void parse_message(std::stringstream *line);
 
 /**
  * add schedule change to appropriate schedule
  *
  * @param change
- *   Schedule_change to apply
+ *   ScheduleChange to apply
  *
  * @return
  *   true if applied succesfull. Otherwise false
  */
-bool apply_schedule_change(const Schedule_change &change);
+bool apply_schedule_change(const ScheduleChange *change);
 
 /**
  * model of application
  */
 static Model *model;
+
+/**
+ * parser
+ */
+static Parser parser;
 
 const Model *init_model(void) {
     assert(model == nullptr);
@@ -123,31 +78,29 @@ void read_input_from_stdin() {
 }
 
 void parse_file(std::istream *input) {
-    std::vector<Schedule_change> changes;
     std::string line;
     while (std::getline(*input, line)) {
-        std::stringstream ss(line);
-        char type = 0;
-        ss >> type;
-        switch (type) {
-            case 'c': parse_n_cores(&ss);          break;
-            case 'j': parse_job(&ss);              break;
-            case 's': parse_schedule(&ss);         break;
-            case 'a': parse_change(&ss, &changes); break;
-            case 'v': parse_cfs_visibility(&ss);   break;
-            case 'm': parse_message(&ss);          break;
-            case 0:
-            case '#': break;
-            default: std::cerr << "Parse error: \"" << type << "\" is not a proper type."
-                     << std::endl; break;
-        }
+        parser.parse_line(line);
     }
 
     bool succ = true;
+    model->n_cores = parser.n_cores;
+    model->jobs = parser.jobs;
+    model->schedules = parser.schedules;
+    model->cfs_visibilities = parser.cfs_visibilities;
+    model->messages = parser.messages;
+
+    for (std::pair<int, int> d: parser.dependencies) {
+        if (model->jobs.size() < std::max(d.first, d.second)) {
+            std::cerr << "Error parsing dependency \"d " << d.first << " " << d.second << "\": job vector has size of " << model->jobs.size() << std::endl;
+        }
+        model->jobs[d.first]->known_dependencies.push_back(model->jobs[d.second]);
+    }
     /* apply changes */
-    for (const Schedule_change &change: changes) {
+    for (const ScheduleChange *change: parser.changes) {
         succ = succ && apply_schedule_change(change);
     }
+
 
     /* check for validity of input */
     if (!check_model()) {
@@ -170,71 +123,24 @@ void read_input_from_file(std::string path) {
     input_file.close();
     /* sort jobs id wise */
     std::sort(model->jobs.begin(), model->jobs.end(),
-            [](const Job &a, const Job &b) -> bool {return a.id < b.id;});
+            [](const Job *a, const Job *b) -> bool {return a->id < b->id;});
 }
 
-void parse_n_cores(std::stringstream *line) {
-    *line >> model->n_cores;
-}
-
-void parse_job(std::stringstream *line) {
-    int id, deadline, time_estimate, time, submission;
-    *line >> id >> deadline >> time_estimate >> time >> submission;
-    model->jobs.emplace_back(id, deadline, time_estimate, time, submission);
-}
-
-void parse_schedule(std::stringstream *line) {
-    int id, job_id, core;
-    int submission_time, begin, time;
-    char scheduler;
-    *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
-    model->schedules.emplace(id, Schedule{id, job_id, core, scheduler, submission_time, begin, time});
-}
-
-void parse_change(std::stringstream *line, std::vector<Schedule_change> *changes) {
-    int schedule_id;
-    int timestamp;
-    int value = -1;
-    char type;
-    *line >> type >> timestamp >> schedule_id;
-    if (static_cast<change_type>(type) != change_type::erase) {
-        *line >> value;
-    }
-    changes->emplace_back(schedule_id, timestamp, type, value);
-}
-
-void parse_cfs_visibility(std::stringstream *line) {
-    int schedule_id;
-    int begin, end;
-    *line >> schedule_id >> begin >> end;
-    model->cfs_visibilities.emplace_back(schedule_id, begin, end);
-}
-
-void parse_message(std::stringstream *line) {
-    int timestamp;
-    *line >> timestamp;
-    int pos = line->tellg();
-    std::string message = line->str();
-    message = message.substr(message.find_first_not_of(" ", pos));
-    model->messages.emplace_back(timestamp, message);
-
-}
-
-bool apply_schedule_change(const Schedule_change &change) {
-    if (static_cast<unsigned>(change.schedule_id) >= model->schedules.size()) {
-        std::cerr << "input error: validity\t- There is no Schedule with id " << change.schedule_id
+bool apply_schedule_change(const ScheduleChange *change) {
+    if (static_cast<unsigned>(change->schedule_id) >= model->schedules.size()) {
+        std::cerr << "input error: validity\t- There is no Schedule with id " << change->schedule_id
                   << " to change" << std::endl;
     }
-    Schedule *schedule = &model->schedules.at(change.schedule_id);
-    switch (change.type) {
-        case change_type::erase:
-            schedule->end = change.timestamp;
+    Schedule *schedule = model->schedules.at(change->schedule_id);
+    switch (change->type) {
+        case ChangeType::erase:
+            schedule->end = change->timestamp;
             break;
-        case change_type::shift:
-            schedule->begin.emplace(change.timestamp, change.value);
+        case ChangeType::shift:
+            schedule->begin.emplace(change->timestamp, change->value);
             break;
-        case change_type::change_execution_time:
-            schedule->execution_time.emplace(change.timestamp, change.value);
+        case ChangeType::change_execution_time:
+            schedule->execution_time.emplace(change->timestamp, change->value);
             break;
         default: break;
     }

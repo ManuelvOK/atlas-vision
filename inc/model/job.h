@@ -1,4 +1,6 @@
 #pragma once
+
+#include <vector>
 /**
  * Object representing a job
  */
@@ -24,6 +26,11 @@ public:
      *   timestamp the job gets submitted
      */
     int submission_time;
+
+    /**
+     * TODO: documentation
+     */
+    std::vector<Job *> known_dependencies;
 
     Job(int id, int deadline, int execution_time_estimate, int execution_time, int submission_time)
         : id(id), deadline(deadline), execution_time_estimate(execution_time_estimate),

@@ -6,6 +6,10 @@
 # job specification
 # > j deadline execution_time_estimate execution_time submission_time
 #
+# dependency specification
+#   The depender depends on the dependency
+# > d depender dependency
+#
 # schedule specification
 # TODO: add optional information about subdivision of jobs.
 # > s schedule_id job_id core scheduler submission_time begin execution_time
@@ -50,6 +54,20 @@ j 8  16000 2000 2000 0000 #X0 id=8
 j 9  24000 3000 3000 0000 #X1 id=9
 j 10 20000 2000 2000 0000 #X2 id=10
 j 11 22000 1000 1000 7000 #X3 id=11
+
+################
+# DEPENDENCIES #
+################
+
+# task with jobs 0 1 2 3 in that order
+d 1 0
+d 2 1
+d 3 2
+
+# task with jobs 4 5 6 7 in that order
+d 5 4
+d 6 5
+d 7 6
 
 #############
 # schedules #

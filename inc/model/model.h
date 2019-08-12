@@ -27,22 +27,22 @@ public:
     /**
      * list of jobs
      */
-    std::vector<Job> jobs;
+    std::vector<Job *> jobs;
 
     /**
      * list of schedules for the jobs
      */
-    std::map<int, Schedule> schedules;
+    std::map<int, Schedule *> schedules;
 
     /**
      * list of atlas schedules visibile for cfs scheduler
      */
-    std::vector<Cfs_visibility> cfs_visibilities;
+    std::vector<CfsVisibility *> cfs_visibilities;
 
     /**
      * messages to display at a given timestamp
      */
-    std::vector<Message> messages;
+    std::vector<Message *> messages;
 
     /**
      * simulation player

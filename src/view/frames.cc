@@ -185,7 +185,7 @@ DeadlineFrame::DeadlineFrame(const Model *model, Frame *parent, Viewmodel *viewm
         /* TODO: get rid of magic number */
         int offset = this->height - 7 * (submissions.second.size() - 1);
         for (int job: submissions.second) {
-            const Job *job_ref = &model->jobs[job];
+            const Job *job_ref = model->jobs[job];
             SubmissionArrow *a =
                 new SubmissionArrow(this->viewmodel, job_ref, submission_position_x, offset - 1);
             a->color = this->viewmodel->get_color(job);
@@ -201,7 +201,7 @@ DeadlineFrame::DeadlineFrame(const Model *model, Frame *parent, Viewmodel *viewm
         /* TODO: get rid of magic number */
         int offset = 7 * (deadlines.second.size() - 1);
         for (int job: deadlines.second) {
-            const Job *job_ref = &model->jobs[job];
+            const Job *job_ref = model->jobs[job];
             DeadlineArrow *a = new DeadlineArrow(this->viewmodel, job_ref, deadline_position_x, offset - 1);
             a->color = this->viewmodel->get_color(job);
             this->drawables.push_back(a);
@@ -269,8 +269,8 @@ DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     std::vector<SimpleText *> index_texts;
     /* generate job id texts */
-    for (const Job &j: *viewmodel->jobs) {
-        SimpleText *t = new SimpleText(this->viewmodel, std::to_string(j.id), 0, 0);
+    for (const Job *j: *viewmodel->jobs) {
+        SimpleText *t = new SimpleText(this->viewmodel, std::to_string(j->id), 0, 0);
         index_texts.push_back(t);
     }
     /* align job id texts */
@@ -284,8 +284,8 @@ DependencyFrame::DependencyFrame(Frame *parent, Viewmodel *viewmodel, int offset
     /* generate job rects */
     int job_offset_y = 0;
     int i = 0;
-    for (const Job &j: *viewmodel->jobs) {
-        JobRect *r = new JobRect(this->viewmodel, &j, max_width, job_offset_y);
+    for (const Job *j: *viewmodel->jobs) {
+        JobRect *r = new JobRect(this->viewmodel, j, max_width, job_offset_y);
         /* directly insert job rects */
         this->drawables.push_back(r);
         /* align index texts */
@@ -307,8 +307,8 @@ EventFrame::EventFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int of
                        int height) :
     Frame(parent, viewmodel, offset_x, offset_y, width, height) {
     int text_offset_y = 0;
-    for (Message &m: viewmodel->messages) {
-        MessageText *message_text = new MessageText(this->viewmodel, &m, width, text_offset_y);
+    for (Message *m: viewmodel->messages) {
+        MessageText *message_text = new MessageText(this->viewmodel, m, width, text_offset_y);
         text_offset_y += message_text->height();
         this->drawables.push_back(message_text);
     }
