@@ -1,9 +1,11 @@
 #pragma once
 #include <SDL2/SDL.h>
 
+#include <view/positionable.h>
+
 class Viewmodel;
 class Model;
-class Drawable {
+class Drawable : public Positionable {
 protected:
     const Viewmodel *viewmodel;
 public:

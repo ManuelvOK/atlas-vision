@@ -4,21 +4,13 @@
 #include <SDL2/SDL.h>
 
 #include <model/model.h>
+#include <util/attributable.h>
 #include <view/viewmodel.h>
 #include <view/drawable.h>
+#include <view/positionable.h>
 
-class Position {
-public:
-    int x;
-    int y;
 
-    Position(int x, int y) : x(x), y(y) {}
-    Position operator+(Position &p) {
-        return Position(this->x + p.x, this->y + p.y);
-    }
-};
-
-class Frame {
+class Frame: public Positionable, public Attributable {
 protected:
     Frame *parent;
     Viewmodel *viewmodel;
@@ -34,12 +26,9 @@ protected:
     virtual void update_this(const Model *model) = 0;
     virtual void draw_this(SDL_Renderer *renderer, int global_offset_x, int global_offset_y) const;
 public:
-    int width;
-    int height;
-
     Frame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width, int height)
-        : parent(parent), viewmodel(viewmodel), offset_x(offset_x), offset_y(offset_y),
-          width(width), height(height) {}
+        : Positionable(0,0,width,height), parent(parent), viewmodel(viewmodel), offset_x(offset_x),
+          offset_y(offset_y) {}
 
     virtual ~Frame();
 

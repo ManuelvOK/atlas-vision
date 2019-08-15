@@ -3,8 +3,11 @@
 #include <SDL2/SDL.h>
 
 #include <controller.h>
+#include <util/attribute_tree.h>
 #include <view/frames.h>
 #include <view/viewmodel.h>
+
+//Tree<Frame> foo;
 
 class View {
     SDL_Window *window = nullptr;
@@ -33,6 +36,8 @@ class View {
     void update_schedules();
 
     void update_visibilities();
+
+    Tree<Frame> frame_hierarchy;
 public:
 
     /**

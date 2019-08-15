@@ -44,6 +44,7 @@ View::~View() {
 }
 
 void View::create_frame_hierarchy() {
+    this->frame_hierarchy.find_all_with_attribute("lol");
     /* TODO: get magic offset values from config */
     this->window_frame = new WindowFrame(nullptr, this->viewmodel, 0, 0, 800, 600);
     this->player_frame = new PlayerFrame(this->window_frame, this->viewmodel, 20, 20, this->viewmodel->config.player.width_px, this->viewmodel->config.player.height_px);
