@@ -14,45 +14,18 @@
  */
 class Model {
 public:
-    /**
-     * flag to determine whether the application runs
-     */
-    int running = 1;
+    int _running = 1; /**< flag to determine whether the application runs */
+    int _n_cores = -1; /**< number of cores the jobs get scheduled on */
+    std::vector<Job *> _jobs; /**< list of jobs */
+    std::map<int, Schedule *> _schedules; /**< list of schedules for the jobs */
+    std::vector<CfsVisibility *> _cfs_visibilities; /**< list of atlas schedules visibile for cfs scheduler */
+    std::vector<Message *> _messages; /**< messages to display at a given timestamp */
+    Player _player; /**< simulation player */
+    /* TODO: move out of model */
+    int _hovered_job = -1; /**< ID of Job that gets hovered */
 
     /**
-     * number of cores the jobs get scheduled on
+     * Constructor
      */
-    int n_cores = -1;
-
-    /**
-     * list of jobs
-     */
-    std::vector<Job *> jobs;
-
-    /**
-     * list of schedules for the jobs
-     */
-    std::map<int, Schedule *> schedules;
-
-    /**
-     * list of atlas schedules visibile for cfs scheduler
-     */
-    std::vector<CfsVisibility *> cfs_visibilities;
-
-    /**
-     * messages to display at a given timestamp
-     */
-    std::vector<Message *> messages;
-
-    /**
-     * simulation player
-     */
-    Player player;
-
-    /**
-     * TODO
-     */
-    int hovered_job = -1;
-
-    Model() : jobs(), schedules(), cfs_visibilities(), player() {}
+    Model() : _jobs(), _schedules(), _cfs_visibilities(), _player() {}
 };

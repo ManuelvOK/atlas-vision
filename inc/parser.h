@@ -12,15 +12,18 @@ class Message;
 class Schedule;
 class ScheduleChange;
 
+/**
+ * A Parser for the Simulation input
+ */
 class Parser {
   public:
-    int n_cores;
-    std::vector<Job *> jobs;
-    std::map<int, Schedule *> schedules;
-    std::vector<ScheduleChange *> changes;
-    std::vector<CfsVisibility *> cfs_visibilities;
-    std::vector<Message *> messages;
-    std::vector<std::pair<int, int>> dependencies;
+    int _n_cores; /**< number of cores */
+    std::vector<Job *> _jobs; /**< Job descriptions */
+    std::map<int, Schedule *> _schedules; /**< schedule descriptions, mapped to its timestamp */
+    std::vector<ScheduleChange *> _changes; /**< schedule change descriptions */
+    std::vector<CfsVisibility *> _cfs_visibilities; /**< CFS visibility descriptions */
+    std::vector<Message *> _messages; /**< message descriptions */
+    std::vector<std::pair<int, int>> _dependencies; /**< description of dependencies between jobs */
 
     /**
      * parses a full line of job description input format
