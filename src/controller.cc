@@ -46,18 +46,18 @@ const Model *init_model(void) {
 
 void handle_input(const struct input *input, View *view) {
     if (input->quit) {
-        model->running = 0;
+        model->_running = 0;
         return;
     }
     /* Player input */
     if (input->player.toggle_play) {
-        model->player.toggle();
+        model->_player.toggle();
     }
     if (input->player.rewind) {
-        model->player.rewind();
+        model->_player.rewind();
     }
     if (input->player.position >= 0) {
-        model->player.set(input->player.position);
+        model->_player.set(input->player.position);
     }
     if (input->player.offset != 0) {
         view->shift_player(input->player.offset);
@@ -69,7 +69,7 @@ void handle_input(const struct input *input, View *view) {
         update_window(input->window.width, input->window.height);
     }
     /* hovered job */
-    model->hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y);
+    model->_hovered_job = get_hovered_job(input->mouse_position_x, input->mouse_position_y);
 #endif
 }
 
@@ -84,38 +84,38 @@ void parse_file(std::istream *input) {
     }
 
     bool succ = true;
-    model->n_cores = parser.n_cores;
-    model->jobs = parser.jobs;
-    model->schedules = parser.schedules;
-    model->cfs_visibilities = parser.cfs_visibilities;
-    model->messages = parser.messages;
+    model->_n_cores = parser._n_cores;
+    model->_jobs = parser._jobs;
+    model->_schedules = parser._schedules;
+    model->_cfs_visibilities = parser._cfs_visibilities;
+    model->_messages = parser._messages;
 
-    for (std::pair<int, int> d: parser.dependencies) {
-        if (model->jobs.size() < std::max(d.first, d.second)) {
-            std::cerr << "Error parsing dependency \"d " << d.first << " " << d.second << "\": job vector has size of " << model->jobs.size() << std::endl;
+    for (std::pair<int, int> d: parser._dependencies) {
+        if (model->_jobs.size() < std::max(d.first, d.second)) {
+            std::cerr << "Error parsing dependency \"d " << d.first << " " << d.second << "\": job vector has size of " << model->_jobs.size() << std::endl;
         }
-        model->jobs[d.first]->known_dependencies.push_back(model->jobs[d.second]);
+        model->_jobs[d.first]->_known_dependencies.push_back(model->_jobs[d.second]);
     }
     /* apply changes */
-    for (const ScheduleChange *change: parser.changes) {
+    for (const ScheduleChange *change: parser._changes) {
         succ = succ && apply_schedule_change(change);
     }
 
     /* calculate dependency level */
-    for (Job *job: model->jobs) {
+    for (Job *job: model->_jobs) {
         job->calculate_dependency_level();
-        std::cerr << "dependency level of job " << job->id << ": " << job->dependency_level << std::endl;
+        std::cerr << "dependency level of job " << job->_id << ": " << job->_dependency_level << std::endl;
     };
 
 
     /* check for validity of input */
     if (!check_model()) {
-        model->running = 0;
+        model->_running = 0;
         return;
     }
 
     /* init player */
-    model->player.init(model);
+    model->_player.init(model);
 }
 
 
@@ -128,25 +128,25 @@ void read_input_from_file(std::string path) {
     parse_file(&input_file);
     input_file.close();
     /* sort jobs id wise */
-    std::sort(model->jobs.begin(), model->jobs.end(),
-            [](const Job *a, const Job *b) -> bool {return a->id < b->id;});
+    std::sort(model->_jobs.begin(), model->_jobs.end(),
+            [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
 }
 
 bool apply_schedule_change(const ScheduleChange *change) {
-    if (static_cast<unsigned>(change->schedule_id) >= model->schedules.size()) {
-        std::cerr << "input error: validity\t- There is no Schedule with id " << change->schedule_id
+    if (static_cast<unsigned>(change->_schedule_id) >= model->_schedules.size()) {
+        std::cerr << "input error: validity\t- There is no Schedule with id " << change->_schedule_id
                   << " to change" << std::endl;
     }
-    Schedule *schedule = model->schedules.at(change->schedule_id);
-    switch (change->type) {
+    Schedule *schedule = model->_schedules.at(change->_schedule_id);
+    switch (change->_type) {
         case ChangeType::erase:
-            schedule->end = change->timestamp;
+            schedule->_end = change->_timestamp;
             break;
         case ChangeType::shift:
-            schedule->begin.emplace(change->timestamp, change->value);
+            schedule->_begin.emplace(change->_timestamp, change->_value);
             break;
         case ChangeType::change_execution_time:
-            schedule->execution_time.emplace(change->timestamp, change->value);
+            schedule->_execution_time.emplace(change->_timestamp, change->_value);
             break;
         default: break;
     }
@@ -158,5 +158,5 @@ bool check_model() {
 }
 
 void control() {
-    model->player.tick();
+    model->_player.tick();
 }

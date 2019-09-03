@@ -10,34 +10,43 @@
 //Tree<Frame> foo;
 
 class View {
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+    SDL_Window *_window = nullptr; /**< SDL Window to display view */
+    SDL_Renderer *_renderer = nullptr; /**< SDL Renderer to draw on */
 
-    WindowFrame *window_frame = nullptr;
-    PlayerFrame *player_frame = nullptr;
-    SidebarFrame *sidebar_frame = nullptr;
-    SchedulerBackgroundFrame *scheduler_background_frame = nullptr;
-    PlayerGridFrame *player_grid_frame = nullptr;
-    DeadlineFrame *deadline_frame = nullptr;
-    SchedulerFrame *ATLAS_frame = nullptr;
-    SchedulerFrame *recovery_frame = nullptr;
-    SchedulerFrame *CFS_frame = nullptr;
-    VisibilityFrame *visibility_frame = nullptr;
-    PlayerPositionFrame *player_position_frame = nullptr;
-    LegendFrame *legend_frame = nullptr;
-    DependencyFrame *dependency_frame = nullptr;
-    EventFrame *event_frame = nullptr;
-    const Model *model = nullptr;
+    WindowFrame *_window_frame = nullptr; /**< Applications root frame */
+    PlayerFrame *_player_frame = nullptr; /**<  */
+    SidebarFrame *_sidebar_frame = nullptr; /**<  */
+    SchedulerBackgroundFrame *_scheduler_background_frame = nullptr; /**<  */
+    PlayerGridFrame *_player_grid_frame = nullptr; /**<  */
+    DeadlineFrame *_deadline_frame = nullptr; /**<  */
+    SchedulerFrame *_ATLAS_frame = nullptr; /**<  */
+    SchedulerFrame *_recovery_frame = nullptr; /**<  */
+    SchedulerFrame *_CFS_frame = nullptr; /**<  */
+    VisibilityFrame *_visibility_frame = nullptr; /**<  */
+    PlayerPositionFrame *_player_position_frame = nullptr; /**<  */
+    LegendFrame *_legend_frame = nullptr; /**<  */
+    DependencyFrame *_dependency_frame = nullptr; /**<  */
+    EventFrame *_event_frame = nullptr; /**<  */
+    const Model *_model = nullptr; /**<  */
 
-    Viewmodel *viewmodel = nullptr;
+    Viewmodel *_viewmodel = nullptr; /**<  */
 
+    /**
+     * initialise the hierarchy between the frames
+     */
     void create_frame_hierarchy();
 
+    /**
+     * synchronise schedule rects with schedules at current timestamp
+     */
     void update_schedules();
 
+    /**
+     * synchronise CFS visibilities at current timestamp
+     */
     void update_visibilities();
 
-    Tree<Frame> frame_hierarchy;
+    Tree<Frame> _frame_hierarchy;
 public:
 
     /**

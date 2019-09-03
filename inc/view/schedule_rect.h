@@ -8,7 +8,7 @@
 #include <view/drawables.h>
 #include <view/view_config.h>
 
-class Dependency_class {
+class DependencyClass {
 protected:
     bool changed = true;
 public:
@@ -16,13 +16,13 @@ public:
 };
 
 template <typename T>
-class Dependency_value {
-    Dependency_class *dependency_class;
+class DependencyValue {
+    DependencyClass *dependency_class;
     T value;
 public:
-    Dependency_value(Dependency_class *c, T value) : dependency_class(c), value(value) {}
+    DependencyValue(DependencyClass *c, T value) : dependency_class(c), value(value) {}
     operator T() const {return this->value;}
-    Dependency_value &operator=(T value) {
+    DependencyValue &operator=(T value) {
         if (value == this->value) {
             return *this;
         }
@@ -32,17 +32,17 @@ public:
     }
 };
 
-class Schedule_rect : public Dependency_class {
+class Schedule_rect : public DependencyClass {
     SDL_Rect m_render_position = {0, 0, 0, 0};
     const ViewConfig *config;
 
 public:
     int job_id;
-    Dependency_value<float> x;
-    Dependency_value<float> y;
-    Dependency_value<float> w;
-    Dependency_value<float> h;
-    Dependency_value<SchedulerType> scheduler;
+    DependencyValue<float> x;
+    DependencyValue<float> y;
+    DependencyValue<float> w;
+    DependencyValue<float> h;
+    DependencyValue<SchedulerType> scheduler;
     bool visible = true;
 
     Schedule_rect(const ViewConfig *config, int job_id, SchedulerType scheduler, float x = 0.0,

@@ -6,12 +6,12 @@
 Viewmodel::Viewmodel(const Model *model) :
     config(), EDF_sorted_jobs(), schedules(), deadlines(), submissions(), colors() {
     float player_width_px = this->get_player_width_px();
-    this->unit_w_min = player_width_px / model->player.max_position;
+    this->unit_w_min = player_width_px / model->_player._max_position;
     this->unit_w = this->unit_w_min;
     this->unit_h = this->config.unit.height_px;
-    this->n_jobs = model->jobs.size();
-    this->jobs = &model->jobs;
-    this->n_schedules = model->schedules.size();
+    this->n_jobs = model->_jobs.size();
+    this->jobs = &model->_jobs;
+    this->n_schedules = model->_schedules.size();
     this->init_colors();
     this->init_EDF_sorted_jobs(model);
     this->init_submissions(model);
@@ -19,7 +19,7 @@ Viewmodel::Viewmodel(const Model *model) :
     this->init_schedules(model);
     this->init_visibilities(model);
     this->init_ttf(model);
-    this->messages = model->messages;
+    this->messages = model->_messages;
 }
 
 void Viewmodel::init_colors() {
@@ -46,45 +46,45 @@ void Viewmodel::init_EDF_sorted_jobs(const Model *model) {
         EDF_sorted_jobs.push_back(i);
     }
     std::sort(EDF_sorted_jobs.begin(), EDF_sorted_jobs.end(), [model](int a, int b) {
-            return model->jobs.at(a)->deadline < model->jobs.at(b)->deadline;
+            return model->_jobs.at(a)->_deadline < model->_jobs.at(b)->_deadline;
         });
 }
 
 void Viewmodel::init_submissions(const Model *model) {
     /* iterate over every job and insert submission */
     for (int job_id: this->EDF_sorted_jobs) {
-        const Job *job = model->jobs.at(job_id);
+        const Job *job = model->_jobs.at(job_id);
 
-        if (this->submissions.find(job->submission_time) == this->submissions.end()) {
-            this->submissions.insert({job->submission_time, std::vector<int>()});
+        if (this->submissions.find(job->_submission_time) == this->submissions.end()) {
+            this->submissions.insert({job->_submission_time, std::vector<int>()});
         }
-        this->submissions[job->submission_time].push_back(job->id);
+        this->submissions[job->_submission_time].push_back(job->_id);
     }
 }
 
 void Viewmodel::init_deadlines(const Model *model) {
     /* iterate over every job and insert deadline */
     for (int job_id: this->EDF_sorted_jobs) {
-        const Job *job = model->jobs.at(job_id);
+        const Job *job = model->_jobs.at(job_id);
 
-        if (this->deadlines.find(job->deadline) == this->deadlines.end()) {
-            this->deadlines.insert({job->deadline, std::vector<int>()});
+        if (this->deadlines.find(job->_deadline) == this->deadlines.end()) {
+            this->deadlines.insert({job->_deadline, std::vector<int>()});
         }
-        this->deadlines[job->deadline].push_back(job->id);
+        this->deadlines[job->_deadline].push_back(job->_id);
     }
 }
 
 void Viewmodel::init_schedules(const Model *model) {
     /* create schedule rect for every schedule */
-    this->schedules.reserve(model->schedules.size());
-    for (std::pair<int, const Schedule *> s: model->schedules) {
+    this->schedules.reserve(model->_schedules.size());
+    for (std::pair<int, const Schedule *> s: model->_schedules) {
         this->schedules.emplace_back(this, s.second);
     }
 }
 
 void Viewmodel::init_visibilities(const Model *model) {
-    this->visibilities.reserve(model->cfs_visibilities.size());
-    for (const CfsVisibility *v: model->cfs_visibilities) {
+    this->visibilities.reserve(model->_cfs_visibilities.size());
+    for (const CfsVisibility *v: model->_cfs_visibilities) {
         this->visibilities.emplace_back(this, nullptr);
     }
 }
@@ -162,7 +162,7 @@ float Viewmodel::px_to_u_h(int pixel) const {
 }
 
 void Viewmodel::recompute_config(const Model *model) {
-    this->config.player.width_u = model->player.max_position;
+    this->config.player.width_u = model->_player._max_position;
     this->config.unit.width_px =
         (this->config.window.width_px - 2 * this->config.window.margin_x_px)
         / this->config.player.width_u;

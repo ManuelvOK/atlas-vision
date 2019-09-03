@@ -33,14 +33,14 @@ void Parser::parse_line(std::string line) {
 
 
 void Parser::parse_n_cores(std::stringstream *line) {
-    *line >> this->n_cores;
+    *line >> this->_n_cores;
 }
 
 void Parser::parse_job(std::stringstream *line) {
     int id, deadline, time_estimate, time, submission;
     *line >> id >> deadline >> time_estimate >> time >> submission;
     Job *job = new Job(id, deadline, time_estimate, time, submission);
-    this->jobs.emplace_back(job);
+    this->_jobs.emplace_back(job);
 }
 
 void Parser::parse_schedule(std::stringstream *line) {
@@ -49,7 +49,7 @@ void Parser::parse_schedule(std::stringstream *line) {
     char scheduler;
     *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
     Schedule *schedule = new Schedule(id, job_id, core, scheduler, submission_time, begin, time);
-    this->schedules.emplace(id, schedule);
+    this->_schedules.emplace(id, schedule);
 }
 
 void Parser::parse_change(std::stringstream *line) {
@@ -62,7 +62,7 @@ void Parser::parse_change(std::stringstream *line) {
         *line >> value;
     }
     ScheduleChange *change = new ScheduleChange(schedule_id, timestamp, type, value);
-    this->changes.emplace_back(change);
+    this->_changes.emplace_back(change);
 }
 
 void Parser::parse_cfs_visibility(std::stringstream *line) {
@@ -70,7 +70,7 @@ void Parser::parse_cfs_visibility(std::stringstream *line) {
     int begin, end;
     *line >> schedule_id >> begin >> end;
     CfsVisibility *visibility = new CfsVisibility(schedule_id, begin, end);
-    this->cfs_visibilities.emplace_back(visibility);
+    this->_cfs_visibilities.emplace_back(visibility);
 }
 
 void Parser::parse_message(std::stringstream *line) {
@@ -80,12 +80,12 @@ void Parser::parse_message(std::stringstream *line) {
     std::string message = line->str();
     message = message.substr(message.find_first_not_of(" ", pos));
     Message *m = new Message(timestamp, message);
-    this->messages.emplace_back(m);
+    this->_messages.emplace_back(m);
 }
 
 void Parser::parse_dependency(std::stringstream *line) {
     int job1 = -1;
     int job2 = -1;
     *line >> job1 >> job2;
-    this->dependencies.emplace_back(job1, job2);
+    this->_dependencies.emplace_back(job1, job2);
 }

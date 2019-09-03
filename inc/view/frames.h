@@ -13,9 +13,9 @@ public:
 };
 
 class PlayerFrame : public Frame {
-    int shift_x = 0;
-    int shift_x_max;
-    int shift_x_min = 0;
+    int _shift_x = 0;
+    int _shift_x_max;
+    int _shift_x_min = 0;
 public:
     PlayerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                 int height);
@@ -36,7 +36,7 @@ public:
 };
 
 class PlayerGridFrame : public Frame {
-    int n_lines;
+    int _n_lines;
 public:
     PlayerGridFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                     int height);
@@ -45,19 +45,19 @@ public:
 };
 
 class DeadlineFrame : public Frame {
-    unsigned max_n_submissions;
-    unsigned max_n_deadlines;
+    unsigned _max_n_submissions;
+    unsigned _max_n_deadlines;
 public:
     DeadlineFrame(const Model *model, Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width, int height);
     void update_this(const Model *model) override;
 };
 
 class SchedulerFrame : public Frame {
-    SchedulerType scheduler;
+    SchedulerType _scheduler;
 public:
     SchedulerFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                    int height, SchedulerType scheduler)
-        : Frame(parent, viewmodel, offset_x, offset_y, width, height), scheduler(scheduler) {}
+        : Frame(parent, viewmodel, offset_x, offset_y, width, height), _scheduler(scheduler) {}
     ~SchedulerFrame() override;
     void update_this(const Model *model) override;
 };
@@ -71,7 +71,7 @@ public:
 };
 
 class PlayerPositionFrame : public Frame {
-    Line *player_line;
+    Line *_player_line;
 public:
     PlayerPositionFrame(Frame *parent, Viewmodel *viewmodel, int offset_x, int offset_y, int width,
                         int height);
