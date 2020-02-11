@@ -6,6 +6,7 @@ OBJDIR := $(CURDIR)/build
 DEPDIR := $(CURDIR)/.d
 INCDIR := $(CURDIR)/inc
 SRCDIR := $(CURDIR)/src
+LIBDIR := $(CURDIR)/lib
 
 RM     := rm -rf
 MKDIR  := mkdir -p
@@ -19,10 +20,14 @@ $(foreach dirname,$(dir $(SRCSCC)),$(shell $(MKDIR) $(DEPDIR)/$(dirname)))
 $(foreach dirname,$(dir $(SRCSCC)),$(shell $(MKDIR) $(OBJDIR)/$(dirname)))
 
 .PHONY: $(all)
-all:
+all: lib
 	+@$(MAKE) --no-print-directory -C $(OBJDIR) -f $(CURDIR)/Makefile \
 	 SRCDIR=$(SRCDIR) INCDIR=$(INCDIR) DEPDIR=$(DEPDIR) ROOTDIR=$(CURDIR) \
 	 $(MAKECMDGOALS)
+
+.PHONY: lib
+lib:
+	$(MAKE) -C $(LIBDIR)/SDL_GUI lib
 
 Makefile : ;
 
@@ -32,6 +37,7 @@ Makefile : ;
 clean:
 	$(RM) $(OBJDIR)
 	$(RM) $(DEPDIR)
+	$(MAKE) -C $(LIBDIR)/SDL_GUI clean
 
 else
 
