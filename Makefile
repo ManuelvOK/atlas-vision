@@ -23,6 +23,7 @@ $(foreach dirname,$(dir $(SRCSCC)),$(shell $(MKDIR) $(OBJDIR)/$(dirname)))
 all: lib
 	+@$(MAKE) --no-print-directory -C $(OBJDIR) -f $(CURDIR)/Makefile \
 	 SRCDIR=$(SRCDIR) INCDIR=$(INCDIR) DEPDIR=$(DEPDIR) ROOTDIR=$(CURDIR) \
+	 LIBDIR=$(LIBDIR) \
 	 $(MAKECMDGOALS)
 
 .PHONY: lib
@@ -43,7 +44,7 @@ else
 
 TARGET       := visualisation
 
-SRCSALL      := $(shell find $(ROOTDIR) -name "*.cc" -o -name "*.h")
+SRCSALL      := $(shell find $(ROOTDIR) -path $(LIBDIR) -prune -o -name "*.cc" -o -name "*.h")
 SRCSCCABS    := $(filter %.cc, $(SRCSALL))
 SRCSCC       := $(patsubst $(SRCDIR)/%,%,$(SRCSCCABS))
 SRCHABS      := $(filter %.h, $(SRCSALL))
@@ -52,7 +53,7 @@ OBJS         := $(SRCSCC:.cc=.o)
 DEPS         := $(addprefix $(patsubst $(ROOTDIR)/%,%,$(DEPDIR))/,$(SRCSCC:.cc=.d))
 
 CXXFLAGS     := -std=c++17 -Wall -Wextra -Wpedantic -g -O0 `sdl2-config --cflags`
-CXXFLAGS     += -I$(INCDIR)
+CXXFLAGS     += -I$(INCDIR) -I$(LIBDIR)
 
 CXXFLAGSTAGS := -I/home/morion/.vim/tags
 
@@ -79,10 +80,10 @@ effective: all
 
 .PHONY: makefile-debug
 makefile-debug:
-	@echo $(dir $(SRCSCC))
+	@echo 'find $(ROOTDIR) -path $(LIBDIR) -prune -o -name "*.cc" -o -name "*.h"'
 
 $(TARGET): $(OBJS)
-	$(CXX) -o $@ $^ $(LIBS)
+	$(CXX) -o $@ $^ $(LIBDIR)/SDL_GUI/build/SDL_GUI.a $(LIBS)
 
 $(DEPDIR)/%.d: %.cc
 	$(CXX) $(CXXFLAGS) -MM -o $@ $<

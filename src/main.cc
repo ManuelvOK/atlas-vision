@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <SDL_GUI/inc/application.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
@@ -8,6 +10,13 @@
 #include <input.h>
 #include <controller.h>
 
+int main(int argc, char *argv[]) {
+    SDL_GUI::Application application("Application");
+    application.run();
+    return 0;
+}
+
+#if 0
 /**
  * Initialise SDL for video output
  */
@@ -60,3 +69,4 @@ void quit_SDL() {
     TTF_Quit();
     SDL_Quit();
 }
+#endif
