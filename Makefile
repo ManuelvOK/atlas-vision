@@ -40,6 +40,10 @@ clean:
 	$(RM) $(DEPDIR)
 	$(MAKE) -C $(LIBDIR)/SDL_GUI clean
 
+.PHONY: sure
+sure: clean
+	@$(MAKE) --no-print-directory
+
 else
 
 TARGET       := visualisation

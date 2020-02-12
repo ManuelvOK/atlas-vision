@@ -2,9 +2,6 @@
 
 #include <SDL_GUI/inc/application.h>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-
 #include <model/model.h>
 #include <view/view.h>
 #include <input.h>
