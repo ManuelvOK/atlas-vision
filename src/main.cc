@@ -2,11 +2,6 @@
 
 #include <SDL_GUI/inc/application.h>
 
-#include <model/model.h>
-#include <view/view.h>
-#include <input.h>
-#include <controller.h>
-
 int main(int argc, char *argv[]) {
     SDL_GUI::Application application("Application");
     application.run();
@@ -14,6 +9,11 @@ int main(int argc, char *argv[]) {
 }
 
 #if 0
+#include <model/model.h>
+#include <view/view.h>
+#include <input.h>
+#include <controller.h>
+
 /**
  * Initialise SDL for video output
  */

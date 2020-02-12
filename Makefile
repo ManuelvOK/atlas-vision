@@ -48,7 +48,7 @@ else
 
 TARGET       := visualisation
 
-SRCSALL      := $(shell find $(ROOTDIR) -path $(LIBDIR) -prune -o -name "*.cc" -o -name "*.h")
+SRCSALL      := $(shell find $(ROOTDIR) -path $(LIBDIR) -prune -o -path $(INCDIR)/_old -prune -o -path $(SRCDIR)/_old -prune -o -name "*.cc" -o -name "*.h")
 SRCSCCABS    := $(filter %.cc, $(SRCSALL))
 SRCSCC       := $(patsubst $(SRCDIR)/%,%,$(SRCSCCABS))
 SRCHABS      := $(filter %.h, $(SRCSALL))
@@ -84,7 +84,7 @@ effective: all
 
 .PHONY: makefile-debug
 makefile-debug:
-	@echo 'find $(ROOTDIR) -path $(LIBDIR) -prune -o -name "*.cc" -o -name "*.h"'
+	@echo $(SRCSALL)
 
 $(TARGET): $(OBJS)
 	$(CXX) -o $@ $^ $(LIBDIR)/SDL_GUI/build/SDL_GUI.a $(LIBS)
