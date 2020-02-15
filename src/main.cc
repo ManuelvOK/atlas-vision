@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include <SDL_GUI/inc/application.h>
+#include <application.h>
 
 int main(int argc, char *argv[]) {
-    SDL_GUI::Application application("Application");
+    Application application("Application");
     application.run();
     return 0;
 }
