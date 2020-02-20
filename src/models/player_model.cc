@@ -1,19 +1,18 @@
-#include <model/player.h>
+#include <models/player_model.h>
 
 #include <iostream>
 
-#include <model/model.h>
-
-void Player::toggle() {
+void PlayerModel::toggle() {
+    std::cout << "toggle" << std::endl;
     this->_running = !this->_running;
 }
 
-void Player::rewind() {
+void PlayerModel::rewind() {
     this->_running = 0;
     this->_position = 0;
 }
 
-void Player::set(int position) {
+void PlayerModel::set(int position) {
     this->_position = position;
     /* check if over end of simulation */
     if (this->_position > this->_max_position) {
@@ -26,7 +25,7 @@ void Player::set(int position) {
     }
 }
 
-void Player::tick() {
+void PlayerModel::tick() {
     if (!this->_running) {
         return;
     }
@@ -38,12 +37,3 @@ void Player::tick() {
     }
 }
 
-void Player::init(const Model *model) {
-    /* set max position */
-    this->_max_position = 0;
-    for (std::pair<int, Schedule *> p: model->_schedules) {
-        const Schedule *s = p.second;
-        this->_max_position = std::max(this->_max_position, s->get_maximal_end());
-    }
-    this->_max_position = (this->_max_position / 20 + 1) * 20;
-}

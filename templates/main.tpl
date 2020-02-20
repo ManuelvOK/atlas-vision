@@ -15,6 +15,7 @@
         <rect width="580" height="110" x="0" y="100" border="true" attributes="visibility">
         </rect>
         <rect width="580" height="580" x="0" y="0" border="true" attributes="player-position">
+            <vertical-line color="red" height="580" x="0" attributes="player_position_line" />
         </rect>
     </rect>
     <rect width="190" height="580" x="600" y="0" border="true" attributes="sidebar">

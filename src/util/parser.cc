@@ -1,14 +1,14 @@
-#include <parser.h>
+#include <util/parser.h>
 
 #include <iostream>
 #include <string>
 #include <sstream>
 
-#include <model/cfs_visibility.h>
-#include <model/job.h>
-#include <model/message.h>
-#include <model/schedule.h>
-#include <model/schedule_change.h>
+#include <models/cfs_visibility.h>
+#include <models/job.h>
+#include <models/message.h>
+#include <models/schedule.h>
+#include <models/schedule_change.h>
 
 void Parser::parse_line(std::string line) {
     std::stringstream ss(line);

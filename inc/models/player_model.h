@@ -1,25 +1,13 @@
 #pragma once
 
-#include <vector>
+#include <SDL_GUI/inc/models/model_base.h>
 
-class Model;
-/**
- * Representation of the simulation player
- */
-class Player {
+class PlayerModel : public SDL_GUI::ModelBase {
 public:
     int _running = 0; /**< determines if the simulation gets played */
     int _speed = 200; /**< this value gets added to the position every tick */
     int _position = 0; /**< current position of player */
     int _max_position = 0; /**< length of full simulation */
-
-    /**
-     * initialise player
-     *
-     * @param model
-     *   application model
-     */
-    void init(const Model *model);
 
     /**
      * toggle play status
@@ -43,5 +31,4 @@ public:
      * trigger a player tick. That is incrementing the players position by its speed value
      */
     void tick();
-
 };

@@ -1,4 +1,4 @@
-#include <model/schedule.h>
+#include <models/schedule.h>
 
 #include <iostream>
 
