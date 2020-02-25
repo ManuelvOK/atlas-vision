@@ -1,25 +1,25 @@
 #pragma once
 
-class InterfaceConfig {
+const class {
 public:
-    class {
+    const class {
         public:
         int width_px = 1000;
         int height_px = 400;
         int margin_x_px = 20;
         int margin_y_px = 20;
     } window;
-    class {
+    const class {
         public:
         float width_px = .012;
         float height_px = 20;
     } unit;
-    class {
+    const class {
         public:
         int margin_x_px = 0;
         int margin_y_px = 0;
     } job;
-    class {
+    const class {
         public:
        const float offset_y_u = 5;
        const float ATLAS_offset_y_u = 0;
@@ -29,20 +29,20 @@ public:
        const float CFS_offset_y_u = 2.6;
        const int CFS_grey = 200;
     } schedule;
-    class {
+    const class {
         public:
         const float margin_x_u = -1.0/30;
         const float margin_y_u = -2.0/20;
         const float width_u = 2.0/30;
         const float height_u = 24.0/20;
     } deadline;
-    class {
+    const class {
         public:
         const float width_u = 4.0/30;
         const float height_u = 1;
         const float spacing_u = 2.0/30;
     } color_deadline;
-    class {
+    const class {
         public:
         const int offset_y_u = 10;
         int width_u = 0; // this gets computed later
@@ -59,5 +59,4 @@ public:
 
     bool changed = false;
 
-    InterfaceConfig() : window(), unit(), job(), schedule(), deadline(), color_deadline(), player() {}
 } interface_config;

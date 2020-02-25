@@ -122,18 +122,6 @@ class Viewmodel {
     Viewmodel(const Model *model);
 
     /**
-     * get rgb values of the color for a given job
-     *
-     * @param job
-     *   number of job to get color for
-     * @param modifier
-     *   color alpha
-     *
-     * @return RGB color object of job color
-     */
-    RGB get_color(int job, float modifier = 1.0) const;
-
-    /**
      * check if point is inside a SDL_Rect
      *
      * @param x
@@ -147,58 +135,10 @@ class Viewmodel {
     bool point_inside_rect(int x, int y, const SDL_Rect *r) const;
 
     /**
-     * convert width unit to pixel value
-     *
-     * @param unit
-     *   unit value to convert into pixel
-     * @returns
-     *   width pixel value of unit
-     */
-    int u_to_px_w(float unit) const;
-
-    /**
-     * convert height unit to pixel value
-     *
-     * @param unit
-     *   unit value to convert into pixel
-     * @returns
-     *   height pixel value of unit
-     */
-    int u_to_px_h(float unit) const;
-
-    /**
-     * convert width pixel to unit value
-     *
-     * @param pixel
-     *   pixel value to convert into unit
-     * @returns
-     *   width unit value of pixel
-     */
-    float px_to_u_w(int pixel) const;
-
-    /**
-     * convert height pixel to unit value
-     *
-     * @param pixel
-     *   pixel value to convert into unit
-     * @returns
-     *   height unit value of pixel
-     */
-    float px_to_u_h(int pixel) const;
-
-    /**
      * recompute values in config given the current state
      *
      * @param model
      *   applications model
      */
     void recompute_config(const Model *model);
-
-    /**
-     * get the width of the player in pixels
-     *
-     * @returns
-     *   width of the player in pixels
-     */
-    int get_player_width_px() const;
 };

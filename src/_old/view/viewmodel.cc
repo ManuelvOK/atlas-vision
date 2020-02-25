@@ -107,59 +107,11 @@ RGB Viewmodel::get_color(int job, float modifier) const {
     return RGB(red * 255, green * 255, blue * 255);
 }
 
-int Viewmodel::get_player_width_px() const {
-    return this->config.player.width_px;
-}
-
-void Viewmodel::HSV_to_RGB(float h, float s, float v, float *r, float *g, float *b) const {
-
-    int i;
-    float f, p, q, t;
-    if (s == 0) {
-        /* achromatic (grey) */
-        *r = *g = *b = v;
-        return;
-    }
-
-    /* sector 0 to 5 */
-    h /= 60;
-    i = floor(h);
-
-    /* factorial part of h */
-    f = h - i;
-    p = v * (1 - s);
-    q = v * (1 - s * f);
-    t = v * (1 - s * (1 - f));
-    switch(i) {
-        case 0: *r = v; *g = t; *b = p; break;
-        case 1: *r = q; *g = v; *b = p; break;
-        case 2: *r = p; *g = v; *b = t; break;
-        case 3: *r = p; *g = q; *b = v; break;
-        case 4: *r = t; *g = p; *b = v; break;
-        default: *r = v; *g = p; *b = q; break;
-    }
-}
-
 bool Viewmodel::point_inside_rect(int x, int y, const SDL_Rect *r) const {
     return x > r->x && x < r->x + r->w
         && y > r->y && y < r->y + r->h;
 }
 
-int Viewmodel::u_to_px_w(float unit) const {
-    return (unit * this->unit_w);
-}
-
-int Viewmodel::u_to_px_h(float unit) const {
-    return (unit * this->unit_h);
-}
-
-float Viewmodel::px_to_u_w(int pixel) const {
-    return (pixel / this->unit_w);
-}
-
-float Viewmodel::px_to_u_h(int pixel) const {
-    return (pixel / this->unit_h);
-}
 
 void Viewmodel::recompute_config(const Model *model) {
     this->config.player.width_u = model->_player._max_position;
