@@ -23,11 +23,8 @@ public:
         public:
        const float offset_y_u = 5;
        const float ATLAS_offset_y_u = 0;
-       const int ATLAS_grey = 180;
        const float recovery_offset_y_u = 1.3;
-       const int recovery_grey = 190;
        const float CFS_offset_y_u = 2.6;
-       const int CFS_grey = 200;
     } schedule;
     const class {
         public:

@@ -4,6 +4,8 @@
 
 #include <config/interface_config.h>
 
+InterfaceModel::InterfaceModel() : _unit_width(interface_config.unit.width_px), _unit_width_min(0.0001), _unit_height(interface_config.unit.height_px) {}
+
 SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
     float red = 0;
     float green = 0;

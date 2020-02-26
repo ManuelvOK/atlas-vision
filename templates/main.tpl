@@ -1,4 +1,4 @@
-<rect width="800" height="600" border="true" attributes="window">
+<rect width="800" height="600" bg="170" border="true" attributes="window">
     <rect width="580" height="580" x="20" y="20" border="true" attributes="player">
         <rect width="580" height="580" x="0" y="0" border="true" attributes="player-grid">
         </rect>
@@ -6,11 +6,11 @@
         </rect>
         <rect width="580" height="100" x="0" y="0" border="true" margin="10 0 10" attributes="deadline">
         </rect>
-        <rect width="580" height="20" x="0" y="100" border="true" attributes="atlas">
+        <rect width="580" height="20" x="0" y="100" bg="180" border="true" attributes="atlas">
         </rect>
-        <rect width="580" height="20" x="0" y="126" border="true" attributes="recovery">
+        <rect width="580" height="20" x="0" y="126" bg="190" border="true" attributes="recovery">
         </rect>
-        <rect width="580" height="20" x="0" y="152" border="true" attributes="cfs">
+        <rect width="580" height="20" x="0" y="152" bg="200" border="true" attributes="cfs">
         </rect>
         <rect width="580" height="110" x="0" y="100" border="true" attributes="visibility">
         </rect>

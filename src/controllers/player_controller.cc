@@ -1,6 +1,13 @@
 #include <controllers/player_controller.h>
 
+#include <algorithm>
 #include <utility>
+
+#include <iostream>
+
+#include <SDL_GUI/inc/gui/rgb.h>
+
+#include <gui/arrow.h>
 
 PlayerController::PlayerController(PlayerModel *player_model, PlayerViewModel *player_view_model,
         const SDL_GUI::KeyboardInputModel<InputKey> *keyboard_input_model, const MouseInputModel *mouse_input_model,
@@ -64,5 +71,56 @@ void PlayerController::init(const AtlasModel *atlas_model) {
         });
 
     this->_player_view_model->_shift_x_max = this->_interface_model->get_player_width_px();
+
+    this->create_sub_and_dl_arrows(atlas_model);
+}
+
+void PlayerController::create_sub_and_dl_arrows(const AtlasModel *atlas_model) {
+    std::map<int, std::vector<int>> submissions;
+    int max_submissions = 0;
+    std::map<int, std::vector<int>> deadlines;
+    int max_deadlines = 0;
+    for (const Job *job: atlas_model->_jobs) {
+        /* subs */
+        submissions[job->_submission_time].push_back(job->_id);
+        max_submissions = std::max(max_submissions, static_cast<int>(submissions[job->_submission_time].size()));
+
+        /* dls */
+        deadlines[job->_deadline].push_back(job->_id);
+        max_deadlines = std::max(max_deadlines, static_cast<int>(deadlines[job->_deadline].size()));
+    };
+
+    SDL_GUI::Tree<SDL_GUI::Drawable> *tree = this->_interface_model->drawable_tree();
+    SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect = tree->filter([](SDL_GUI::Drawable *d){return d->has_attribute("deadline");})[0];
+
+    /* create subs */
+    for (std::pair<int, std::vector<int>> submissions_at_time: submissions) {
+        int submission_position_x = this->_interface_model->px_width(submissions_at_time.first);
+
+        /* TODO: get rid of magic number */
+        int offset = deadline_rect->node()->height() - 7 * (submissions_at_time.second.size() - 1);
+        for (int job_id: submissions_at_time.second) {
+            Arrow *a = new Arrow({submission_position_x, offset - 1});
+            a->_default_style._color = SDL_GUI::RGB("white");//this->_viewmodel->get_color(job);
+            deadline_rect->add_child(a);
+            /* TODO: get rid of magic number */
+            offset += 7;
+        }
+    }
+
+    /* create deadlines */
+    for (std::pair<int, std::vector<int>> deadlines_at_time: deadlines) {
+        int deadline_position_x = this->_interface_model->px_width(deadlines_at_time.first);
+
+        /* TODO: get rid of magic number */
+        int offset = 7 * (deadlines_at_time.second.size() - 1);
+        for (int job: deadlines_at_time.second) {
+            Arrow *a = new Arrow({deadline_position_x, offset-1}, Arrow::direction::DOWN);
+            a->_default_style._color = SDL_GUI::RGB("white");//this->_viewmodel->get_color(job);
+            deadline_rect->add_child(a);
+            /* TODO: get rid of magic number */
+            offset -= 7;
+        }
+    }
 
 }

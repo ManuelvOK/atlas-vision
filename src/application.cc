@@ -121,8 +121,7 @@ void Application::init_MVCs() {
     this->_model_list.push_back(mouse_input_model);
 
     /* init atlas model */
-    AtlasModel *atlas_model = new AtlasModel();
-    this->_model_list.push_back(atlas_model);
+    this->_model_list.push_back(this->_atlas_model);
 
     /* init player model */
     PlayerModel *player_model = new PlayerModel();
@@ -149,11 +148,11 @@ void Application::init_MVCs() {
     this->_controller_list.push_back(interface_controller);
 
     /* init ATLAS Controller */
-    AtlasController *atlas_controller = new AtlasController(atlas_model);
+    AtlasController *atlas_controller = new AtlasController(this->_atlas_model);
     this->_controller_list.push_back(atlas_controller);
 
     /* init player controller */
-    PlayerController *player_controller = new PlayerController(player_model, player_view_model, this->_keyboard_input_model, mouse_input_model, atlas_model, interface_model);
+    PlayerController *player_controller = new PlayerController(player_model, player_view_model, this->_keyboard_input_model, mouse_input_model, this->_atlas_model, interface_model);
     this->_controller_list.push_back(player_controller);
 
     /********

@@ -20,6 +20,8 @@ class PlayerController : public SDL_GUI::ControllerBase {
     void init(const AtlasModel *atlas_model);
 
     void evaluate_input();
+
+    void create_sub_and_dl_arrows(const AtlasModel *atlas_model);
 public:
     PlayerController(PlayerModel *player_model, PlayerViewModel *player_view_model, const SDL_GUI::KeyboardInputModel<InputKey> *keyboard_input_model,
             const MouseInputModel *mouse_input_model, const AtlasModel *atlas_model, InterfaceModel *interface_model);
