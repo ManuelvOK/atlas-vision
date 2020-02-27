@@ -6,6 +6,22 @@
 
 InterfaceModel::InterfaceModel() : _unit_width(interface_config.unit.width_px), _unit_width_min(0.0001), _unit_height(interface_config.unit.height_px) {}
 
+void InterfaceModel::init_colors(int n_jobs) {
+    std::vector<unsigned> c;
+    for (int i = 0; i < n_jobs; ++i) {
+        c.push_back((360 / (n_jobs)) * i);
+    }
+    int half = c.size() / 2;
+    this->_colors.reserve(n_jobs);
+    for (int i = 0; i < half; ++i) {
+        this->_colors.push_back(c[half + i]);
+        this->_colors.push_back(c[i]);
+    }
+    if (c.size() % 2 == 1) {
+        this->_colors.push_back(c.back());
+    }
+}
+
 SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
     float red = 0;
     float green = 0;

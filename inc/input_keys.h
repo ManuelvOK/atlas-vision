@@ -6,4 +6,6 @@ enum class InputKey {
     PLAYER_REWIND,
     PLAYER_FORWARDS,
     PLAYER_BACKWARDS,
+    PLAYER_ZOOM_IN,
+    PLAYER_ZOOM_OUT,
 };

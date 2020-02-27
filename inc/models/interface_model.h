@@ -17,6 +17,14 @@ public:
     std::vector<unsigned> _colors;   /**< job colors */
 
     /**
+     * initialise color presets
+     *
+     * @param n_jobs
+     *   number of jobs to calculate color preset for
+     */
+    void init_colors(int n_jobs);
+
+    /**
      * get rgb values of the color for a given job
      *
      * @param job

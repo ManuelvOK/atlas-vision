@@ -1,9 +1,6 @@
 #include <models/player_model.h>
 
-#include <iostream>
-
 void PlayerModel::toggle() {
-    std::cout << "toggle" << std::endl;
     this->_running = !this->_running;
 }
 
