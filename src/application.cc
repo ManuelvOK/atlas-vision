@@ -3,19 +3,16 @@
 #include <iostream>
 #include <string>
 
-#include <SDL_GUI/inc/controllers/keyboard_input_controller.h>
-#include <SDL_GUI/inc/models/keyboard_input_model.h>
+#include <SDL_GUI/inc/controllers/input_controller.h>
 #include <SDL_GUI/inc/views/interface_view.h>
 
 #include <config/input_config.h>
 
 #include <controllers/atlas_controller.h>
 #include <controllers/interface_controller.h>
-#include <controllers/mouse_input_controller.h>
 #include <controllers/player_controller.h>
 
 #include <models/interface_model.h>
-#include <models/mouse_input_model.h>
 #include <models/player_model.h>
 #include <models/player_view_model.h>
 
@@ -112,13 +109,9 @@ void Application::init_MVCs() {
     InterfaceModel *interface_model = new InterfaceModel();
     this->_model_list.push_back(interface_model);
 
-    /* init keyboard input model */
-    this->_keyboard_input_model = new SDL_GUI::KeyboardInputModel<InputKey>();
-    this->_model_list.push_back(this->_keyboard_input_model);
-
-    /* init keyboard input model */
-    MouseInputModel *mouse_input_model = new MouseInputModel();
-    this->_model_list.push_back(mouse_input_model);
+    /* init input model */
+    this->_input_model = new SDL_GUI::InputModel<InputKey>();
+    this->_model_list.push_back(this->_input_model);
 
     /* init atlas model */
     this->_model_list.push_back(this->_atlas_model);
@@ -134,25 +127,20 @@ void Application::init_MVCs() {
     /***************
      * Controllers *
      ***************/
-    /* init keyboard input controller */
-    SDL_GUI::KeyboardInputController<InputKey> *keyboard_input_controller = new SDL_GUI::KeyboardInputController<InputKey>(this->_keyboard_input_model, input_config);
-    this->_controller_list.push_back(keyboard_input_controller);
-
-    /* init mouse input controller */
-    MouseInputController *mouse_input_controller = new MouseInputController();
-    mouse_input_controller->set_model(mouse_input_model);
-    this->_controller_list.push_back(mouse_input_controller);
+    /* init input controller */
+    SDL_GUI::InputController<InputKey> *input_controller = new SDL_GUI::InputController<InputKey>(this->_input_model, keyboard_input_config, window_event_config);
+    this->_controller_list.push_back(input_controller);
 
     /* init interface controller */
-    InterfaceController *interface_controller = new InterfaceController("./templates/main.tpl", interface_model, mouse_input_model, player_model);
+    InterfaceController *interface_controller = new InterfaceController("./templates/main.tpl", interface_model, this->_input_model, player_model);
     this->_controller_list.push_back(interface_controller);
 
     /* init ATLAS Controller */
-    AtlasController *atlas_controller = new AtlasController(this->_atlas_model, interface_model, this->_keyboard_input_model);
+    AtlasController *atlas_controller = new AtlasController(this->_atlas_model, interface_model, this->_input_model);
     this->_controller_list.push_back(atlas_controller);
 
     /* init player controller */
-    PlayerController *player_controller = new PlayerController(player_model, player_view_model, this->_keyboard_input_model, mouse_input_model, this->_atlas_model, interface_model);
+    PlayerController *player_controller = new PlayerController(player_model, player_view_model, this->_input_model, this->_atlas_model, interface_model);
     this->_controller_list.push_back(player_controller);
 
     /********
@@ -165,7 +153,7 @@ void Application::init_MVCs() {
 }
 
 void Application::update_running() {
-    if (this->_keyboard_input_model->is_down(InputKey::QUIT)) {
+    if (this->_input_model->is_down(InputKey::QUIT)) {
         this->_is_running = false;
     }
 }

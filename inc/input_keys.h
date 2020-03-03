@@ -8,4 +8,5 @@ enum class InputKey {
     PLAYER_BACKWARDS,
     PLAYER_ZOOM_IN,
     PLAYER_ZOOM_OUT,
+    RESIZED,
 };

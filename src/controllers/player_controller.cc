@@ -6,13 +6,11 @@
 #include <iostream>
 
 PlayerController::PlayerController(PlayerModel *player_model, PlayerViewModel *player_view_model,
-        const SDL_GUI::KeyboardInputModel<InputKey> *keyboard_input_model, const MouseInputModel *mouse_input_model,
-        const AtlasModel *atlas_model,
+        const SDL_GUI::InputModel<InputKey> *input_model, const AtlasModel *atlas_model,
         InterfaceModel *interface_model) :
     _player_model(player_model),
     _player_view_model(player_view_model),
-    _keyboard_input_model(keyboard_input_model),
-    _mouse_input_model(mouse_input_model),
+    _input_model(input_model),
     _interface_model(interface_model) {
     this->init(atlas_model);
 }
@@ -23,16 +21,16 @@ void PlayerController::update() {
 }
 
 void PlayerController::evaluate_input() {
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_TOGGLE)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_TOGGLE)) {
         this->_player_model->toggle();
     }
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_REWIND)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_REWIND)) {
         this->_player_model->rewind();
     }
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_FORWARDS)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_FORWARDS)) {
         this->_player_model->set(this->_player_model->_position + 1000);
     }
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_BACKWARDS)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_BACKWARDS)) {
         this->_player_model->set(this->_player_model->_position - 1000);
     }
 }

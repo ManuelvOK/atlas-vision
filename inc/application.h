@@ -3,14 +3,14 @@
 #include <fstream>
 
 #include <SDL_GUI/inc/application.h>
-#include <SDL_GUI/inc/models/keyboard_input_model.h>
+#include <SDL_GUI/inc/models/input_model.h>
 
 #include <input_keys.h>
 #include <models/atlas_model.h>
 #include <models/schedule_change.h>
 
 class Application : public SDL_GUI::Application {
-    SDL_GUI::KeyboardInputModel<InputKey> *_keyboard_input_model = nullptr;
+    SDL_GUI::InputModel<InputKey> *_input_model = nullptr;
 
     AtlasModel *_atlas_model;
 

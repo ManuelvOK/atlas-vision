@@ -6,7 +6,7 @@
 
 #include <gui/arrow.h>
 
-AtlasController::AtlasController(AtlasModel *atlas_model, InterfaceModel *interface_model, const SDL_GUI::KeyboardInputModel<InputKey> *keyboard_input_model) : _atlas_model(atlas_model), _interface_model(interface_model), _keyboard_input_model(keyboard_input_model) {
+AtlasController::AtlasController(AtlasModel *atlas_model, InterfaceModel *interface_model, const SDL_GUI::InputModel<InputKey> *input_model) : _atlas_model(atlas_model), _interface_model(interface_model), _input_model(input_model) {
     this->init_this();
 }
 
@@ -40,7 +40,7 @@ void AtlasController::init_this() {
             Arrow *a = new Arrow({0, offset - 1});
             /* recompute the position based on the scale */
             a->add_recalculation_callback([submission_position_x,px_width](SDL_GUI::Drawable *d) {
-                    d->set_x(px_width(submission_position_x));
+                    d->set_x(10 +px_width(submission_position_x));
                 });
             a->_default_style._color = this->_interface_model->get_color(job_id);
             deadline_rect->add_child(a);
@@ -59,7 +59,7 @@ void AtlasController::init_this() {
             Arrow *a = new Arrow({deadline_position_x, offset-1}, Arrow::direction::DOWN);
             /* recompute the position based on the scale */
             a->add_recalculation_callback([deadline_position_x,px_width](SDL_GUI::Drawable *d) {
-                    d->set_x(px_width(deadline_position_x));
+                    d->set_x(10 + px_width(deadline_position_x));
                 });
             a->_default_style._color = this->_interface_model->get_color(job_id);
             deadline_rect->add_child(a);
@@ -70,10 +70,10 @@ void AtlasController::init_this() {
 }
 
 void AtlasController::update() {
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_ZOOM_IN)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_IN)) {
         this->_interface_model->_unit_width += 0.01;
     }
-    if (this->_keyboard_input_model->is_down(InputKey::PLAYER_ZOOM_OUT)) {
+    if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_OUT)) {
         this->_interface_model->_unit_width = std::max<float>(this->_interface_model->_unit_width - 0.01, this->_interface_model->_unit_width_min);
     }
 }

@@ -8,8 +8,8 @@
 #include <SDL_GUI/inc/gui/primitives/rect.h>
 
 InterfaceController::InterfaceController(const std::string template_file_path,
-        InterfaceModel *interface_model, const MouseInputModel *mouse_input_model, const PlayerModel *player_model)
-    : SDL_GUI::InterfaceController(template_file_path, interface_model, mouse_input_model), _player_model(player_model) {
+        InterfaceModel *interface_model, const SDL_GUI::InputModelBase *input_model, const PlayerModel *player_model)
+    : SDL_GUI::InterfaceController(template_file_path, interface_model, input_model), _player_model(player_model) {
         this->init_this();
     }
 
