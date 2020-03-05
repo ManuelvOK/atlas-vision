@@ -26,8 +26,7 @@ void AtlasController::init_this() {
         max_deadlines = std::max(max_deadlines, static_cast<int>(deadlines[job->_deadline].size()));
     };
 
-    SDL_GUI::Tree<SDL_GUI::Drawable> *tree = this->_interface_model->drawable_tree();
-    SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect = tree->filter([](SDL_GUI::Drawable *d){return d->has_attribute("deadline");})[0];
+    SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect = this->_interface_model->find_first_tree_node("deadline");
 
     std::function<int(float)> px_width = std::bind(&InterfaceModel::px_width, this->_interface_model, std::placeholders::_1);
     /* create subs */

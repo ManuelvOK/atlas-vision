@@ -45,22 +45,19 @@ void PlayerController::init(const AtlasModel *atlas_model) {
     max_position = (max_position / 20 + 1) * 20;
     this->_player_model->_max_position = max_position;
 
-    /* get interface tree */
-    SDL_GUI::Tree<SDL_GUI::Drawable> *tree = this->_interface_model->drawable_tree();
-
     /* bind player position line to the models variable */
-    std::vector<SDL_GUI::TreeNode<SDL_GUI::Drawable> *> player_position_line = tree->filter([](SDL_GUI::Drawable *d){return d->has_attribute("player_position_line");});
+    SDL_GUI::Drawable * player_position_line = this->_interface_model->find_first_drawable("player_position_line");
     const PlayerModel *player_model = this->_player_model;
     const InterfaceModel *interface_model = this->_interface_model;
-    player_position_line[0]->node()->add_recalculation_callback([player_model, interface_model](SDL_GUI::Drawable *d){
+    player_position_line->add_recalculation_callback([player_model, interface_model](SDL_GUI::Drawable *d){
             d->set_x(interface_model->px_width(player_model->_position));
         });
 
     /* initialise the viewmodel of the player */
     /* TODO: The shift_x value should be directly changed inside the interface model */
-    std::vector<SDL_GUI::TreeNode<SDL_GUI::Drawable> *> player = tree->filter([](SDL_GUI::Drawable *d){return d->has_attribute("player");});
+    SDL_GUI::Drawable *player = this->_interface_model->find_first_drawable("player");
     const PlayerViewModel *player_view_model = this->_player_view_model;
-    player[0]->node()->add_recalculation_callback([player_view_model](SDL_GUI::Drawable *d) {
+    player->add_recalculation_callback([player_view_model](SDL_GUI::Drawable *d) {
             d->set_scroll_position_x(-player_view_model->_shift_x);
         });
 
