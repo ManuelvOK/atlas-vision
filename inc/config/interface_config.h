@@ -4,13 +4,6 @@ const class {
 public:
     const class {
         public:
-        int width_px = 1000;
-        int height_px = 400;
-        int margin_x_px = 20;
-        int margin_y_px = 20;
-    } window;
-    const class {
-        public:
         float width_px = .012;
         float height_px = 20;
     } unit;
@@ -20,19 +13,12 @@ public:
         int margin_y_px = 0;
     } job;
     const class {
-        public:
+       public:
        const float offset_y_u = 5;
        const float ATLAS_offset_y_u = 0;
        const float recovery_offset_y_u = 1.3;
        const float CFS_offset_y_u = 2.6;
     } schedule;
-    const class {
-        public:
-        const float margin_x_u = -1.0/30;
-        const float margin_y_u = -2.0/20;
-        const float width_u = 2.0/30;
-        const float height_u = 24.0/20;
-    } deadline;
     const class {
         public:
         const float width_u = 4.0/30;

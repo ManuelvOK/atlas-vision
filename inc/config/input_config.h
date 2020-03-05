@@ -15,6 +15,8 @@ const std::map<SDL_Scancode, InputKey> keyboard_input_config = {
     {SDL_SCANCODE_RIGHT, InputKey::PLAYER_FORWARDS},
     {SDL_SCANCODE_UP, InputKey::PLAYER_ZOOM_IN},
     {SDL_SCANCODE_DOWN, InputKey::PLAYER_ZOOM_OUT},
+    {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
+    {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
 };
 
 const std::map<SDL_WindowEventID, InputKey> window_event_config = {

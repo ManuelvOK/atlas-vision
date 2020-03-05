@@ -4,7 +4,4 @@
 
 class PlayerViewModel : public SDL_GUI::ModelBase {
 public:
-    int _shift_x = 0;
-    int _shift_x_max = 0;
-    int _shift_x_min = 0;
 };

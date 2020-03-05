@@ -33,6 +33,12 @@ void PlayerController::evaluate_input() {
     if (this->_input_model->is_down(InputKey::PLAYER_BACKWARDS)) {
         this->_player_model->set(this->_player_model->_position - 1000);
     }
+    if (this->_input_model->is_down(InputKey::PLAYER_SCROLL_LEFT)) {
+        this->_interface_model->find_first_drawable("player")->scroll_left();
+    }
+    if (this->_input_model->is_down(InputKey::PLAYER_SCROLL_RIGHT)) {
+        this->_interface_model->find_first_drawable("player")->scroll_right();
+    }
 }
 
 void PlayerController::init(const AtlasModel *atlas_model) {
@@ -53,13 +59,8 @@ void PlayerController::init(const AtlasModel *atlas_model) {
             d->set_x(interface_model->px_width(player_model->_position));
         });
 
-    /* initialise the viewmodel of the player */
-    /* TODO: The shift_x value should be directly changed inside the interface model */
+    /* set maximum scroll  */
     SDL_GUI::Drawable *player = this->_interface_model->find_first_drawable("player");
-    const PlayerViewModel *player_view_model = this->_player_view_model;
-    player->add_recalculation_callback([player_view_model](SDL_GUI::Drawable *d) {
-            d->set_scroll_position_x(-player_view_model->_shift_x);
-        });
-
-    this->_player_view_model->_shift_x_max = this->_interface_model->get_player_width_px();
+    player->enable_scrolling_x();
+    player->set_overscroll_x(1000);
 }
