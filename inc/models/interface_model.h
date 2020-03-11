@@ -24,6 +24,10 @@ public:
      */
     void init_colors(int n_jobs);
 
+    void set_unit_width(float unit_width);
+
+    void set_unit_width_min(float unit_width_min);
+
     /**
      * get rgb values of the color for a given job
      *

@@ -22,6 +22,15 @@ void InterfaceModel::init_colors(int n_jobs) {
     }
 }
 
+void InterfaceModel::set_unit_width(float unit_width) {
+    this->_unit_width = std::max(unit_width, this->_unit_width_min);
+}
+
+void InterfaceModel::set_unit_width_min(float unit_width_min) {
+    this->_unit_width_min = unit_width_min;
+    this->set_unit_width(this->_unit_width);
+}
+
 SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
     float red = 0;
     float green = 0;
@@ -45,8 +54,4 @@ float InterfaceModel::unit_width(int pixel) const {
 
 float InterfaceModel::unit_height(int pixel) const {
     return (pixel / this->_unit_height);
-}
-
-int InterfaceModel::get_player_width_px() const {
-    return interface_config.player.width_px;
 }

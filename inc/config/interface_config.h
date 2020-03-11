@@ -28,16 +28,10 @@ public:
     const class {
         public:
         const int offset_y_u = 10;
-        int width_u = 0; // this gets computed later
-        const int width_px = 580;
-        const int height_u = 1;
-        const int height_px = 580;
-        const float grid_height_big_u = 1.0/2;
-        const float grid_height_small_u = 1.0/6;
-        const float poi_max_height_u = 2.0/3;
-        const float poi_width_u = 1.0/3;
         const int grid_grey = 150;
+        const int grid_distance = 250;
         const int grid_dark_grey = 100;
+        const int grid_dark_distance = 4;
     } player;
 
     bool changed = false;
