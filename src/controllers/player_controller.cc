@@ -33,10 +33,10 @@ void PlayerController::evaluate_input() {
     if (this->_input_model->is_down(InputKey::PLAYER_BACKWARDS)) {
         this->_player_model->set(this->_player_model->_position - 1000);
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_SCROLL_LEFT)) {
+    if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_LEFT)) {
         this->_interface_model->find_first_drawable("player")->scroll_left();
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_SCROLL_RIGHT)) {
+    if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_RIGHT)) {
         this->_interface_model->find_first_drawable("player")->scroll_right();
     }
 }
