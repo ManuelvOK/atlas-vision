@@ -7,6 +7,7 @@
 #include <SDL_GUI/inc/gui/primitives/rect.h>
 #include <SDL_GUI/inc/util/tree.h>
 
+#include <config/interface_config.h>
 #include <gui/arrow.h>
 
 #include <iostream>
@@ -72,52 +73,42 @@ void AtlasController::init_this() {
         }
     }
 
-    std::map<SchedulerType, SDL_GUI::TreeNode<SDL_GUI::Drawable> *> schedulers;
-    schedulers[SchedulerType::ATLAS] = this->_interface_model->find_first_tree_node("atlas");
-    schedulers[SchedulerType::recovery] = this->_interface_model->find_first_tree_node("recovery");
-    schedulers[SchedulerType::CFS] = this->_interface_model->find_first_tree_node("cfs");
+    std::map<SchedulerType, int> offsets;
+    offsets[SchedulerType::ATLAS] = interface_config.schedule.ATLAS_offset_y;
+    offsets[SchedulerType::recovery] = interface_config.schedule.recovery_offset_y;
+    offsets[SchedulerType::CFS] = interface_config.schedule.CFS_offset_y;
+    SDL_GUI::TreeNode<SDL_GUI::Drawable> *core_rect = this->_interface_model->find_first_tree_node("core-1");
+
     /* create schedules */
     for (std::pair<int, Schedule *> s: this->_atlas_model->_schedules) {
         Schedule *schedule = s.second;
         SDL_GUI::RGB color = this->_interface_model->get_color(schedule->_job_id);
-        /* get a list of all different time interval starts */
-        std::vector<int> beginning_times;
-        for (std::pair<int,SchedulerType> pair: schedule->_scheduler) {
-            beginning_times.push_back(pair.first);
-        }
-        /* add INT_MAX as end of the last interval */
-        beginning_times.push_back(std::numeric_limits<int>::max());
-        /* iterate over all time intervals. Since we added INT_MAX as last value, we do not want to iterate over that */
-        for (unsigned i = 0; i < beginning_times.size() - 1; ++i) {
-            int starting_time = beginning_times[i];
-            int end_time = beginning_times[i+1];
-            if (schedule->_end >= 0) {
-                end_time = std::min(schedule->_end, end_time);
-            }
-            SchedulerType scheduler = schedule->_scheduler[starting_time];
+
             /* constructing Schedule */
             SDL_GUI::Rect *r = new SDL_GUI::Rect();
             r->set_height(this->_interface_model->px_height(1));
             r->_default_style._color = color;
             r->_default_style._has_background = true;
             r->_default_style._has_border = true;
-            /* zooming callback */
-            r->add_recalculation_callback([px_width,starting_time,schedule](SDL_GUI::Drawable *d){
-                    d->set_x(px_width(schedule->_begin[starting_time]));
-                    d->set_width(px_width(schedule->_execution_time[starting_time]));
-                });
             const PlayerModel *player_model = this->_player_model;
             /* hide schedules that should not be shown */
-            r->add_recalculation_callback([player_model,starting_time, end_time](SDL_GUI::Drawable *d){
-                    if (player_model->_position >= starting_time && player_model->_position < end_time) {
-                        d->show();
-                    } else {
+            r->add_recalculation_callback([px_width, player_model, schedule, offsets](SDL_GUI::Drawable *d){
+                    if (not schedule->exists_at_time(player_model->_position)) {
                         d->hide();
+                        return;
                     }
+                    d->show();
+                    int begin;
+                    SchedulerType scheduler;
+                    int execution_time;
+                    std::tie(begin, scheduler, execution_time) = schedule->get_data_at_time(player_model->_position);
+
+                    d->set_x(px_width(begin));
+                    d->set_y(offsets.at(scheduler));
+                    d->set_width(px_width(execution_time));
                 });
             /* add to tree */
-            schedulers[scheduler]->add_child(r);
-        }
+            core_rect->add_child(r);
     }
 }
 

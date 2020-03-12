@@ -1,5 +1,7 @@
 #include <models/interface_model.h>
 
+#include <cmath>
+
 #include <SDL_GUI/inc/gui/util.h>
 
 #include <config/interface_config.h>
@@ -41,17 +43,17 @@ SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
 }
 
 int InterfaceModel::px_width(float unit) const {
-    return (unit * this->_unit_width);
+    return std::ceil(unit * this->_unit_width);
 }
 
 int InterfaceModel::px_height(float unit) const {
-    return (unit * this->_unit_height);
+    return std::ceil(unit * this->_unit_height);
 }
 
 float InterfaceModel::unit_width(int pixel) const {
-    return (pixel / this->_unit_width);
+    return std::ceil(pixel / this->_unit_width);
 }
 
 float InterfaceModel::unit_height(int pixel) const {
-    return (pixel / this->_unit_height);
+    return std::ceil(pixel / this->_unit_height);
 }

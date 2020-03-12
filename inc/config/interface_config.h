@@ -14,10 +14,9 @@ public:
     } job;
     const class {
        public:
-       const float offset_y_u = 5;
-       const float ATLAS_offset_y_u = 0;
-       const float recovery_offset_y_u = 1.3;
-       const float CFS_offset_y_u = 2.6;
+       const int ATLAS_offset_y = 10;
+       const int recovery_offset_y = 40;
+       const int CFS_offset_y = 70;
     } schedule;
     const class {
         public:

@@ -35,8 +35,13 @@ std::tuple<int, SchedulerType, int> Schedule::get_data_at_time(int timestamp) co
         }
         execution_time_index = e.first;
     }
-    return {this->_begin.at(begin_index), this->_scheduler.at(scheduler_index),
-            this->_execution_time.at(execution_time_index)};
+    int begin = this->_begin.at(begin_index);
+    SchedulerType scheduler = this->_scheduler.at(scheduler_index);
+    int execution_time = this->_execution_time.at(execution_time_index);
+    if (scheduler == SchedulerType::CFS) {
+        execution_time = std::max(0,std::min(execution_time, timestamp - begin));
+    }
+    return {begin, scheduler, execution_time};
 }
 
 bool Schedule::exists_at_time(int timestamp) const {

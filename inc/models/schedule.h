@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <tuple>
 
 /**
@@ -29,6 +30,7 @@ public:
     std::map<int, int> _begin;
     int _end = -1; /**< possible end of this schedule */
     std::map<int, int> _execution_time; /**< time the scheduled job runs */
+    std::set<int> _change_points; /**< list of points at which changes happen */
 
     /**
      * Constructor

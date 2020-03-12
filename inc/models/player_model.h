@@ -5,7 +5,7 @@
 class PlayerModel : public SDL_GUI::ModelBase {
 public:
     int _running = 0;       /**< determines if the simulation gets played */
-    int _speed = 200;       /**< this value gets added to the position every tick */
+    int _speed = 50;       /**< this value gets added to the position every tick */
     int _position = 0;      /**< current position of player */
     int _max_position = 0;  /**< length of full simulation */
 

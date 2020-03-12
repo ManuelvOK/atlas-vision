@@ -98,6 +98,7 @@ bool Application::apply_schedule_change(AtlasModel *model, const ScheduleChange 
             break;
         default: break;
     }
+    schedule->_change_points.insert(change->_timestamp);
     return true;
 }
 
