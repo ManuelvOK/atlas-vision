@@ -136,7 +136,7 @@ void Application::init_MVCs() {
     this->_controller_list.push_back(interface_controller);
 
     /* init ATLAS Controller */
-    AtlasController *atlas_controller = new AtlasController(this->_atlas_model, interface_model, this->_input_model);
+    AtlasController *atlas_controller = new AtlasController(this->_atlas_model, interface_model, this->_input_model, player_model);
     this->_controller_list.push_back(atlas_controller);
 
     /* init player controller */
