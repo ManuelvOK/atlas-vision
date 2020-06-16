@@ -38,12 +38,18 @@ Makefile : ;
 clean:
 	$(RM) $(OBJDIR)
 	$(RM) $(DEPDIR)
+
+.PHONY: superclean
+superclean: clean
 	$(MAKE) -C $(LIBDIR)/SDL_GUI clean
 
 .PHONY: sure
 sure: clean
 	@$(MAKE) --no-print-directory
 
+.PHONY: supersure
+supersure: superclean
+	@$(MAKE) --no-print-directory
 else
 
 TARGET       := visualisation
@@ -61,13 +67,14 @@ CXXFLAGS     += -I$(INCDIR) -I$(LIBDIR)
 
 CXXFLAGSTAGS := -I/home/morion/.vim/tags
 
-LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf
+LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image
 
 vpath %.h $(dir $(SRCSHABS))
 vpath %.cc $(dir $(SRCSCCABS))
 vpath %.d $(dir $(addprefix $(DEPDIR)/, $(DEPS)))
 
 .PHONY: all
+all: LIBS += -fsanitize=address
 all: $(TARGET)
 
 .PHONY: tags

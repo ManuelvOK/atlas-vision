@@ -6,7 +6,7 @@
 
 class InterfaceModel : public SDL_GUI::InterfaceModel {
 public:
-    InterfaceModel();
+    InterfaceModel(SDL_Renderer *renderer, unsigned window_width, unsigned window_height);
 
     float _unit_width;       /**< current unit to pixel ratio of width*/
     float _unit_width_min;   /**< minimal unit to pixel ratio of width */

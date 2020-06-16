@@ -107,7 +107,7 @@ void Application::init_MVCs() {
      * Models *
      **********/
     /* init interface model */
-    InterfaceModel *interface_model = new InterfaceModel();
+    InterfaceModel *interface_model = new InterfaceModel(this->_renderer, this->_window_width, this->_window_height);
     this->_model_list.push_back(interface_model);
 
     /* init input model */
@@ -129,7 +129,7 @@ void Application::init_MVCs() {
      * Controllers *
      ***************/
     /* init input controller */
-    SDL_GUI::InputController<InputKey> *input_controller = new SDL_GUI::InputController<InputKey>(this->_input_model, keyboard_input_config, window_event_config);
+    SDL_GUI::InputController<InputKey> *input_controller = new SDL_GUI::InputController<InputKey>(this->_input_model, keyboard_input_config, window_event_config, mouse_input_config);
     this->_controller_list.push_back(input_controller);
 
     /* init interface controller */
