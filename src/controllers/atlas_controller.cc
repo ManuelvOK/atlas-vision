@@ -61,7 +61,8 @@ void AtlasController::init_this() {
     std::tie(submissions, max_submissions) = submissions_from_jobs(this->_atlas_model->_jobs);
     std::tie(deadlines, max_deadlines) = deadlines_from_jobs(this->_atlas_model->_jobs);
 
-    SDL_GUI::Drawable *deadline_rect = this->_default_interface_model->find_first_drawable("deadline");
+    SDL_GUI::Drawable *deadline_rect =
+        this->_default_interface_model->find_first_drawable("deadline");
 
     std::function<int(float)> px_width = std::bind(&InterfaceModel::px_width,
                                                    this->_interface_model, std::placeholders::_1);
@@ -69,8 +70,8 @@ void AtlasController::init_this() {
     create_deadline_drawables(deadlines, deadline_rect, px_width, this->_interface_model);
 
 
-    create_schedule_drawables(this->_interface_model, this->_default_interface_model, this->_atlas_model, this->_player_model,
-                              px_width);
+    create_schedule_drawables(this->_interface_model, this->_default_interface_model,
+                              this->_atlas_model, this->_player_model, px_width);
 }
 
 
@@ -112,11 +113,11 @@ void create_submission_drawables(std::map<int, std::vector<int>> submissions,
         /* TODO: get rid of magic number */
         int offset = deadline_rect->height() - 7 * (submissions_at_time.second.size() - 1);
         for (int job_id: submissions_at_time.second) {
-            Arrow *a = new Arrow({0, offset - 1});
+            Arrow *a = new Arrow(deadline_rect->position(), {10 + px_width(submission_position_x), offset});
             /* recompute the position based on the scale */
             a->add_recalculation_callback([submission_position_x,px_width](SDL_GUI::Drawable *d) {
-                    d->set_x(10 + px_width(submission_position_x));
-                });
+                d->set_x(10 + px_width(submission_position_x));
+            });
             a->_default_style._color = interface_model->get_color(job_id);
             deadline_rect->add_child(a);
             /* TODO: get rid of magic number */
@@ -136,7 +137,7 @@ void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
         /* TODO: get rid of magic number */
         int offset = 7 * (deadlines_at_time.second.size() - 1);
         for (int job_id: deadlines_at_time.second) {
-            Arrow *a = new Arrow({deadline_position_x, offset-1}, Arrow::direction::DOWN);
+            Arrow *a = new Arrow(deadline_rect->position(), {10 + px_width(deadline_position_x), offset}, Arrow::direction::DOWN);
             /* recompute the position based on the scale */
             a->add_recalculation_callback([deadline_position_x,px_width](SDL_GUI::Drawable *d) {
                 d->set_x(10 + px_width(deadline_position_x));

@@ -30,7 +30,7 @@ private:
 public:
     Arrow(): Drawable("Arrow") {}
 
-    Arrow(SDL_GUI::Position position, direction direction = direction::UP): Drawable("Arrow", position), _direction(direction) {}
+    Arrow(SDL_GUI::Position parent_position, SDL_GUI::Position position, direction direction = direction::UP): Drawable("Arrow", parent_position, position), _direction(direction) {}
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 };
