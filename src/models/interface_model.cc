@@ -4,9 +4,6 @@
 
 #include <SDL_GUI/inc/gui/util.h>
 
-#include <config/interface_config.h>
-
-InterfaceModel::InterfaceModel(SDL_Renderer *renderer, unsigned window_width, unsigned window_height) : SDL_GUI::InterfaceModel(renderer, window_width, window_height), _unit_width(interface_config.unit.width_px), _unit_width_min(0.0001), _unit_height(interface_config.unit.height_px) {}
 
 void InterfaceModel::init_colors(int n_jobs) {
     std::vector<unsigned> c;

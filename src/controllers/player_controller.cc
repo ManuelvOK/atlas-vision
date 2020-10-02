@@ -11,11 +11,12 @@
 
 PlayerController::PlayerController(PlayerModel *player_model, PlayerViewModel *player_view_model,
         const SDL_GUI::InputModel<InputKey> *input_model, const AtlasModel *atlas_model,
-        InterfaceModel *interface_model) :
+        InterfaceModel *interface_model, SDL_GUI::InterfaceModel *default_interface_model) :
     _player_model(player_model),
     _player_view_model(player_view_model),
     _input_model(input_model),
-    _interface_model(interface_model) {
+    _interface_model(interface_model),
+    _default_interface_model(default_interface_model) {
     this->init(atlas_model);
 }
 
@@ -38,17 +39,17 @@ void PlayerController::evaluate_input() {
         this->_player_model->set(this->_player_model->_position - 1000);
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_LEFT)) {
-        this->_interface_model->find_first_drawable("player")->scroll_left();
+        this->_default_interface_model->find_first_drawable("player")->scroll_left();
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_RIGHT)) {
-        this->_interface_model->find_first_drawable("player")->scroll_right();
+        this->_default_interface_model->find_first_drawable("player")->scroll_right();
     }
     if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_IN)) {
         this->_interface_model->set_unit_width(this->_interface_model->_unit_width += 0.01);
     }
     if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_OUT)) {
         this->_interface_model->set_unit_width(this->_interface_model->_unit_width -= 0.01);
-        SDL_GUI::Drawable *player = this->_interface_model->find_first_drawable("player");
+        SDL_GUI::Drawable *player = this->_default_interface_model->find_first_drawable("player");
         player->set_overscroll_x(std::max(static_cast<unsigned>(0),this->_interface_model->px_width(this->_player_model->_max_position) - (player->width() - 20)));
         player->reposition();
     }
@@ -65,14 +66,14 @@ void PlayerController::init(const AtlasModel *atlas_model) {
     this->_player_model->_max_position = max_position;
 
     /* bind player position line to the models variable */
-    SDL_GUI::Drawable * player_position_line = this->_interface_model->find_first_drawable("player_position_line");
+    SDL_GUI::Drawable * player_position_line = this->_default_interface_model->find_first_drawable("player_position_line");
     const PlayerModel *player_model = this->_player_model;
     const InterfaceModel *interface_model = this->_interface_model;
     player_position_line->add_recalculation_callback([player_model, interface_model](SDL_GUI::Drawable *d){
             d->set_x(interface_model->px_width(player_model->_position));
         });
 
-    SDL_GUI::Drawable *player = this->_interface_model->find_first_drawable("player");
+    SDL_GUI::Drawable *player = this->_default_interface_model->find_first_drawable("player");
 
     /* set minimal zoom */
     this->_interface_model->set_unit_width_min((player->width() - 20) * 1.0 / max_position);
@@ -85,8 +86,8 @@ void PlayerController::init(const AtlasModel *atlas_model) {
         });
 
     /* add grid */
-    SDL_GUI::TreeNode<SDL_GUI::Drawable> *grid =this->_interface_model->find_first_tree_node("player-grid");
-    unsigned height = grid->node()->height();
+    SDL_GUI::Drawable *grid =this->_default_interface_model->find_first_drawable("player-grid");
+    unsigned height = grid->height();
     unsigned grid_dark_distance = interface_config.player.grid_dark_distance *interface_config.player.grid_distance;
     for (int i = 0; i < max_position; i += interface_config.player.grid_distance) {
         SDL_GUI::VerticalLine *l = new SDL_GUI::VerticalLine();
@@ -99,7 +100,7 @@ void PlayerController::init(const AtlasModel *atlas_model) {
         grid->add_child(l);
     }
     /* scale scheduler background frames */
-    std::vector<SDL_GUI::Drawable *> backgrounds = this->_interface_model->find_drawables("scheduler");
+    std::vector<SDL_GUI::Drawable *> backgrounds = this->_default_interface_model->find_drawables("scheduler");
     for (SDL_GUI::Drawable *d: backgrounds) {
         d->add_recalculation_callback([interface_model, max_position](SDL_GUI::Drawable *d) {
                 d->set_width(interface_model->px_width(max_position));

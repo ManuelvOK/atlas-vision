@@ -5,7 +5,6 @@
 #include <SDL_GUI/inc/gui/drawable.h>
 #include <SDL_GUI/inc/gui/rgb.h>
 #include <SDL_GUI/inc/gui/primitives/rect.h>
-#include <SDL_GUI/inc/util/tree.h>
 
 #include <config/interface_config.h>
 #include <gui/arrow.h>
@@ -17,16 +16,18 @@ static std::tuple<std::map<int, std::vector<int>>, int> submissions_from_jobs(st
 static std::tuple<std::map<int, std::vector<int>>, int> deadlines_from_jobs(std::vector<Job *> jobs);
 
 static void create_submission_drawables(std::map<int, std::vector<int>> submissions,
-                                        SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect,
+                                        SDL_GUI::Drawable *deadline_rect,
                                         std::function<int(float)> px_width,
                                         InterfaceModel *interface_model);
 
 static void create_deadline_drawables(std::map<int, std::vector<int>> submissions,
-                                      SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect,
+                                      SDL_GUI::Drawable *deadline_rect,
                                       std::function<int(float)> px_width,
                                       InterfaceModel *interface_model);
 
-static void create_schedule_drawables(InterfaceModel *interface_model, AtlasModel *atlas_model,
+static void create_schedule_drawables(InterfaceModel *interface_model,
+                                      SDL_GUI::InterfaceModel *default_interface_model,
+                                      AtlasModel *atlas_model,
                                       const PlayerModel *player_model,
                                       std::function<int(float)> px_width);
 
@@ -35,11 +36,15 @@ static void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(
                                         std::map<SchedulerType, int> offsets);
 
 
-AtlasController::AtlasController(AtlasModel *atlas_model, InterfaceModel *interface_model,
+AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
+                                 InterfaceModel *interface_model,
+                                 SDL_GUI::InterfaceModel *default_interface_model,
                                  const SDL_GUI::InputModel<InputKey> *input_model,
                                  const PlayerModel *player_model) :
+    _application(application),
     _atlas_model(atlas_model),
     _interface_model(interface_model),
+    _default_interface_model(default_interface_model),
     _input_model(input_model),
     _player_model(player_model) {
     this->init_this();
@@ -56,8 +61,7 @@ void AtlasController::init_this() {
     std::tie(submissions, max_submissions) = submissions_from_jobs(this->_atlas_model->_jobs);
     std::tie(deadlines, max_deadlines) = deadlines_from_jobs(this->_atlas_model->_jobs);
 
-    SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect =
-        this->_interface_model->find_first_tree_node("deadline");
+    SDL_GUI::Drawable *deadline_rect = this->_default_interface_model->find_first_drawable("deadline");
 
     std::function<int(float)> px_width = std::bind(&InterfaceModel::px_width,
                                                    this->_interface_model, std::placeholders::_1);
@@ -65,12 +69,15 @@ void AtlasController::init_this() {
     create_deadline_drawables(deadlines, deadline_rect, px_width, this->_interface_model);
 
 
-    create_schedule_drawables(this->_interface_model, this->_atlas_model, this->_player_model,
+    create_schedule_drawables(this->_interface_model, this->_default_interface_model, this->_atlas_model, this->_player_model,
                               px_width);
 }
 
 
 void AtlasController::update() {
+    if (this->_input_model->is_pressed(InputKey::QUIT)) {
+        this->_application->_is_running = false;
+    }
 }
 
 std::tuple<std::map<int, std::vector<int>>, int> submissions_from_jobs(std::vector<Job *> jobs) {
@@ -96,14 +103,14 @@ std::tuple<std::map<int, std::vector<int>>, int> deadlines_from_jobs(std::vector
 }
 
 void create_submission_drawables(std::map<int, std::vector<int>> submissions,
-                                 SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect,
+                                 SDL_GUI::Drawable *deadline_rect,
                                  std::function<int(float)> px_width,
                                  InterfaceModel *interface_model) {
     for (std::pair<int, std::vector<int>> submissions_at_time: submissions) {
         int submission_position_x = submissions_at_time.first;
 
         /* TODO: get rid of magic number */
-        int offset = deadline_rect->node()->height() - 7 * (submissions_at_time.second.size() - 1);
+        int offset = deadline_rect->height() - 7 * (submissions_at_time.second.size() - 1);
         for (int job_id: submissions_at_time.second) {
             Arrow *a = new Arrow({0, offset - 1});
             /* recompute the position based on the scale */
@@ -120,7 +127,7 @@ void create_submission_drawables(std::map<int, std::vector<int>> submissions,
 
 
 void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
-                               SDL_GUI::TreeNode<SDL_GUI::Drawable> *deadline_rect,
+                               SDL_GUI::Drawable *deadline_rect,
                                std::function<int(float)> px_width,
                                InterfaceModel *interface_model) {
     for (std::pair<int, std::vector<int>> deadlines_at_time: deadlines) {
@@ -143,10 +150,12 @@ void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
 }
 
 
-void create_schedule_drawables(InterfaceModel *interface_model, AtlasModel *atlas_model,
+void create_schedule_drawables(InterfaceModel *interface_model,
+                               SDL_GUI::InterfaceModel *default_interface_model,
+                               AtlasModel *atlas_model,
                                const PlayerModel *player_model,
                                std::function<int(float)> px_width) {
-    SDL_GUI::TreeNode<SDL_GUI::Drawable> *core_rect = interface_model->find_first_tree_node("core-1");
+    SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
 
     std::map<SchedulerType, int> offsets;
     offsets[SchedulerType::ATLAS] = interface_config.schedule.ATLAS_offset_y;

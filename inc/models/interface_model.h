@@ -1,12 +1,15 @@
 #pragma once
 
-#include <SDL_GUI/inc/models/interface_model.h>
+#include <vector>
 
+#include <SDL_GUI/inc/models/model_base.h>
 #include <SDL_GUI/inc/gui/rgb.h>
 
-class InterfaceModel : public SDL_GUI::InterfaceModel {
+#include <config/interface_config.h>
+
+class InterfaceModel : public SDL_GUI::ModelBase {
 public:
-    InterfaceModel(SDL_Renderer *renderer, unsigned window_width, unsigned window_height);
+    InterfaceModel() : _unit_width(interface_config.unit.width_px), _unit_width_min(0.0001), _unit_height(interface_config.unit.height_px) {}
 
     float _unit_width;       /**< current unit to pixel ratio of width*/
     float _unit_width_min;   /**< minimal unit to pixel ratio of width */
