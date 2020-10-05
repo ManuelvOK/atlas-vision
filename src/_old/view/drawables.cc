@@ -127,16 +127,6 @@ bool Line::is_visible(int timestamp) const {
     return true;
 }
 
-void VisibilityLine::draw(SDL_Renderer *renderer, int offset_x, int offset_y) const {
-    if (not this->_visible) {
-        return;
-    }
-    Line::draw(renderer, offset_x, offset_y);
-}
-
-bool VisibilityLine::is_visible(int timestamp) const {
-    return this->_schedule->is_active_at_time(timestamp);
-}
 
 Text::Text(Viewmodel *viewmodel, int offset_x, int offset_y) :
     Drawable(viewmodel), _offset_x(offset_x), _offset_y(offset_y) {

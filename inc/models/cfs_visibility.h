@@ -29,5 +29,5 @@ public:
      * @returns
      *   True if timestamp is between begin and end of visibility. False otherwise.
      */
-    bool is_active_at_time(int timestamp) const ;
+    bool is_active_at_time(int timestamp) const;
 };

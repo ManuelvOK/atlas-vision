@@ -249,31 +249,6 @@ public:
     JobDependencyLine(const Viewmodel *viewmodel, JobRect *r1, JobRect *r2);
 };
 
-/**
- * line that visualises the visibility of a schedule for the CFS scheduler.
- *
- * It is drawn from the current player position at the CFS scheduler to the beginning of the related
- * schedule
- */
-class VisibilityLine : public Line {
-    const Schedule *_schedule; /**< related schedule */
-public:
-    bool _visible = false; /**< visibility flag */
-
-    /**
-     * Constructor
-     *
-     * @param viewmodel
-     *   applications viewmodel
-     * @param schedule
-     *   related schedule
-     */
-    VisibilityLine(Viewmodel *viewmodel, const Schedule *schedule) : Line(viewmodel), _schedule(schedule) {}
-
-    void draw(SDL_Renderer *renderer, int offset_x = 0, int offset_y = 0) const override;
-
-    bool is_visible(int timestamp) const override;
-};
 
 /**
  * A Text view

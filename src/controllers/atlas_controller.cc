@@ -8,8 +8,8 @@
 
 #include <config/interface_config.h>
 #include <gui/arrow.h>
+#include <gui/visibility_line.h>
 
-#include <iostream>
 
 static std::tuple<std::map<int, std::vector<int>>, int> submissions_from_jobs(std::vector<Job *> jobs);
 
@@ -30,6 +30,12 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
                                       AtlasModel *atlas_model,
                                       const PlayerModel *player_model,
                                       std::function<int(float)> px_width);
+
+static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
+                                            InterfaceModel *interface_model,
+                                            SDL_GUI::InterfaceModel *default_interface_model,
+                                            const PlayerModel *player_model,
+                                            AtlasModel *atlas_model);
 
 static void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
                                         const PlayerModel *player_model, Schedule *schedule,
@@ -72,6 +78,9 @@ void AtlasController::init_this() {
 
     create_schedule_drawables(this->_interface_model, this->_default_interface_model,
                               this->_atlas_model, this->_player_model, px_width);
+
+    create_CFS_visibility_drawables(this->_atlas_model->_cfs_visibilities, this->_interface_model,
+                                    this->_default_interface_model, this->_player_model, this->_atlas_model);
 }
 
 
@@ -179,6 +188,19 @@ void create_schedule_drawables(InterfaceModel *interface_model,
         });
         /* add to tree */
         core_rect->add_child(r);
+    }
+}
+
+void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
+                                     InterfaceModel *interface_model,
+                                     SDL_GUI::InterfaceModel *default_interface_model,
+                                     const PlayerModel *player_model,
+                                     AtlasModel *atlas_model) {
+    SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
+    for (CfsVisibility *visibility: visibilities) {
+        Schedule *schedule = atlas_model->_schedules.at(visibility->_schedule_id);
+        VisibilityLine *l = new VisibilityLine(interface_model, player_model, visibility, schedule);
+        core_rect->add_child(l);
     }
 }
 
