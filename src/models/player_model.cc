@@ -1,5 +1,7 @@
 #include <models/player_model.h>
 
+#include <iostream>
+
 void PlayerModel::toggle() {
     this->_running = !this->_running;
 }
@@ -31,6 +33,7 @@ void PlayerModel::tick() {
     if (this->_position > this->_max_position) {
         this->_position = this->_max_position;
         this->_running = false;
+        std::cout << "stop" << std::endl;
     }
 }
 
