@@ -57,7 +57,7 @@ $(OBJS): $(BUILD)/%.o: $(SRCDIR)/%.cc
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 $(DEPS): $(DEPDIR)/%.d: $(SRCDIR)/%.cc
-	$(CXX) $(CXXFLAGS) -MM -o $@ $<
+	$(CXX) $(CXXFLAGS) -MM -MT $(BUILD)/$*.o -o $@ $<
 
 $(TARGET): $(OBJS) $(LIBRARIES)
 	$(CXX) -o $@ $^ $(LIBS)

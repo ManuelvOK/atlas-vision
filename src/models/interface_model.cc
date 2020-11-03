@@ -21,14 +21,6 @@ void InterfaceModel::init_colors(int n_jobs) {
     }
 }
 
-void InterfaceModel::set_unit_width(float unit_width) {
-    this->_unit_width = std::max(unit_width, this->_unit_width_min);
-}
-
-void InterfaceModel::set_unit_width_min(float unit_width_min) {
-    this->_unit_width_min = unit_width_min;
-    this->set_unit_width(this->_unit_width);
-}
 
 SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
     float red = 0;
@@ -40,7 +32,7 @@ SDL_GUI::RGB InterfaceModel::get_color(int job, float modifier) const {
 }
 
 int InterfaceModel::px_width(float unit) const {
-    return std::ceil(unit * this->_unit_width);
+    return std::ceil(unit * this->_player_model->zoom());
 }
 
 int InterfaceModel::px_height(float unit) const {
@@ -48,7 +40,7 @@ int InterfaceModel::px_height(float unit) const {
 }
 
 float InterfaceModel::unit_width(int pixel) const {
-    return std::ceil(pixel / this->_unit_width);
+    return std::ceil(pixel / this->_player_model->zoom());
 }
 
 float InterfaceModel::unit_height(int pixel) const {

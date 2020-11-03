@@ -27,14 +27,15 @@ public:
     template <typename ... Ts>
     void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> previous, int argc, char *argv[]) {
         /* Models */
-        InterfaceModel *interface_model = new InterfaceModel();
-        app->add_model(interface_model);
 
         SDL_GUI::InputModel<InputKey> *input_model = new SDL_GUI::InputModel<InputKey>();
         app->add_model(input_model);
 
         PlayerModel *player_model = new PlayerModel();
         app->add_model(player_model);
+
+        InterfaceModel *interface_model = new InterfaceModel(player_model);
+        app->add_model(interface_model);
 
         PlayerViewModel *player_view_model = new PlayerViewModel();
         app->add_model(player_view_model);

@@ -32,26 +32,24 @@ void PlayerController::evaluate_input() {
     if (this->_input_model->is_down(InputKey::PLAYER_REWIND)) {
         this->_player_model->rewind();
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_FORWARDS)) {
-        this->_player_model->set(this->_player_model->_position + 1000);
+    if (this->_input_model->is_pressed(InputKey::PLAYER_FORWARDS)) {
+        this->_player_model->skip_forwards();
+        //this->_player_model->set(this->_player_model->_position + 200);
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_BACKWARDS)) {
-        this->_player_model->set(this->_player_model->_position - 1000);
+    if (this->_input_model->is_pressed(InputKey::PLAYER_BACKWARDS)) {
+        this->_player_model->skip_backwards();
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_LEFT)) {
-        this->_default_interface_model->find_first_drawable("player")->scroll_left();
+        this->_player_model->scroll_left();
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_SCROLL_RIGHT)) {
-        this->_default_interface_model->find_first_drawable("player")->scroll_right();
+        this->_player_model->scroll_right();
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_IN)) {
-        this->_interface_model->set_unit_width(this->_interface_model->_unit_width += 0.01);
+    if (this->_input_model->is_pressed(InputKey::PLAYER_ZOOM_IN)) {
+        this->_player_model->zoom_in();
     }
-    if (this->_input_model->is_down(InputKey::PLAYER_ZOOM_OUT)) {
-        this->_interface_model->set_unit_width(this->_interface_model->_unit_width -= 0.01);
-        SDL_GUI::Drawable *player = this->_default_interface_model->find_first_drawable("player");
-        player->set_overscroll_x(std::max(static_cast<unsigned>(0),this->_interface_model->px_width(this->_player_model->_max_position) - (player->width() - 20)));
-        player->reposition();
+    if (this->_input_model->is_pressed(InputKey::PLAYER_ZOOM_OUT)) {
+        this->_player_model->zoom_out();
     }
 }
 
@@ -66,7 +64,7 @@ void PlayerController::init(const AtlasModel *atlas_model) {
     this->_player_model->_max_position = max_position;
 
     /* bind player position line to the models variable */
-    SDL_GUI::Drawable * player_position_line = this->_default_interface_model->find_first_drawable("player_position_line");
+    SDL_GUI::Drawable *player_position_line = this->_default_interface_model->find_first_drawable("player-position-line");
     const PlayerModel *player_model = this->_player_model;
     const InterfaceModel *interface_model = this->_interface_model;
     player_position_line->add_recalculation_callback([player_model, interface_model](SDL_GUI::Drawable *d){
@@ -76,13 +74,12 @@ void PlayerController::init(const AtlasModel *atlas_model) {
     SDL_GUI::Drawable *player = this->_default_interface_model->find_first_drawable("player");
 
     /* set minimal zoom */
-    this->_interface_model->set_unit_width_min((player->width() - 20) * 1.0 / max_position);
+    this->_player_model->set_width(player->width() - 20);
 
     /* set maximum scroll  */
     player->enable_scrolling_x();
-    unsigned player_width_px = player->width() - 20;
-    player->add_recalculation_callback([interface_model, max_position, player_width_px](SDL_GUI::Drawable *d) {
-            d->set_overscroll_x(std::max(static_cast<unsigned>(0),interface_model->px_width(max_position) - player_width_px));
+    player->add_recalculation_callback([interface_model, player_model](SDL_GUI::Drawable *d) {
+            d->set_scroll_position_x(-player_model->scroll_offset());
         });
 
     /* add grid */
