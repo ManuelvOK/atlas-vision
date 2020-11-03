@@ -33,7 +33,6 @@ void PlayerModel::tick() {
     if (this->_position > this->_max_position) {
         this->_position = this->_max_position;
         this->_running = false;
-        std::cout << "stop" << std::endl;
     }
 }
 
