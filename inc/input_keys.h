@@ -11,4 +11,6 @@ enum class InputKey {
     PLAYER_SCROLL_LEFT,
     PLAYER_SCROLL_RIGHT,
     RESIZED,
+    CLICK,
+    RIGHT_CLICK,
 };

@@ -10,7 +10,7 @@
 #include <config/interface_config.h>
 
 PlayerController::PlayerController(PlayerModel *player_model, PlayerViewModel *player_view_model,
-        const SDL_GUI::InputModel<InputKey> *input_model, const AtlasModel *atlas_model,
+        InputModel *input_model, const AtlasModel *atlas_model,
         InterfaceModel *interface_model, SDL_GUI::InterfaceModel *default_interface_model) :
     _player_model(player_model),
     _player_view_model(player_view_model),
@@ -22,6 +22,7 @@ PlayerController::PlayerController(PlayerModel *player_model, PlayerViewModel *p
 
 void PlayerController::update() {
     this->evaluate_input();
+    this->drag();
     this->_player_model->tick();
 }
 
@@ -34,7 +35,6 @@ void PlayerController::evaluate_input() {
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_FORWARDS)) {
         this->_player_model->skip_forwards();
-        //this->_player_model->set(this->_player_model->_position + 200);
     }
     if (this->_input_model->is_pressed(InputKey::PLAYER_BACKWARDS)) {
         this->_player_model->skip_backwards();
@@ -51,6 +51,34 @@ void PlayerController::evaluate_input() {
     if (this->_input_model->is_pressed(InputKey::PLAYER_ZOOM_OUT)) {
         this->_player_model->zoom_out();
     }
+
+    if (this->_input_model->mouse_wheel()._y > 0) {
+        this->_player_model->zoom_in(1.25);
+    }
+
+    if (this->_input_model->mouse_wheel()._y < 0) {
+        this->_player_model->zoom_out(1.25);
+    }
+
+    if (this->_input_model->is_pressed(InputKey::RIGHT_CLICK)) {
+        if (this->_input_model->_player_hovered) {
+            this->_player_model->set_position_with_click(this->_input_model->_mouse_in_player._x);
+        }
+    }
+    if (this->_input_model->is_down(InputKey::CLICK)) {
+        this->_dragging = true;
+    }
+    if (this->_input_model->is_up(InputKey::CLICK)) {
+        this->_dragging = false;
+    }
+}
+
+void PlayerController::drag() {
+    if (not this->_dragging) {
+        return;
+    }
+    int offset_x = this->_input_model->mouse_offset()._x;
+    this->_player_model->scroll_right(offset_x);
 }
 
 void PlayerController::init(const AtlasModel *atlas_model) {
@@ -80,6 +108,17 @@ void PlayerController::init(const AtlasModel *atlas_model) {
     player->enable_scrolling_x();
     player->add_recalculation_callback([interface_model, player_model](SDL_GUI::Drawable *d) {
             d->set_scroll_position_x(-player_model->scroll_offset());
+        });
+
+    InputModel *input_model = this->_input_model;
+    player->add_recalculation_callback([input_model, player_model](SDL_GUI::Drawable *d) {
+            SDL_GUI::Position mouse_position = input_model->mouse_position();
+            if (d->is_inside(mouse_position)) {
+                input_model->_player_hovered = true;
+                input_model->_mouse_in_player = mouse_position - d->absolute_position();
+            } else {
+                input_model->_player_hovered = false;
+            }
         });
 
     /* add grid */

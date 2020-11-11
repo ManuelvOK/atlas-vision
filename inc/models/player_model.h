@@ -38,6 +38,8 @@ public:
      */
     void set_position(int position);
 
+    void set_position_with_click(int position);
+
     /**
      * trigger a player tick. That is incrementing the players position by its speed value
      */

@@ -30,6 +30,10 @@ void PlayerModel::set_position(int position) {
     }
 }
 
+void PlayerModel::set_position_with_click(int position) {
+    this->set_position((position - 10 - this->_half_width) / this->_zoom + this->_scroll);
+}
+
 void PlayerModel::tick() {
     if (!this->_running) {
         return;

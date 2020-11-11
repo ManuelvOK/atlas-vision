@@ -2,7 +2,6 @@
 
 #include <SDL_GUI/inc/application.h>
 #include <SDL_GUI/inc/controllers/input_controller.h>
-#include <SDL_GUI/inc/models/input_model.h>
 #include <SDL_GUI/inc/plugins/default_plugin.h>
 #include <SDL_GUI/inc/plugins/plugin_base.h>
 
@@ -11,6 +10,7 @@
 #include <controllers/atlas_controller.h>
 #include <controllers/player_controller.h>
 #include <models/atlas_model.h>
+#include <models/input_model.h>
 #include <models/interface_model.h>
 #include <models/player_model.h>
 #include <models/player_view_model.h>
@@ -28,7 +28,7 @@ public:
     void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> previous, int argc, char *argv[]) {
         /* Models */
 
-        SDL_GUI::InputModel<InputKey> *input_model = new SDL_GUI::InputModel<InputKey>();
+        InputModel *input_model = new InputModel();
         app->add_model(input_model);
 
         PlayerModel *player_model = new PlayerModel();
