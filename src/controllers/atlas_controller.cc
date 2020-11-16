@@ -8,6 +8,7 @@
 
 #include <config/interface_config.h>
 #include <gui/arrow.h>
+#include <gui/message_text.h>
 #include <gui/visibility_line.h>
 
 
@@ -36,6 +37,10 @@ static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibil
                                             SDL_GUI::InterfaceModel *default_interface_model,
                                             const PlayerModel *player_model,
                                             AtlasModel *atlas_model);
+
+static void create_message_drawables(std::vector<Message *> messages,
+                                     SDL_GUI::InterfaceModel *default_interface_model,
+                                     const PlayerModel *player_model);
 
 static void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
                                         const PlayerModel *player_model, Schedule *schedule,
@@ -80,7 +85,10 @@ void AtlasController::init_this() {
                               this->_atlas_model, this->_player_model, px_width);
 
     create_CFS_visibility_drawables(this->_atlas_model->_cfs_visibilities, this->_interface_model,
-                                    this->_default_interface_model, this->_player_model, this->_atlas_model);
+                                    this->_default_interface_model, this->_player_model,
+                                    this->_atlas_model);
+    create_message_drawables(this->_atlas_model->_messages, this->_default_interface_model,
+                             this->_player_model);
 }
 
 
@@ -221,4 +229,23 @@ void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(float)>
     d->set_x(px_width(begin));
     d->set_y(offsets.at(scheduler));
     d->set_width(px_width(execution_time));
+}
+
+void create_message_drawables(std::vector<Message *> messages,
+                              SDL_GUI::InterfaceModel *default_interface_model,
+                              const PlayerModel *player_model) {
+    SDL_GUI::Drawable *message_rect = default_interface_model->find_first_drawable("messages");
+    int offset = 0;
+    for (Message *message: messages) {
+        MessageText *t = new MessageText(message->_message, default_interface_model->font(), message_rect->width(), offset);
+        t->add_recalculation_callback([player_model, message, t](SDL_GUI::Drawable *) {
+            if (player_model->_position >= message->_timestamp) {
+                t->activate();
+            } else {
+                t->deactivate();
+            }
+        });
+        message_rect->add_child(t);
+        offset += t->height();
+    }
 }

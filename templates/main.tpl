@@ -21,7 +21,7 @@
         </rect>
         <rect width="150" height="350" x="40" y="0" border="true" attributes="dependency">
         </rect>
-        <rect width="190" height="170" x="0" y="400" border="true" attributes="event">
+        <rect width="190" height="170" x="0" y="400" border="true" attributes="messages">
         </rect>
     </rect>
 </rect>
