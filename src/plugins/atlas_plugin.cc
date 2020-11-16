@@ -36,11 +36,19 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
     model->_cfs_visibilities = parser._cfs_visibilities;
     model->_messages = parser._messages;
 
-    for (std::pair<int, int> d: parser._dependencies) {
-        if (model->_jobs.size() < std::max(d.first, d.second)) {
-            std::cerr << "Error parsing dependency \"d " << d.first << " " << d.second << "\": job vector has size of " << model->_jobs.size() << std::endl;
+    for (std::tuple<int, int, bool> d: parser._dependencies) {
+        int from = std::get<0>(d);
+        int to = std::get<1>(d);
+        bool known = std::get<2>(d);
+        if (model->_jobs.size() < std::max(from, to)) {
+            std::cerr << "Error parsing dependency \"d " << from << " " << to << "\": job vector has size of " << model->_jobs.size() << std::endl;
         }
-        model->_jobs[d.first]->_known_dependencies.push_back(model->_jobs[d.second]);
+        if (known) {
+            model->_jobs[from]->_known_dependencies.push_back(model->_jobs[to]);
+        } else {
+            model->_jobs[from]->_unknown_dependencies.push_back(model->_jobs[to]);
+
+        }
     }
     /* apply changes */
     for (const ScheduleChange *change: parser._changes) {
@@ -50,7 +58,6 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
     /* calculate dependency level */
     for (Job *job: model->_jobs) {
         job->calculate_dependency_level();
-        std::cerr << "dependency level of job " << job->_id << ": " << job->_dependency_level << std::endl;
     };
 
     return model;

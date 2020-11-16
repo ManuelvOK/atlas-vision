@@ -12,6 +12,7 @@ public:
     int _execution_time; /**< real execution time */
     int _submission_time; /**< timestamp the job gets submitted */
     std::vector<Job *> _known_dependencies; /**< List of Jobs, the execution of this job depends on */
+    std::vector<Job *> _unknown_dependencies; /**< List of Jobs, the execution of this job depends on unknowingly */
     int _dependency_level = -1; /**< level in dependency DAG. -1 before calculated */
 
     /**

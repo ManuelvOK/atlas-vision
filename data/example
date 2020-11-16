@@ -8,7 +8,14 @@
 #
 # dependency specification
 #   The depender depends on the dependency
-# > d depender dependency
+# > d type depender dependency
+#  list of types and values
+#
+#   type                | t
+# ===========================
+#   known               | k
+# ---------------------------
+#   unknown             | u
 #
 # schedule specification
 # TODO: add optional information about subdivision of jobs.
@@ -60,14 +67,18 @@ j 11 22000 1000 1000 7000 #X3 id=11
 ################
 
 # task with jobs 0 1 2 3 in that order
-d 1 0
-d 2 1
-d 3 2
+d k 1 0
+d k 2 1
+d k 3 2
 
 # task with jobs 4 5 6 7 in that order
-d 5 4
-d 6 5
-d 7 6
+d k 5 4
+d k 6 5
+d k 7 6
+
+# unknown dependencies
+d u 10 9 # X2 has an unknown dependency from X1
+
 
 #############
 # schedules #

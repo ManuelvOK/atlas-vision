@@ -84,8 +84,9 @@ void Parser::parse_message(std::stringstream *line) {
 }
 
 void Parser::parse_dependency(std::stringstream *line) {
+    char type;
     int job1 = -1;
     int job2 = -1;
-    *line >> job1 >> job2;
-    this->_dependencies.emplace_back(job1, job2);
+    *line >> type >> job1 >> job2;
+    this->_dependencies.emplace_back(job1, job2, type == 'k');
 }

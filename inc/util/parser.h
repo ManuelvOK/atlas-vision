@@ -23,7 +23,7 @@ class Parser {
     std::vector<ScheduleChange *> _changes; /**< schedule change descriptions */
     std::vector<CfsVisibility *> _cfs_visibilities; /**< CFS visibility descriptions */
     std::vector<Message *> _messages; /**< message descriptions */
-    std::vector<std::pair<int, int>> _dependencies; /**< description of dependencies between jobs */
+    std::vector<std::tuple<int, int, bool>> _dependencies; /**< description of dependencies between jobs */
 
     /**
      * parses a full line of job description input format

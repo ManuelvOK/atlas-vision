@@ -38,14 +38,17 @@ static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibil
                                             const PlayerModel *player_model,
                                             AtlasModel *atlas_model);
 
+static void recalculate_schedule_position(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
+                                          const PlayerModel *player_model, Schedule *schedule,
+                                          std::map<SchedulerType, int> offsets);
+
 static void create_message_drawables(std::vector<Message *> messages,
                                      SDL_GUI::InterfaceModel *default_interface_model,
                                      const PlayerModel *player_model);
 
-static void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
-                                        const PlayerModel *player_model, Schedule *schedule,
-                                        std::map<SchedulerType, int> offsets);
-
+static void create_dependency_graph(std::vector<Job *> jobs,
+                                    SDL_GUI::InterfaceModel *default_interface_model,
+                                    InterfaceModel *interface_model);
 
 AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                                  InterfaceModel *interface_model,
@@ -89,6 +92,8 @@ void AtlasController::init_this() {
                                     this->_atlas_model);
     create_message_drawables(this->_atlas_model->_messages, this->_default_interface_model,
                              this->_player_model);
+    create_dependency_graph(this->_atlas_model->_jobs, this->_default_interface_model,
+                            this->_interface_model);
 }
 
 
@@ -185,14 +190,14 @@ void create_schedule_drawables(InterfaceModel *interface_model,
         SDL_GUI::RGB color = interface_model->get_color(schedule->_job_id);
 
         /* constructing Schedule */
-        SDL_GUI::Rect *r = new SDL_GUI::Rect();
+        SDL_GUI::Rect *r = new SDL_GUI::Rect(core_rect->absolute_position());
         r->set_height(interface_model->px_height(1));
         r->_default_style._color = color;
         r->_default_style._has_background = true;
         r->_default_style._has_border = true;
         /* hide schedules that should not be shown */
         r->add_recalculation_callback([px_width, player_model, schedule, offsets] (SDL_GUI::Drawable *d) {
-            hide_schedule_if_not_active(d, px_width, player_model, schedule, offsets);
+            recalculate_schedule_position(d, px_width, player_model, schedule, offsets);
         });
         /* add to tree */
         core_rect->add_child(r);
@@ -213,7 +218,7 @@ void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
 }
 
 
-void hide_schedule_if_not_active(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
+void recalculate_schedule_position(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
                                  const PlayerModel *player_model, Schedule *schedule,
                                  std::map<SchedulerType, int> offsets) {
     if (not schedule->exists_at_time(player_model->_position)) {
@@ -248,4 +253,50 @@ void create_message_drawables(std::vector<Message *> messages,
         message_rect->add_child(t);
         offset += t->height();
     }
+}
+
+void create_dependency_graph(std::vector<Job *> jobs,
+                             SDL_GUI::InterfaceModel *default_interface_model,
+                             InterfaceModel *interface_model) {
+    std::map<unsigned, std::vector<Job *>> jobs_in_graph;
+    for (Job *job: jobs) {
+        jobs_in_graph[job->_dependency_level].push_back(job);
+    }
+
+    SDL_GUI::Drawable *dep_rect = default_interface_model->find_first_drawable("dependencies");
+    std::map<unsigned, SDL_GUI::Rect *> rects;
+    for (int i = 0; jobs_in_graph[i].size(); ++i) {
+        int j = 0;
+        for (Job *job: jobs_in_graph[i]) {
+            SDL_GUI::Rect *r = new SDL_GUI::Rect(dep_rect->absolute_position(), {10 + 30 * j, 10 + 30 * i}, 20, 20);
+            SDL_GUI::RGB color = interface_model->get_color(job->_id);
+            r->_default_style._color = color;
+            r->_default_style._has_background = true;
+            r->_default_style._has_border = true;
+            dep_rect->add_child(r);
+            rects[job->_id] = r;
+            ++j;
+        }
+    }
+
+    for (Job *job: jobs) {
+        SDL_GUI::Rect *rect_from = rects[job->_id];
+        for (Job *dep: job->_known_dependencies) {
+            SDL_GUI::Rect *rect_to = rects[dep->_id];
+            SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
+            SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
+            SDL_GUI::Line *l = new SDL_GUI::Line(dep_rect->absolute_position(), begin, end - begin);
+            l->_default_style._color = SDL_GUI::RGB("black");
+            dep_rect->add_child(l);
+        }
+
+        for (Job *dep: job->_unknown_dependencies) {
+            SDL_GUI::Rect *rect_to = rects[dep->_id];
+            SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
+            SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
+            SDL_GUI::Line *l = new SDL_GUI::Line(dep_rect->absolute_position(), begin, end - begin);
+            l->_default_style._color = SDL_GUI::RGB("red");
+            dep_rect->add_child(l);
+        }
+      }
 }
