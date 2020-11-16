@@ -1,6 +1,7 @@
 #include <controllers/atlas_controller.h>
 
 #include <limits>
+#include <sstream>
 
 #include <SDL_GUI/inc/gui/drawable.h>
 #include <SDL_GUI/inc/gui/rgb.h>
@@ -50,6 +51,9 @@ static void create_dependency_graph(std::vector<Job *> jobs,
                                     SDL_GUI::InterfaceModel *default_interface_model,
                                     InterfaceModel *interface_model);
 
+static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *default_interface_model,
+                          InterfaceModel *interface_model);
+
 AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                                  InterfaceModel *interface_model,
                                  SDL_GUI::InterfaceModel *default_interface_model,
@@ -94,6 +98,8 @@ void AtlasController::init_this() {
                              this->_player_model);
     create_dependency_graph(this->_atlas_model->_jobs, this->_default_interface_model,
                             this->_interface_model);
+    create_legend(this->_atlas_model->_jobs, this->_default_interface_model,
+                  this->_interface_model);
 }
 
 
@@ -299,4 +305,26 @@ void create_dependency_graph(std::vector<Job *> jobs,
             dep_rect->add_child(l);
         }
       }
+}
+
+void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *default_interface_model,
+                   InterfaceModel *interface_model) {
+    SDL_GUI::Drawable *legend_rect = default_interface_model->find_first_drawable("legend");
+
+    unsigned width = 0;
+    for (int i = 0; i < jobs.size(); ++i) {
+        std::stringstream ss;
+        ss << i << ":";
+        SDL_GUI::Text *t = new SDL_GUI::Text(default_interface_model->font(), ss.str(), legend_rect->absolute_position(), {5, 10 + 25 * i});
+        legend_rect->add_child(t);
+        width = std::max(width, t->width());
+    }
+    for (int i = 0; i < jobs.size(); ++i) {
+        SDL_GUI::Rect *r = new SDL_GUI::Rect(legend_rect->absolute_position(), {10 + static_cast<int>(width), 7 + 25 * i}, 20, 20);
+        SDL_GUI::RGB color = interface_model->get_color(i);
+        r->_default_style._color = color;
+        r->_default_style._has_background = true;
+        r->_default_style._has_border = true;
+        legend_rect->add_child(r);
+    }
 }
