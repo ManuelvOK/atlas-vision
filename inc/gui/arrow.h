@@ -3,34 +3,45 @@
 #include <SDL_GUI/inc/gui/drawable.h>
 #include <SDL_GUI/inc/gui/rgb.h>
 
+/** Drawable that is a polygon in arrow shape */
 class Arrow : public SDL_GUI::Drawable {
 public:
-    enum class direction {
+    /** possible directions of the arrow */
+    enum class Direction {
         UP,
         DOWN,
     };
 private:
-    const std::map<direction, std::pair<std::array<short,9>, std::array<short,9>>> _coords= {
+    /** polygon shape for the arrow in up and down direction */
+    const std::map<Direction, std::pair<std::array<short,9>, std::array<short,9>>> _coords= {
         {
-            direction::DOWN,
+            Direction::DOWN,
             {
                 {-10, 10, 10, 40, 50,   0, -50, -40, -10},
                 {  0,  0, 80, 50, 60, 110,  60,  50,  80}
             },
         },
         {
-            direction::UP,
+            Direction::UP,
             {
                 {-10, 10,  10,  40,  50,    0, -50, -40, -10},
                 {  0,  0, -80, -50, -60, -110, -60, -50, -80}
             },
         },
     };
-    direction _direction;
+
+    Direction _direction;   /**< direction this arrow has */
 public:
+    /** Constructor */
     Arrow(): Drawable("Arrow") {}
 
-    Arrow(SDL_GUI::Position parent_position, SDL_GUI::Position position, direction direction = direction::UP): Drawable("Arrow", parent_position, position), _direction(direction) {}
+    /**
+     * Constructor
+     * @param position position of arrow in parent drawable
+     * @param direction direction the arrow should point to
+     */
+    Arrow(SDL_GUI::Position position, Direction direction = Direction::UP)
+        : Drawable("Arrow", position), _direction(direction) {}
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 };

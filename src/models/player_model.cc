@@ -84,7 +84,8 @@ void PlayerModel::scroll_right(int value) {
 
 void PlayerModel::set_scroll(int value) {
     int half_width_unit = this->_half_width / this->_zoom;
-    this->_scroll = std::min(std::max(value, half_width_unit), this->_max_position - half_width_unit);
+    this->_scroll = std::min(std::max(value, half_width_unit),
+                             this->_max_position - half_width_unit);
 }
 
 int PlayerModel::scroll() const {

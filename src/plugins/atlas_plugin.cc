@@ -41,7 +41,8 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
         int to = std::get<1>(d);
         bool known = std::get<2>(d);
         if (model->_jobs.size() < std::max(from, to)) {
-            std::cerr << "Error parsing dependency \"d " << from << " " << to << "\": job vector has size of " << model->_jobs.size() << std::endl;
+            std::cerr << "Error parsing dependency \"d " << from << " " << to
+                      << "\": job vector has size of " << model->_jobs.size() << std::endl;
         }
         if (known) {
             model->_jobs[from]->_known_dependencies.push_back(model->_jobs[to]);
@@ -65,8 +66,8 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
 
 bool AtlasPlugin::apply_schedule_change(AtlasModel *model, const ScheduleChange *change) const {
     if (static_cast<unsigned>(change->_schedule_id) >= model->_schedules.size()) {
-        std::cerr << "input error: validity\t- There is no Schedule with id " << change->_schedule_id
-                  << " to change" << std::endl;
+        std::cerr << "input error: validity\t- There is no Schedule with id "
+                  << change->_schedule_id << " to change" << std::endl;
     }
     Schedule *schedule = model->_schedules.at(change->_schedule_id);
     switch (change->_type) {

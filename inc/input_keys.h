@@ -1,5 +1,6 @@
 #pragma once
 
+/** enum for all possible inputs */
 enum class InputKey {
     QUIT,
     PLAYER_TOGGLE,

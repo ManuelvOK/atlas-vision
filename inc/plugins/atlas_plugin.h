@@ -13,21 +13,53 @@
 #include <models/input_model.h>
 #include <models/interface_model.h>
 #include <models/player_model.h>
-#include <models/player_view_model.h>
 #include <models/schedule_change.h>
 
+/** The Main Plugin for this application. It does the simulation visioning. */
 class AtlasPlugin: public SDL_GUI::PluginBase {
+    /**
+     * Read simulation output from file
+     * @param path file to read from
+     * @return Model with all the parsed information
+     */
     AtlasModel *atlas_model_from_file(std::string path) const;
+
+    /**
+     * Read simulation output from stdin
+     * @return Model with all the parsed information
+     */
     AtlasModel *atlas_model_from_stdin() const;
+
+    /**
+     * Generate Atlas Model from an input stream
+     * @param input input stream
+     * @return Model with all the parsed information
+     */
     AtlasModel *parse_file(std::istream *input) const;
+
+    /**
+     * Apply a schedule change to a given Model.
+     * The schedule changes have to be applied after parsing everything
+     * @param model model to apply change to
+     * @param change change to apply
+     * @return true. TODO: this should have more than true as a return value
+     */
     bool apply_schedule_change(AtlasModel *model, const ScheduleChange *change) const;
 public:
+    /** Constructor */
     AtlasPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {}
 
+    /**
+     * Create all the needed Models, Controllers and Views
+     * @tparam Ts List of already instantiated plugin types
+     * @param app The application
+     * @param previous tuple of already instantiated plugins
+     * @param argc programs argc
+     * @param argv[] programs argv
+     */
     template <typename ... Ts>
     void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> previous, int argc, char *argv[]) {
         /* Models */
-
         InputModel *input_model = new InputModel();
         app->add_model(input_model);
 
@@ -36,9 +68,6 @@ public:
 
         InterfaceModel *interface_model = new InterfaceModel(player_model);
         app->add_model(interface_model);
-
-        PlayerViewModel *player_view_model = new PlayerViewModel();
-        app->add_model(player_view_model);
 
         AtlasModel *atlas_model;
         if (argc > 1) {
@@ -51,18 +80,22 @@ public:
                   [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
 
         /* Controllers */
-        SDL_GUI::InputController<InputKey> *input_controller = new SDL_GUI::InputController<InputKey>(input_model, keyboard_input_config, window_event_config, mouse_input_config);
+        SDL_GUI::InputController<InputKey> *input_controller =
+            new SDL_GUI::InputController<InputKey>(input_model, keyboard_input_config,
+                                                   window_event_config, mouse_input_config);
         app->add_controller(input_controller);
 
 
         SDL_GUI::DefaultPlugin &default_plugin = std::get<SDL_GUI::DefaultPlugin>(previous);
         SDL_GUI::InterfaceModel *default_interface_model = default_plugin.interface_model();
-        AtlasController *atlas_controller = new AtlasController(app, atlas_model, interface_model, default_interface_model, input_model, player_model);
+        AtlasController *atlas_controller = new AtlasController(app, atlas_model, interface_model,
+                                                                default_interface_model,
+                                                                input_model, player_model);
         app->add_controller(atlas_controller);
 
-        PlayerController *player_controller = new PlayerController(player_model, player_view_model, input_model, atlas_model, interface_model, default_interface_model);
+        PlayerController *player_controller = new PlayerController(player_model, input_model,
+                                                                   atlas_model, interface_model,
+                                                                   default_interface_model);
         app->add_controller(player_controller);
-
     }
-
 };

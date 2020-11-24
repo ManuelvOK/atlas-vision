@@ -13,23 +13,23 @@
  * schedule
  */
 class VisibilityLine : public SDL_GUI::Line {
-    const InterfaceModel *_interface_model;
-    const PlayerModel *_player_model;
+    const InterfaceModel *_interface_model; /**< The applications interface model */
+    const PlayerModel *_player_model;       /**< The applications player model */
 
-    const CfsVisibility *_visibility; /**< related schedule */
-    const Schedule *_schedule;
+    const CfsVisibility *_visibility;       /**< related visibility object */
+    const Schedule *_schedule;              /**< related schedule */
 
 public:
 
     /**
      * Constructor
-     *
-     * @param viewmodel
-     *   applications viewmodel
-     * @param schedule
-     *   related schedule
+     * @param interface_model the applications interface model
+     * @param player_model the applications player model
+     * @param visibility related visibility
+     * @param schedule related schedule
      */
-    VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model, const CfsVisibility *visibility, const Schedule *schedule);
+    VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model,
+                   const CfsVisibility *visibility, const Schedule *schedule);
 
     void update() override;
 };

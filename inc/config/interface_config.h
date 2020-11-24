@@ -1,5 +1,6 @@
 #pragma once
 
+/** Values that are used for the visual appereance of this application */
 const class {
 public:
     const class {

@@ -3,8 +3,9 @@
 #include <iostream>
 
 Schedule::Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
-        int execution_time)
-    : _id(id), _job_id(job_id), _core(core), _scheduler(), _submission_time(submission_time), _begin(), _execution_time() {
+                   int execution_time)
+    : _id(id), _job_id(job_id), _core(core), _scheduler(), _submission_time(submission_time),
+    _begin(), _execution_time() {
     this->_scheduler.emplace(submission_time, static_cast<SchedulerType>(scheduler));
     this->_begin.emplace(submission_time, begin);
     this->_execution_time.emplace(submission_time, execution_time);

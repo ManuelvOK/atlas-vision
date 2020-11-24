@@ -6,6 +6,7 @@
 
 #include <input_keys.h>
 
+/** config for keyboard input */
 const std::map<SDL_Scancode, InputKey> keyboard_input_config = {
     {SDL_SCANCODE_Q, InputKey::QUIT},
     {SDL_SCANCODE_ESCAPE, InputKey::QUIT},
@@ -21,10 +22,12 @@ const std::map<SDL_Scancode, InputKey> keyboard_input_config = {
     {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
 };
 
+/** config for window events */
 const std::map<SDL_WindowEventID, InputKey> window_event_config = {
     {SDL_WINDOWEVENT_RESIZED, InputKey::RESIZED},
 };
 
+/** config for mouse input */
 const std::map<Uint8, InputKey> mouse_input_config = {
     {SDL_BUTTON_LEFT, InputKey::CLICK},
     {SDL_BUTTON_RIGHT, InputKey::RIGHT_CLICK},

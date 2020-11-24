@@ -1,4 +1,7 @@
 build/
+html/
+latex/
 .d/
+.vimrc
 tags
 *.a

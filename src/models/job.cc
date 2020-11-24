@@ -13,10 +13,12 @@ int Job::calculate_dependency_level() {
     }
     this->_dependency_level = 1;
     for (Job *j: this->_known_dependencies) {
-        this->_dependency_level = std::max(this->_dependency_level, 1 + j->calculate_dependency_level());
+        this->_dependency_level = std::max(this->_dependency_level,
+                                           1 + j->calculate_dependency_level());
     }
     for (Job *j: this->_unknown_dependencies) {
-        this->_dependency_level = std::max(this->_dependency_level, 1 + j->calculate_dependency_level());
+        this->_dependency_level = std::max(this->_dependency_level,
+                                           1 + j->calculate_dependency_level());
     }
     return this->_dependency_level;
 }
