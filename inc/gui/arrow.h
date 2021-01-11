@@ -33,7 +33,7 @@ private:
     Direction _direction;   /**< direction this arrow has */
 public:
     /** Constructor */
-    Arrow(): Drawable("Arrow") {}
+    Arrow(std::string type = "Arrow"): Drawable(type) {}
 
     /**
      * Constructor
@@ -42,6 +42,15 @@ public:
      */
     Arrow(SDL_GUI::Position position, Direction direction = Direction::UP)
         : Drawable("Arrow", position), _direction(direction) {}
+
+    /**
+     * Constructor
+     * @param type type of drawable
+     * @param position position of arrow in parent drawable
+     * @param direction direction the arrow should point to
+     */
+    Arrow(std::string type, SDL_GUI::Position position, Direction direction = Direction::UP)
+        : Drawable(type, position), _direction(direction) {}
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 };
