@@ -18,6 +18,8 @@ class AtlasController : public SDL_GUI::ControllerBase {
     SDL_GUI::InterfaceModel *_default_interface_model;  /**< The interface model from the library */
     const SDL_GUI::InputModel<InputKey> *_input_model;  /**< The applications input model */
     const PlayerModel *_player_model;                   /**< Model for the schedule player */
+
+
     /**
      * initialise the controller. This is called from the constructor and creates all the drawables
      * for the scheduler with their recalculation callbacks.

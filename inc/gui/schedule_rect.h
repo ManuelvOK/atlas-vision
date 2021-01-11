@@ -2,11 +2,12 @@
 
 #include <SDL_GUI/inc/gui/primitives/rect.h>
 
+#include <gui/job_highlight.h>
 #include <models/interface_model.h>
 #include <models/player_model.h>
 #include <models/schedule.h>
 
-class ScheduleRect: public SDL_GUI::Rect {
+class ScheduleRect: public SDL_GUI::Rect, public JobHighlight {
 protected:
     const Schedule *_schedule;
     const InterfaceModel *_interface_model;
@@ -14,7 +15,8 @@ protected:
     const std::map<SchedulerType, int> _offsets;
 public:
     ScheduleRect(const Schedule *schedule, const InterfaceModel *interface_model,
-                 const PlayerModel *player_model, const std::map<SchedulerType, int> offsets);
+                 const PlayerModel *player_model, const AtlasModel *atlas_model,
+                 const std::map<SchedulerType, int> offsets);
 
     void update() override;
 };

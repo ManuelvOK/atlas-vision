@@ -1,5 +1,6 @@
 #include <controllers/atlas_controller.h>
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
 
@@ -8,6 +9,7 @@
 
 #include <config/interface_config.h>
 #include <gui/job_arrow.h>
+#include <gui/job_rect.h>
 #include <gui/message_text.h>
 #include <gui/schedule_rect.h>
 #include <gui/visibility_line.h>
@@ -41,7 +43,7 @@ static void create_submission_drawables(std::map<int, std::vector<int>> submissi
                                         SDL_GUI::Drawable *deadline_rect,
                                         std::function<int(float)> px_width,
                                         InterfaceModel *interface_model,
-                                        const AtlasModel *atlas_model);
+                                        AtlasModel *atlas_model);
 
 /**
  * Create Drawables for all the deadlines (Deadline Arrows that is)
@@ -55,7 +57,7 @@ static void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
                                       SDL_GUI::Drawable *deadline_rect,
                                       std::function<int(float)> px_width,
                                       InterfaceModel *interface_model,
-                                      const AtlasModel *atlas_model);
+                                      AtlasModel *atlas_model);
 
 /**
  * Create drawables for all schedules and register calbacks to reposition/hide them on occasion.
@@ -63,13 +65,11 @@ static void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
  * @param default_interface_model the interface model of the SDL_GUI library
  * @param atlas_model the applications atlas model
  * @param player_model the applications player model
- * @param px_width function to calculate the current width in px from a unit
  */
 static void create_schedule_drawables(InterfaceModel *interface_model,
                                       SDL_GUI::InterfaceModel *default_interface_model,
                                       AtlasModel *atlas_model,
-                                      const PlayerModel *player_model,
-                                      std::function<int(float)> px_width);
+                                      const PlayerModel *player_model);
 
 /**
  * Create drawables for all visibilities
@@ -85,17 +85,6 @@ static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibil
                                             const PlayerModel *player_model,
                                             AtlasModel *atlas_model);
 
-/**
- * callback to reposition a schedule
- * @param d schedules drawable
- * @param px_width function to calculate the current width in px from a unit
- * @param player_model the applications player model
- * @param schedule schedule to reposition
- * @param offsets config holding the offsets of the various scheduler levels
- */
-static void recalculate_schedule_position(SDL_GUI::Drawable *d, std::function<int(float)> px_width,
-                                          const PlayerModel *player_model, Schedule *schedule,
-                                          std::map<SchedulerType, int> offsets);
 
 /**
  * create drawables for all the event messages
@@ -115,7 +104,8 @@ static void create_message_drawables(std::vector<Message *> messages,
  */
 static void create_dependency_graph(std::vector<Job *> jobs,
                                     SDL_GUI::InterfaceModel *default_interface_model,
-                                    InterfaceModel *interface_model);
+                                    InterfaceModel *interface_model,
+                                    AtlasModel *atlas_model);
 
 /**
  * create all the drawables for the visual color to job number mapping
@@ -124,7 +114,8 @@ static void create_dependency_graph(std::vector<Job *> jobs,
  * @param interface_model the applicatoins interface model
  */
 static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *default_interface_model,
-                          InterfaceModel *interface_model);
+                          InterfaceModel *interface_model,
+                          AtlasModel *atlas_model);
 
 AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                                  InterfaceModel *interface_model,
@@ -163,7 +154,7 @@ void AtlasController::init() {
 
 
     create_schedule_drawables(this->_interface_model, this->_default_interface_model,
-                              this->_atlas_model, this->_player_model, px_width);
+                              this->_atlas_model, this->_player_model);
 
     create_CFS_visibility_drawables(this->_atlas_model->_cfs_visibilities, this->_interface_model,
                                     this->_default_interface_model, this->_player_model,
@@ -171,15 +162,29 @@ void AtlasController::init() {
     create_message_drawables(this->_atlas_model->_messages, this->_default_interface_model,
                              this->_player_model);
     create_dependency_graph(this->_atlas_model->_jobs, this->_default_interface_model,
-                            this->_interface_model);
+                            this->_interface_model, this->_atlas_model);
     create_legend(this->_atlas_model->_jobs, this->_default_interface_model,
-                  this->_interface_model);
+                  this->_interface_model, this->_atlas_model);
 }
 
 
 void AtlasController::update() {
     if (this->_input_model->is_pressed(InputKey::QUIT)) {
         this->_application->_is_running = false;
+    }
+    SDL_GUI::Position mouse_position = this->_input_model->mouse_position();
+    std::vector<SDL_GUI::Drawable *>hovered =
+        this->_default_interface_model->find_drawables_at_position(mouse_position);
+    std::map<const SDL_GUI::Drawable *, const Job *> drawables_jobs = this->_atlas_model->_drawables_jobs;
+    auto first_hovered = std::find_if(hovered.begin(), hovered.end(),
+        [drawables_jobs](SDL_GUI::Drawable *d){
+            return drawables_jobs.contains(d);
+        });
+    if (first_hovered != hovered.end()) {
+        const Job *job = this->_atlas_model->_drawables_jobs[*first_hovered];
+        this->_atlas_model->_highlighted_job = job->_id;
+    } else {
+        this->_atlas_model->_highlighted_job = -1;
     }
 }
 
@@ -210,18 +215,18 @@ deadlines_from_jobs(std::vector<Job *> jobs) {
 static void create_submission_drawables(std::map<int, std::vector<int>> submissions,
                                         SDL_GUI::Drawable *deadline_rect,
                                         std::function<int(float)> px_width,
-                                        InterfaceModel *interface_model,
-                                        const AtlasModel *atlas_model) {
+                                        InterfaceModel *interface_model, AtlasModel *atlas_model) {
     for (std::pair<int, std::vector<int>> submissions_at_time: submissions) {
         int submission_position_x = submissions_at_time.first;
 
         /* TODO: get rid of magic number */
-        int offset = deadline_rect->height() - 7 * (submissions_at_time.second.size() - 1);
+        int offset = deadline_rect->height() - 22 - 7 * (submissions_at_time.second.size() - 1);
         for (int job_id: submissions_at_time.second) {
             const Job *job = atlas_model->_jobs[job_id];
             SDL_GUI::Position position(10 + px_width(submission_position_x), offset);
-            JobArrow *a = new JobArrow(job, submission_position_x, interface_model, position);
-
+            JobArrow *a = new JobArrow(job, submission_position_x, interface_model, atlas_model,
+                                       position);
+            atlas_model->_drawables_jobs[a] = job;
             deadline_rect->add_child(a);
             /* TODO: get rid of magic number */
             offset += 7;
@@ -233,8 +238,7 @@ static void create_submission_drawables(std::map<int, std::vector<int>> submissi
 static void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
                                       SDL_GUI::Drawable *deadline_rect,
                                       std::function<int(float)> px_width,
-                                      InterfaceModel *interface_model,
-                                      const AtlasModel *atlas_model) {
+                                      InterfaceModel *interface_model, AtlasModel *atlas_model) {
     for (std::pair<int, std::vector<int>> deadlines_at_time: deadlines) {
         int deadline_position_x = deadlines_at_time.first;
 
@@ -243,8 +247,9 @@ static void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
         for (int job_id: deadlines_at_time.second) {
             const Job *job = atlas_model->_jobs[job_id];
             SDL_GUI::Position position(10 + px_width(deadline_position_x), offset);
-            JobArrow *a = new JobArrow(job, deadline_position_x, interface_model, position,
-                                       Arrow::Direction::DOWN);
+            JobArrow *a = new JobArrow(job, deadline_position_x, interface_model, atlas_model,
+                                       position, Arrow::Direction::DOWN);
+            atlas_model->_drawables_jobs[a] = job;
             deadline_rect->add_child(a);
             /* TODO: get rid of magic number */
             offset -= 7;
@@ -256,8 +261,7 @@ static void create_deadline_drawables(std::map<int, std::vector<int>> deadlines,
 static void create_schedule_drawables(InterfaceModel *interface_model,
                                       SDL_GUI::InterfaceModel *default_interface_model,
                                       AtlasModel *atlas_model,
-                                      const PlayerModel *player_model,
-                                      std::function<int(float)> px_width) {
+                                      const PlayerModel *player_model) {
     SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
 
     std::map<SchedulerType, int> offsets;
@@ -268,7 +272,9 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
     for (std::pair<int, Schedule *> s: atlas_model->_schedules) {
         Schedule *schedule = s.second;
         /* constructing Schedule */
-        ScheduleRect *r = new ScheduleRect(schedule, interface_model, player_model, offsets);
+        ScheduleRect *r = new ScheduleRect(schedule, interface_model, player_model, atlas_model,
+                                           offsets);
+        atlas_model->_drawables_jobs[r] = atlas_model->_jobs[schedule->_job_id];
         core_rect->add_child(r);
     }
 }
@@ -308,22 +314,20 @@ static void create_message_drawables(std::vector<Message *> messages,
 
 static void create_dependency_graph(std::vector<Job *> jobs,
                                     SDL_GUI::InterfaceModel *default_interface_model,
-                                    InterfaceModel *interface_model) {
+                                    InterfaceModel *interface_model, AtlasModel *atlas_model) {
     std::map<unsigned, std::vector<Job *>> jobs_in_graph;
     for (Job *job: jobs) {
         jobs_in_graph[job->_dependency_level].push_back(job);
     }
 
     SDL_GUI::Drawable *dep_rect = default_interface_model->find_first_drawable("dependencies");
-    std::map<unsigned, SDL_GUI::Rect *> rects;
+    std::map<unsigned, JobRect *> rects;
     for (int i = 0; jobs_in_graph[i].size(); ++i) {
         int j = 0;
         for (Job *job: jobs_in_graph[i]) {
-            SDL_GUI::Rect *r = new SDL_GUI::Rect({10 + 30 * j, 10 + 30 * i}, 20, 20);
-            SDL_GUI::RGB color = interface_model->get_color(job->_id);
-            r->_default_style._color = color;
-            r->_default_style._has_background = true;
-            r->_default_style._has_border = true;
+            JobRect *r = new JobRect(job, interface_model, atlas_model,
+                                     {10 + 30 * j, 10 + 30 * i}, 20, 20);
+            atlas_model->_drawables_jobs[r] = job;
             dep_rect->add_child(r);
             rects[job->_id] = r;
             ++j;
@@ -331,9 +335,9 @@ static void create_dependency_graph(std::vector<Job *> jobs,
     }
 
     for (Job *job: jobs) {
-        SDL_GUI::Rect *rect_from = rects[job->_id];
+        JobRect *rect_from = rects[job->_id];
         for (Job *dep: job->_known_dependencies) {
-            SDL_GUI::Rect *rect_to = rects[dep->_id];
+            JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
             SDL_GUI::Line *l = new SDL_GUI::Line(begin, end - begin);
@@ -342,7 +346,7 @@ static void create_dependency_graph(std::vector<Job *> jobs,
         }
 
         for (Job *dep: job->_unknown_dependencies) {
-            SDL_GUI::Rect *rect_to = rects[dep->_id];
+            JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
             SDL_GUI::Line *l = new SDL_GUI::Line(begin, end - begin);
@@ -353,11 +357,11 @@ static void create_dependency_graph(std::vector<Job *> jobs,
 }
 
 static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *default_interface_model,
-                          InterfaceModel *interface_model) {
+                          InterfaceModel *interface_model, AtlasModel *atlas_model) {
     SDL_GUI::Drawable *legend_rect = default_interface_model->find_first_drawable("legend");
 
     unsigned width = 0;
-    for (int i = 0; i < jobs.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(jobs.size()); ++i) {
         std::stringstream ss;
         ss << i << ":";
         SDL_GUI::Text *t = new SDL_GUI::Text(default_interface_model->font(), ss.str(),
@@ -365,12 +369,10 @@ static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *defa
         legend_rect->add_child(t);
         width = std::max(width, t->width());
     }
-    for (int i = 0; i < jobs.size(); ++i) {
-        SDL_GUI::Rect *r = new SDL_GUI::Rect({10 + static_cast<int>(width), 7 + 25 * i}, 20, 20);
-        SDL_GUI::RGB color = interface_model->get_color(i);
-        r->_default_style._color = color;
-        r->_default_style._has_background = true;
-        r->_default_style._has_border = true;
+    for (int i = 0; i < static_cast<int>(jobs.size()); ++i) {
+        JobRect *r = new JobRect(jobs[i], interface_model, atlas_model,
+                                 {10 + static_cast<int>(width), 7 + 25 * i}, 20, 20);
+        atlas_model->_drawables_jobs[r] = jobs[i];
         legend_rect->add_child(r);
     }
 }

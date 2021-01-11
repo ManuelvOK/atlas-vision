@@ -1,8 +1,10 @@
 #include <gui/schedule_rect.h>
 
 ScheduleRect::ScheduleRect(const Schedule *schedule, const InterfaceModel *interface_model,
-                           const PlayerModel *player_model, std::map<SchedulerType, int> offsets):
+                           const PlayerModel *player_model, const AtlasModel *atlas_model,
+                           std::map<SchedulerType, int> offsets):
     SDL_GUI::Rect("ScheduleRect"),
+    JobHighlight(atlas_model->_jobs[schedule->_job_id], interface_model, atlas_model),
     _schedule(schedule),
     _interface_model(interface_model),
     _player_model(player_model),
@@ -29,4 +31,11 @@ void ScheduleRect::update() {
     this->set_x(this->_interface_model->px_width(begin));
     this->set_y(this->_offsets.at(scheduler));
     this->set_width(this->_interface_model->px_width(execution_time));
+    this->set_current_style(&this->_default_style);
+    if (this->is_hidden()) {
+        return;
+    }
+    if (this->is_highlighted()) {
+        this->set_current_style(this->highlight_style());
+    }
 }

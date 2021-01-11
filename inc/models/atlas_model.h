@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 
+#include <SDL_GUI/inc/gui/drawable.h>
 #include <SDL_GUI/inc/models/model_base.h>
 
 #include <models/cfs_visibility.h>
@@ -17,6 +18,9 @@ public:
     std::vector<Job *> _jobs;               /**< list of jobs */
     std::map<int, Schedule *> _schedules;   /**< list of schedules for the jobs */
     std::vector<Message *> _messages;       /**< messages to display at a given timestamp */
+
+    int _highlighted_job = -1;
+    std::map<const SDL_GUI::Drawable *, const Job *> _drawables_jobs;
 
     /** list of atlas schedules visibile for cfs scheduler */
     std::vector<CfsVisibility *> _cfs_visibilities;

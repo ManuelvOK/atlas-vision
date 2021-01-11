@@ -40,7 +40,7 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
         int from = std::get<0>(d);
         int to = std::get<1>(d);
         bool known = std::get<2>(d);
-        if (model->_jobs.size() < std::max(from, to)) {
+        if (static_cast<long>(model->_jobs.size()) < std::max(from, to)) {
             std::cerr << "Error parsing dependency \"d " << from << " " << to
                       << "\": job vector has size of " << model->_jobs.size() << std::endl;
         }

@@ -17,20 +17,24 @@ private:
         {
             Direction::DOWN,
             {
-                {-10, 10, 10, 40, 50,   0, -50, -40, -10},
-                {  0,  0, 80, 50, 60, 110,  60,  50,  80}
+                {40, 60, 60, 90, 100,  50,  0, 10, 40},
+                { 0,  0, 80, 50,  60, 110, 60, 50, 80}
             },
         },
         {
             Direction::UP,
             {
-                {-10, 10,  10,  40,  50,    0, -50, -40, -10},
-                {  0,  0, -80, -50, -60, -110, -60, -50, -80}
+                { 40,  60, 60, 90, 100, 50,  0, 10, 40},
+                {110, 110, 30, 60,  50,  0, 50, 60, 30}
             },
         },
     };
+    std::array<short, 9> _coords_x;
+    std::array<short, 9> _coords_y;
 
     Direction _direction;   /**< direction this arrow has */
+
+    void init();
 public:
     /** Constructor */
     Arrow(std::string type = "Arrow"): Drawable(type) {}
@@ -40,8 +44,7 @@ public:
      * @param position position of arrow in parent drawable
      * @param direction direction the arrow should point to
      */
-    Arrow(SDL_GUI::Position position, Direction direction = Direction::UP)
-        : Drawable("Arrow", position), _direction(direction) {}
+    Arrow(SDL_GUI::Position position, Direction direction = Direction::UP);
 
     /**
      * Constructor
@@ -49,8 +52,7 @@ public:
      * @param position position of arrow in parent drawable
      * @param direction direction the arrow should point to
      */
-    Arrow(std::string type, SDL_GUI::Position position, Direction direction = Direction::UP)
-        : Drawable(type, position), _direction(direction) {}
+    Arrow(std::string type, SDL_GUI::Position position, Direction direction = Direction::UP);
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 };
