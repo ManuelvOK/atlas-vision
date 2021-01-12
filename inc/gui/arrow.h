@@ -35,6 +35,9 @@ private:
     Direction _direction;   /**< direction this arrow has */
 
     void init();
+
+    std::tuple<std::array<short, 9>, std::array<short, 9>>
+        get_drawing_coords(SDL_GUI::Position position) const;
 public:
     /** Constructor */
     Arrow(std::string type = "Arrow"): Drawable(type) {}
@@ -55,4 +58,6 @@ public:
     Arrow(std::string type, SDL_GUI::Position position, Direction direction = Direction::UP);
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
+
+    void draw_border(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 };
