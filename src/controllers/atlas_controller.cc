@@ -177,8 +177,9 @@ void AtlasController::update() {
         this->_default_interface_model->find_drawables_at_position(mouse_position);
     std::map<const SDL_GUI::Drawable *, const Job *> drawables_jobs = this->_atlas_model->_drawables_jobs;
     auto first_hovered = std::find_if(hovered.begin(), hovered.end(),
-        [drawables_jobs](SDL_GUI::Drawable *d){
-            return drawables_jobs.contains(d) && not d->is_hidden();
+        [drawables_jobs, mouse_position](SDL_GUI::Drawable *d){
+            return drawables_jobs.contains(d) && not d->is_hidden()
+                   && d->is_inside_clip_rect(mouse_position);
         });
     if (first_hovered != hovered.end()) {
         const Job *job = this->_atlas_model->_drawables_jobs[*first_hovered];
