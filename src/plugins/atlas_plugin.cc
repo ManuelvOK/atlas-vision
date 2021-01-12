@@ -68,20 +68,9 @@ bool AtlasPlugin::apply_schedule_change(AtlasModel *model, const ScheduleChange 
     if (static_cast<unsigned>(change->_schedule_id) >= model->_schedules.size()) {
         std::cerr << "input error: validity\t- There is no Schedule with id "
                   << change->_schedule_id << " to change" << std::endl;
+        return false;
     }
     Schedule *schedule = model->_schedules.at(change->_schedule_id);
-    switch (change->_type) {
-        case ChangeType::erase:
-            schedule->_end = change->_timestamp;
-            break;
-        case ChangeType::shift:
-            schedule->_begin.emplace(change->_timestamp, change->_value);
-            break;
-        case ChangeType::change_execution_time:
-            schedule->_execution_time.emplace(change->_timestamp, change->_value);
-            break;
-        default: break;
-    }
-    schedule->_change_points.insert(change->_timestamp);
+    schedule->add_change(change);
     return true;
 }

@@ -4,6 +4,8 @@
 #include <set>
 #include <tuple>
 
+#include <models/schedule_change.h>
+
 /** type of scheduler encoded as ascii character */
 enum class SchedulerType {
     ATLAS = 'a',
@@ -11,23 +13,26 @@ enum class SchedulerType {
     CFS = 'c'
 };
 
+struct ScheduleData {
+    SchedulerType _scheduler;   /**< the scheduler this schedule is on */
+    int _begin;                 /**< start time of schedule execution */
+    int _execution_time;        /**< time the scheduled job runs */
+    bool _does_execute = true;  /**< flag determining whether the schedule does run */
+};
+
 /** Object representing a schedule for a certain job */
 class Schedule {
+    ScheduleData &data_at_time(int timestamp);
+    const ScheduleData &data_at_time(int timestamp) const;
 public:
-    int _id;                                    /**< id of this schedule */
-    int _job_id;                                /**< Id of the concerning job */
-    int _core;                                  /**< core on wich the job gets executed */
-    std::map<int, SchedulerType> _scheduler;    /**< the scheduler this schedule is on */
-    int _submission_time;                       /**< time this schedule gets submitted */
+    int _id;                            /**< id of this schedule */
+    int _job_id;                        /**< Id of the concerning job */
+    int _core;                          /**< core on wich the job gets executed */
+    int _submission_time;               /**< time this schedule gets submitted */
 
-    /**
-     * start times of job execution. This is a map for storing different execution times for
-     * different timestamps
-     */
-    std::map<int, int> _begin;
-    int _end = -1;                              /**< possible end of this schedule */
-    std::map<int, int> _execution_time;         /**< time the scheduled job runs */
-    std::set<int> _change_points;               /**< list of points at which changes happen */
+    std::map<int, ScheduleData> _data;  /**< data for a given time period */
+    int _end = -1;                      /**< possible end of this schedule */
+    std::set<int> _change_points;       /**< list of points at which changes happen */
 
     /**
      * Constructor
@@ -40,14 +45,20 @@ public:
      * @param execution_time time the schedule gets executed
      */
     Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
-            int execution_time);
+             int execution_time);
+
+    /**
+     * Add a change to this schedule
+     * @param change change object to add
+     */
+    void add_change(const ScheduleChange *change);
 
     /**
      * get relevant data for rendering for a given timestamp
      * @param timestamp timestamp to get data for
-     * @returns tuple consisting of begin, scheduler and execution_time values
+     * @returns schedules data at given timestamp
      */
-    std::tuple<int, SchedulerType, int> get_data_at_time(int timestamp = 0) const;
+    ScheduleData get_data_at_time(int timestamp = 0) const;
 
     /**
      * check if the schedule does exist at a given timestamp

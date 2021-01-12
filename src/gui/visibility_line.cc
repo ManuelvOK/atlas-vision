@@ -26,8 +26,7 @@ void VisibilityLine::update() {
     /* set begin and end */
     int line_begin_x = this->_interface_model->px_width(this->_player_model->_position);
     this->set_x(line_begin_x + 1);
-    int schedule_begin_x =
-        std::get<0>(this->_schedule->get_data_at_time(this->_player_model->_position));
-    this->_end.set_x(this->_interface_model->px_width(schedule_begin_x
-                                                      - this->_player_model->_position) - 1);
+    ScheduleData data = this->_schedule->get_data_at_time(this->_player_model->_position);
+    this->_end.set_x(this->_interface_model
+                     ->px_width(data._begin - this->_player_model->_position) - 1);
 }

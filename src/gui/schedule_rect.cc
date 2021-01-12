@@ -23,14 +23,11 @@ void ScheduleRect::update() {
     }
     this->show();
 
-    int begin;
-    SchedulerType scheduler;
-    int execution_time;
-    std::tie(begin, scheduler, execution_time) = this->_schedule->get_data_at_time(timestamp);
+    ScheduleData data = this->_schedule->get_data_at_time(timestamp);
 
-    this->set_x(this->_interface_model->px_width(begin));
-    this->set_y(this->_offsets.at(scheduler));
-    this->set_width(this->_interface_model->px_width(execution_time));
+    this->set_x(this->_interface_model->px_width(data._begin));
+    this->set_y(this->_offsets.at(data._scheduler));
+    this->set_width(this->_interface_model->px_width(data._execution_time));
     this->set_current_style(&this->_default_style);
     if (this->is_hidden()) {
         return;
