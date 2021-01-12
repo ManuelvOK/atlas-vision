@@ -9,7 +9,6 @@ JobArrow::JobArrow(const Job *job, int pos_x, const InterfaceModel *interface_mo
     _pos_x(pos_x),
     _interface_model(interface_model) {
     this->_default_style._color = this->_interface_model->get_color(this->_job->_id);
-    this->_default_style._has_border = false;
 }
 
 void JobArrow::update() {
