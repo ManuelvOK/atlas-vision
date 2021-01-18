@@ -3,8 +3,36 @@
 #include <fstream>
 #include <string>
 
-
 #include <util/parser.h>
+
+
+AtlasPlugin::AtlasPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {
+    this->_command_line.register_option("simulate", "s");
+    this->_command_line.register_option("visualise", "v");
+}
+
+AtlasModel *AtlasPlugin::build_atlas_model() const {
+    AtlasModel *model;
+    std::string vision_input = this->_command_line.get_argument("visualise");
+    std::string simulation_input = this->_command_line.get_argument("simulate");
+    if (vision_input.size() and simulation_input.size()) {
+        std::cerr << "Both simulation and visualisation input given. Using visualisation input"
+                  << std::endl;
+    }
+    if (vision_input.size()) {
+        model = this->atlas_model_from_file(vision_input);
+    } else if (simulation_input.size()) {
+        /* TODO: Simulate and fill model */
+    } else {
+        std::cerr << "No input given." << std::endl;
+        exit(1);
+    }
+    /* sort jobs id wise */
+    std::sort(model->_jobs.begin(), model->_jobs.end(),
+              [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
+
+    return model;
+}
 
 AtlasModel *AtlasPlugin::atlas_model_from_file(std::string path) const {
     std::ifstream input_file(path);

@@ -14,9 +14,13 @@
 #include <models/interface_model.h>
 #include <models/player_model.h>
 #include <models/schedule_change.h>
+#include <util/command_line.h>
 
 /** The Main Plugin for this application. It does the simulation visioning. */
 class AtlasPlugin: public SDL_GUI::PluginBase {
+    CommandLine _command_line;
+
+    AtlasModel *build_atlas_model() const;
     /**
      * Read simulation output from file
      * @param path file to read from
@@ -47,7 +51,7 @@ class AtlasPlugin: public SDL_GUI::PluginBase {
     bool apply_schedule_change(AtlasModel *model, const ScheduleChange *change) const;
 public:
     /** Constructor */
-    AtlasPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {}
+    AtlasPlugin();
 
     /**
      * Create all the needed Models, Controllers and Views
@@ -59,6 +63,8 @@ public:
      */
     template <typename ... Ts>
     void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> previous, int argc, char *argv[]) {
+        this->_command_line.parse(argc, argv);
+
         /* Models */
         InputModel *input_model = new InputModel();
         app->add_model(input_model);
@@ -69,15 +75,7 @@ public:
         InterfaceModel *interface_model = new InterfaceModel(player_model);
         app->add_model(interface_model);
 
-        AtlasModel *atlas_model;
-        if (argc > 1) {
-            atlas_model = this->atlas_model_from_file(argv[1]);
-        } else {
-            atlas_model = this->atlas_model_from_stdin();
-        }
-        /* sort jobs id wise */
-        std::sort(atlas_model->_jobs.begin(), atlas_model->_jobs.end(),
-                  [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
+        AtlasModel *atlas_model = this->build_atlas_model();
 
         /* Controllers */
         SDL_GUI::InputController<InputKey> *input_controller =
