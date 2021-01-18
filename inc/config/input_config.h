@@ -20,6 +20,7 @@ const std::map<SDL_Scancode, InputKey> keyboard_input_config = {
     {SDL_SCANCODE_J, InputKey::PLAYER_ZOOM_OUT},
     {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
     {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
+    {SDL_SCANCODE_N, InputKey::REINIT},
 };
 
 /** config for window events */

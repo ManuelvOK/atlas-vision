@@ -6,6 +6,7 @@
 
 
 void InterfaceModel::init_colors(int n_jobs) {
+    this->_colors.clear();
     std::vector<unsigned> c;
     for (int i = 0; i < n_jobs; ++i) {
         c.push_back((360 / (n_jobs)) * i);

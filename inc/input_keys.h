@@ -14,4 +14,5 @@ enum class InputKey {
     RESIZED,
     CLICK,
     RIGHT_CLICK,
+    REINIT,
 };

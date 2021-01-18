@@ -25,6 +25,8 @@ class AtlasController : public SDL_GUI::ControllerBase {
      * for the scheduler with their recalculation callbacks.
      */
     void init();
+
+    void reinit();
 public:
     /**
      * Constructor

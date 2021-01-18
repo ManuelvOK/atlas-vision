@@ -128,7 +128,6 @@ AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasMod
     _default_interface_model(default_interface_model),
     _input_model(input_model),
     _player_model(player_model) {
-    this->init();
 }
 
 void AtlasController::init() {
@@ -165,12 +164,33 @@ void AtlasController::init() {
                             this->_interface_model, this->_atlas_model);
     create_legend(this->_atlas_model->_jobs, this->_default_interface_model,
                   this->_interface_model, this->_atlas_model);
+
+    this->_atlas_model->_dirty = false;
+}
+
+void AtlasController::reinit() {
+    this->_default_interface_model->find_first_drawable("core-1")->remove_children(
+        [](SDL_GUI::Drawable *d){
+            return d->_type != "Rect";
+        });
+    for (std::string id: {"deadline", "messages", "dependencies", "legend"}) {
+        this->_default_interface_model->find_first_drawable(id)->remove_all_children();
+    }
+
+    this->init();
 }
 
 
 void AtlasController::update() {
     if (this->_input_model->is_pressed(InputKey::QUIT)) {
         this->_application->_is_running = false;
+    }
+    if (this->_input_model->is_pressed(InputKey::REINIT)) {
+        this->_atlas_model->_dirty = true;
+    }
+
+    if (this->_atlas_model->_dirty) {
+        this->reinit();
     }
     SDL_GUI::Position mouse_position = this->_input_model->mouse_position();
     std::vector<SDL_GUI::Drawable *>hovered =

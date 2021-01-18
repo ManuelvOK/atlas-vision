@@ -22,6 +22,8 @@ public:
     int _highlighted_job = -1;
     std::map<const SDL_GUI::Drawable *, const Job *> _drawables_jobs;
 
+    bool _dirty = true;
+
     /** list of atlas schedules visibile for cfs scheduler */
     std::vector<CfsVisibility *> _cfs_visibilities;
 
