@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include <models/atlas_model.h>
+
 class CfsVisibility;
 class Job;
 class Message;
@@ -15,7 +17,9 @@ class ScheduleChange;
 /** A Parser for the Simulation input */
 class Parser {
   public:
+    AtlasModel *_atlas_model;
     int _n_cores;                                   /**< number of cores */
+    int _cfs_factor;                                /**< time factor on CFS scheduler */
     std::vector<Job *> _jobs;                       /**< Job descriptions */
     std::vector<ScheduleChange *> _changes;         /**< schedule change descriptions */
     std::vector<CfsVisibility *> _cfs_visibilities; /**< CFS visibility descriptions */
@@ -38,6 +42,12 @@ class Parser {
      * @param line line to parse with index at first parameter
      */
     void parse_n_cores(std::stringstream *line);
+
+    /**
+     * parse cfs factor from input line
+     * @param line line to parse with index at first parameter
+     */
+    void parse_cfs_factor(std::stringstream *line);
 
     /**
      * parse job from input line

@@ -17,12 +17,13 @@ void Parser::parse_line(std::string line) {
     ss >> type;
     switch (type) {
         case 'c': this->parse_n_cores(&ss);          break;
+        case 'f': this->parse_cfs_factor(&ss);       break;
         case 'j': this->parse_job(&ss);              break;
         case 's': this->parse_schedule(&ss);         break;
         case 'a': this->parse_change(&ss);           break;
         case 'v': this->parse_cfs_visibility(&ss);   break;
         case 'm': this->parse_message(&ss);          break;
-        case 'd': this->parse_dependency(&ss); break;
+        case 'd': this->parse_dependency(&ss);       break;
         case ' ':
         case 0:
         case '#': break;
@@ -36,10 +37,16 @@ void Parser::parse_n_cores(std::stringstream *line) {
     *line >> this->_n_cores;
 }
 
+void Parser::parse_cfs_factor(std::stringstream *line) {
+    int factor = 1;
+    *line >> factor;
+    this->_cfs_factor = factor;
+}
+
 void Parser::parse_job(std::stringstream *line) {
     int id, deadline, time_estimate, time, submission;
     *line >> id >> deadline >> time_estimate >> time >> submission;
-    Job *job = new Job(id, deadline, time_estimate, time, submission);
+    Job *job = new Job(this->_atlas_model, id, deadline, time_estimate, time, submission);
     this->_jobs.emplace_back(job);
 }
 
@@ -48,7 +55,8 @@ void Parser::parse_schedule(std::stringstream *line) {
     int submission_time, begin, time;
     char scheduler;
     *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
-    Schedule *schedule = new Schedule(id, job_id, core, scheduler, submission_time, begin, time);
+    Schedule *schedule = new Schedule(id, job_id, core, static_cast<SchedulerType>(scheduler),
+                                      submission_time, begin, time);
     this->_schedules.emplace(id, schedule);
 }
 

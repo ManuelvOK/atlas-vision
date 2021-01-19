@@ -169,6 +169,7 @@ void AtlasController::init() {
 }
 
 void AtlasController::reinit() {
+    std::cout << "reinitialising atlas_controller" << std::endl;
     this->_default_interface_model->find_first_drawable("core-1")->remove_children(
         [](SDL_GUI::Drawable *d){
             return d->_type != "Rect";
@@ -185,7 +186,7 @@ void AtlasController::update() {
     if (this->_input_model->is_pressed(InputKey::QUIT)) {
         this->_application->_is_running = false;
     }
-    if (this->_input_model->is_pressed(InputKey::REINIT)) {
+    if (this->_input_model->is_down(InputKey::REINIT)) {
         this->_atlas_model->_dirty = true;
     }
 
@@ -290,12 +291,12 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
     offsets[SchedulerType::recovery] = interface_config.schedule.recovery_offset_y;
     offsets[SchedulerType::CFS] = interface_config.schedule.CFS_offset_y;
 
-    for (std::pair<int, Schedule *> s: atlas_model->_schedules) {
-        Schedule *schedule = s.second;
+    for (Schedule * schedule: atlas_model->_schedules) {
+        //std::cout << "creating Schedule drawable for schedule " << schedule->_id << std::endl;
         /* constructing Schedule */
         ScheduleRect *r = new ScheduleRect(schedule, interface_model, player_model, atlas_model,
                                            offsets);
-        atlas_model->_drawables_jobs[r] = atlas_model->_jobs[schedule->_job_id];
+        atlas_model->_drawables_jobs[r] = atlas_model->_jobs[schedule->_job->_id];
         core_rect->add_child(r);
     }
 }

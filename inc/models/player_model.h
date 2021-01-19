@@ -16,6 +16,7 @@ public:
     int _speed = 50;        /**< this value gets added to the position every tick */
     int _position = 0;      /**< current position of player */
     int _max_position = 0;  /**< length of full simulation */
+    bool _dirty = true;
 
     /** toggle play status */
     void toggle();

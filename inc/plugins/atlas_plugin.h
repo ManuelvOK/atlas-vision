@@ -9,6 +9,7 @@
 #include <config/input_config.h>
 #include <controllers/atlas_controller.h>
 #include <controllers/player_controller.h>
+#include <controllers/simulation_controller.h>
 #include <models/atlas_model.h>
 #include <models/input_model.h>
 #include <models/interface_model.h>
@@ -86,6 +87,10 @@ public:
 
         SDL_GUI::DefaultPlugin &default_plugin = std::get<SDL_GUI::DefaultPlugin>(previous);
         SDL_GUI::InterfaceModel *default_interface_model = default_plugin.interface_model();
+        SimulationController *simulation_controller =
+            new SimulationController(atlas_model, player_model, default_interface_model);
+        app->add_controller(simulation_controller);
+
         AtlasController *atlas_controller = new AtlasController(app, atlas_model, interface_model,
                                                                 default_interface_model,
                                                                 input_model, player_model);

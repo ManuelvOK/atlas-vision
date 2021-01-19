@@ -14,6 +14,7 @@
 class PlayerController : public SDL_GUI::ControllerBase {
     PlayerModel *_player_model;         /**< Model for the player */
     InputModel *_input_model;           /**< The applications input model */
+    const AtlasModel *_atlas_model;           /**< The applications atlas mdel */
     InterfaceModel *_interface_model;   /**< The applications interface model */
 
     /** the interface model from the SDL_GUI library */
@@ -24,9 +25,8 @@ class PlayerController : public SDL_GUI::ControllerBase {
 
     /**
      * initialise this controller. This gets called from the constructor.
-     * @param atlas_model the applications atlas model
      */
-    void init(const AtlasModel *atlas_model);
+    void init();
 
     /** change state on input. This gets called from update() */
     void evaluate_input();

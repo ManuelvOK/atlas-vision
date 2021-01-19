@@ -21,8 +21,9 @@ AtlasModel *AtlasPlugin::build_atlas_model() const {
     }
     if (vision_input.size()) {
         model = this->atlas_model_from_file(vision_input);
+        model->_simulated = true;
     } else if (simulation_input.size()) {
-        /* TODO: Simulate and fill model */
+        model = this->atlas_model_from_file(simulation_input);
     } else {
         std::cerr << "No input given." << std::endl;
         exit(1);
@@ -52,15 +53,23 @@ AtlasModel *AtlasPlugin::atlas_model_from_stdin() const {
 AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
     Parser parser;
     AtlasModel *model = new AtlasModel();
+    parser._atlas_model = model;
     std::string line;
     while (std::getline(*input, line)) {
         parser.parse_line(line);
     }
 
+
     bool succ = true;
     model->_n_cores = parser._n_cores;
+    model->_cfs_factor = parser._cfs_factor;
     model->_jobs = parser._jobs;
-    model->_schedules = parser._schedules;
+    for (auto p: parser._schedules) {
+        Schedule *schedule = p.second;
+        /* TODO: what happens if the parsed schedules have a missing id? */
+        schedule->_job = model->_jobs[schedule->_job_id];
+        model->_schedules.push_back(schedule);
+    }
     model->_cfs_visibilities = parser._cfs_visibilities;
     model->_messages = parser._messages;
 
@@ -76,7 +85,6 @@ AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
             model->_jobs[from]->_known_dependencies.push_back(model->_jobs[to]);
         } else {
             model->_jobs[from]->_unknown_dependencies.push_back(model->_jobs[to]);
-
         }
     }
     /* apply changes */

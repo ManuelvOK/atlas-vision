@@ -5,6 +5,9 @@
 #include <tuple>
 
 #include <models/schedule_change.h>
+#include <models/printable.h>
+
+class Job;
 
 /** type of scheduler encoded as ascii character */
 enum class SchedulerType {
@@ -21,12 +24,14 @@ struct ScheduleData {
 };
 
 /** Object representing a schedule for a certain job */
-class Schedule {
+class Schedule : public Printable {
+    static int _next_id;
     ScheduleData &data_at_time(int timestamp);
     const ScheduleData &data_at_time(int timestamp) const;
 public:
     int _id;                            /**< id of this schedule */
-    int _job_id;                        /**< Id of the concerning job */
+    Job *_job;                          /**< the concerning job */
+    int _job_id;                        /**< id of the concerning job */
     int _core;                          /**< core on wich the job gets executed */
     int _submission_time;               /**< time this schedule gets submitted */
 
@@ -44,8 +49,22 @@ public:
      * @param begin time the schedule begins execution
      * @param execution_time time the schedule gets executed
      */
-    Schedule(int id, int job_id, int core, char scheduler, int submission_time, int begin,
+    Schedule(int id, Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
              int execution_time);
+
+    Schedule(int id, int job_id, int core, SchedulerType scheduler, int submission_time, int begin,
+             int execution_time);
+
+    Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
+             int execution_time);
+
+    Schedule(const Schedule *s);
+
+    virtual ~Schedule() = default;
+
+    static int next_id();
+
+    static void reset_next_id();
 
     /**
      * Add a change to this schedule
@@ -53,12 +72,32 @@ public:
      */
     void add_change(const ScheduleChange *change);
 
+    void add_change(int timestamp, int begin, int execution_time);
+
+    void add_change_shift_relative(int timestamp, int shift);
+
+    void add_change_execution_time_relative(int timestamp, int execution_time_difference);
+
+    void add_change_end(int timestamp, int end);
+
     /**
      * get relevant data for rendering for a given timestamp
      * @param timestamp timestamp to get data for
      * @returns schedules data at given timestamp
      */
     ScheduleData get_data_at_time(int timestamp = 0) const;
+
+    /**
+     * get first Schedule Data
+     * @returns first ScheduleData in _data
+     */
+    ScheduleData first_data() const;
+
+    /**
+     * get last Schedule Data
+     * @returns last ScheduleData in _data
+     */
+    ScheduleData last_data() const;
 
     /**
      * check if the schedule does exist at a given timestamp
@@ -79,5 +118,56 @@ public:
      * @returns worst-case end timestamp
      */
     int get_maximal_end() const;
+
+    std::string to_string() const override;
 };
 
+
+class AtlasSchedule : public Schedule {
+  public:
+    using Schedule::Schedule;
+    AtlasSchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(id, job, core, SchedulerType::ATLAS, submission_time, begin, execution_time) {}
+    AtlasSchedule(Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(job, core, SchedulerType::ATLAS, submission_time, begin, execution_time) {}
+
+};
+
+class DependencySchedule : public AtlasSchedule {
+  public:
+    using AtlasSchedule::AtlasSchedule;
+};
+
+class CfsSchedule : public Schedule {
+  public:
+    using Schedule::Schedule;
+    CfsSchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(id, job, core, SchedulerType::CFS, submission_time, begin, execution_time) {}
+    CfsSchedule(Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(job, core, SchedulerType::CFS, submission_time, begin, execution_time) {}
+    CfsSchedule(AtlasSchedule *s, int submission_time, int begin, int execution_time);
+};
+
+class EarlyCfsSchedule : public CfsSchedule {
+  public:
+    using CfsSchedule::CfsSchedule;
+    AtlasSchedule *_atlas_schedule = nullptr;
+    EarlyCfsSchedule(AtlasSchedule *s)
+        : CfsSchedule(s), _atlas_schedule(s) {}
+};
+
+class LateCfsSchedule : public CfsSchedule {
+  public:
+    using CfsSchedule::CfsSchedule;
+};
+
+class RecoverySchedule : public Schedule {
+  public:
+    using Schedule::Schedule;
+    RecoverySchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(id, job, core, SchedulerType::recovery, submission_time, begin,
+                   execution_time) {}
+    RecoverySchedule(Job *job, int core, int submission_time, int begin, int execution_time)
+        : Schedule(job, core, SchedulerType::recovery, submission_time, begin, execution_time) {}
+    RecoverySchedule(const Schedule *s);
+};

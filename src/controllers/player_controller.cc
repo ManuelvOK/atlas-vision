@@ -11,13 +11,19 @@
 
 PlayerController::PlayerController(PlayerModel *player_model, InputModel *input_model,
                                    const AtlasModel *atlas_model, InterfaceModel *interface_model,
-                                   SDL_GUI::InterfaceModel *default_interface_model)
-    : _player_model(player_model), _input_model(input_model), _interface_model(interface_model),
+                                   SDL_GUI::InterfaceModel *default_interface_model) :
+    _player_model(player_model),
+    _input_model(input_model),
+    _atlas_model(atlas_model),
+    _interface_model(interface_model),
     _default_interface_model(default_interface_model) {
-    this->init(atlas_model);
+    this->init();
 }
 
 void PlayerController::update() {
+    if (this->_player_model->_dirty) {
+        this->init();
+    }
     this->evaluate_input();
     this->drag();
     this->_player_model->tick();
@@ -78,12 +84,11 @@ void PlayerController::drag() {
     this->_player_model->scroll_right(offset_x);
 }
 
-void PlayerController::init(const AtlasModel *atlas_model) {
+void PlayerController::init() {
     /* set max position */
     int max_position = 0;
-    for (std::pair<int, Schedule *> p: atlas_model->_schedules) {
-        const Schedule *s = p.second;
-        max_position = std::max(max_position, s->get_maximal_end());
+    for (Schedule * schedule: this->_atlas_model->_schedules) {
+        max_position = std::max(max_position, schedule->get_maximal_end());
     }
     max_position = (max_position / 20 + 10) * 20;
     this->_player_model->_max_position = max_position;
@@ -147,4 +152,5 @@ void PlayerController::init(const AtlasModel *atlas_model) {
                 d->set_width(interface_model->px_width(max_position));
             });
     }
+    this->_player_model->_dirty = false;
 }

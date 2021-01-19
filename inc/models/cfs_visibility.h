@@ -1,7 +1,9 @@
 #pragma once
 
+#include <models/printable.h>
+
 /** the visibility of an ATLAS schedule fot the CFS scheduler */
-class CfsVisibility {
+class CfsVisibility : public Printable {
 public:
     int _schedule_id;   /**< ID of visible schedule */
     int _begin;         /**< timestand of visibility begin */
@@ -22,4 +24,6 @@ public:
      * @returns True if timestamp is between begin and end of visibility. False otherwise.
      */
     bool is_active_at_time(int timestamp) const;
+
+    virtual std::string to_string() const override;
 };

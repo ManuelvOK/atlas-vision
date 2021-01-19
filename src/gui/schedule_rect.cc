@@ -4,13 +4,13 @@ ScheduleRect::ScheduleRect(const Schedule *schedule, const InterfaceModel *inter
                            const PlayerModel *player_model, const AtlasModel *atlas_model,
                            std::map<SchedulerType, int> offsets):
     SDL_GUI::Rect("ScheduleRect"),
-    JobHighlight(atlas_model->_jobs[schedule->_job_id], interface_model, atlas_model),
+    JobHighlight(schedule->_job, interface_model, atlas_model),
     _schedule(schedule),
     _interface_model(interface_model),
     _player_model(player_model),
     _offsets(offsets) {
     this->set_height(this->_interface_model->px_height(1));
-    this->_default_style._color = this->_interface_model->get_color(this->_schedule->_job_id);
+    this->_default_style._color = this->_interface_model->get_color(this->_schedule->_job->_id);
     this->_default_style._has_background = true;
     this->_default_style._has_border = true;
 }
