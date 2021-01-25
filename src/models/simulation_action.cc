@@ -34,9 +34,11 @@ void SubmissionAction::action() {
             /* we are looking for the job earlier in the timeline */
             const Schedule *schedule = *schedule_it;
             /* at after the first job whose deadline is less than ours, we get inserted
-             * and also: never insert a job before one that has already started executing */
+             * and also: never insert a job before one that has already started executing or that is a known dependency */
+            std::vector<Job *> deps = job->_known_dependencies;
             if (schedule->_job->_state != JobState::running
-                    and job->_deadline <= schedule->_job->_deadline) {
+                and std::find(deps.begin(), deps.end(), schedule->_job) == deps.end()
+                and job->_deadline <= schedule->_job->_deadline) {
                 /* Dereferencing a reverse iterator gives a different value then dereferencing
                  * its non-reverse iterator (got calling base()). Thus, we have to adjust it
                  * by substracting 1 */
