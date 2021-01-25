@@ -42,6 +42,7 @@ Schedule::Schedule(Job *job, int core, SchedulerType scheduler, int submission_t
 Schedule::Schedule(const Schedule *s) :
     _id(Schedule::next_id()),
     _job(s->_job),
+    _job_id(s->_job_id),
     _core(s->_core),
     _submission_time(s->_submission_time),
     _data(s->_data) {
@@ -81,6 +82,12 @@ void Schedule::add_change(int timestamp, int begin, int execution_time) {
     this->_data.emplace(timestamp, last_data);
 }
 
+void Schedule::add_change_begin(int timestamp, int begin) {
+    ScheduleData last_data = this->last_data();
+    last_data._begin = begin;
+    this->_data.emplace(timestamp, last_data);
+}
+
 void Schedule::add_change_shift_relative(int timestamp, int shift) {
     ScheduleData last_data = this->last_data();
     last_data._begin += shift;
@@ -98,6 +105,13 @@ void Schedule::add_change_end(int timestamp, int end) {
     ScheduleData last_data = this->last_data();
     last_data._execution_time = end - last_data._begin;
     this->_data.emplace(timestamp, last_data);
+}
+
+void Schedule::add_change_delete(int timestamp) {
+    this->_end = timestamp;
+    //ScheduleData last_data = this->last_data();
+    //last_data._execution_time = 0;
+    //this->_data.emplace(timestamp, last_data);
 }
 
 
@@ -125,7 +139,7 @@ const ScheduleData &Schedule::data_at_time(int timestamp) const {
     return this->_data.at(data_index);
 }
 
-ScheduleData Schedule::get_data_at_time(int timestamp) const {
+ScheduleData Schedule::get_vision_data_at_time(int timestamp) const {
 
     ScheduleData data = this->data_at_time(timestamp);
 
@@ -136,6 +150,10 @@ ScheduleData Schedule::get_data_at_time(int timestamp) const {
         data._begin = timestamp + 1;
     }
     return data;
+}
+
+ScheduleData Schedule::get_data_at_time(int timestamp) const {
+    return this->data_at_time(timestamp);
 }
 
 ScheduleData Schedule::first_data() const {
@@ -155,7 +173,7 @@ bool Schedule::exists_at_time(int timestamp) const {
 bool Schedule::is_active_at_time(int timestamp) const {
     ScheduleData data = this->get_data_at_time(timestamp);
 
-    return (data._begin <= timestamp && data._begin + data._execution_time >= timestamp);
+    return (data._begin <= timestamp && data._begin + data._execution_time > timestamp);
 }
 
 int Schedule::get_maximal_end() const {

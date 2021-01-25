@@ -8,7 +8,7 @@ const Schedule *AtlasModel::active_schedule(int timestamp) const {
             return (data_a._begin < data_b._begin);
         });
     for (const Schedule *s: schedules) {
-        if (s->exists_at_time(timestamp)) {
+        if (s->is_active_at_time(timestamp)) {
             return s;
         }
     }
@@ -24,7 +24,7 @@ const Schedule *AtlasModel::active_schedule_on_scheduler(SchedulerType scheduler
         });
     for (const Schedule *s: schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
-        if (s->exists_at_time(timestamp) and data._scheduler == scheduler) {
+        if (s->is_active_at_time(timestamp) and data._scheduler == scheduler) {
             return s;
         }
     }

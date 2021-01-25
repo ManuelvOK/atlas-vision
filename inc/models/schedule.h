@@ -74,11 +74,15 @@ public:
 
     void add_change(int timestamp, int begin, int execution_time);
 
+    void add_change_begin(int timestamp, int begin);
+
     void add_change_shift_relative(int timestamp, int shift);
 
     void add_change_execution_time_relative(int timestamp, int execution_time_difference);
 
     void add_change_end(int timestamp, int end);
+
+    void add_change_delete(int timestamp);
 
     /**
      * get relevant data for rendering for a given timestamp
@@ -86,6 +90,8 @@ public:
      * @returns schedules data at given timestamp
      */
     ScheduleData get_data_at_time(int timestamp = 0) const;
+
+    ScheduleData get_vision_data_at_time(int timestamp = 0) const;
 
     /**
      * get first Schedule Data
@@ -152,8 +158,8 @@ class EarlyCfsSchedule : public CfsSchedule {
   public:
     using CfsSchedule::CfsSchedule;
     AtlasSchedule *_atlas_schedule = nullptr;
-    EarlyCfsSchedule(AtlasSchedule *s)
-        : CfsSchedule(s), _atlas_schedule(s) {}
+    EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int begin, int execution_time)
+        : CfsSchedule(s, submission_time, begin, execution_time), _atlas_schedule(s) {}
 };
 
 class LateCfsSchedule : public CfsSchedule {

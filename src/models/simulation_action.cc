@@ -66,11 +66,12 @@ void SubmissionAction::action() {
         /* shift remaining schedules if nesseccary */
         for (; schedule_it != this->_atlas_model->_atlas_schedules.rend(); ++schedule_it) {
             Schedule *s = *schedule_it;
-            ScheduleData data = s->last_data();
+            const ScheduleData data = s->last_data();
             /* check if preceeding element has to be shifted. This is the case if the end is
              * greater than the current start. */
             if (data._begin + data._execution_time > start) {
-                data._begin = start - data._execution_time;
+                s->add_change_begin(this->_atlas_model->_timestamp, start - data._execution_time);
+                start -= data._execution_time;
             } else {
                 break;
             }
@@ -90,9 +91,11 @@ void SubmissionAction::action() {
         this->_atlas_model->_actions_to_do.push_back(
             new DeadlineAction(this->_atlas_model, schedule_to_insert->_job->_deadline,
                                schedule_to_insert->_job));
+        ScheduleData data = schedule_to_insert->last_data();
         std::cerr << this->_atlas_model->_timestamp << ": Job " << job->_id
                   << " submitted and scheduled on ATLAS from "
-                  << schedule_to_insert->last_data()._begin << "." << std::endl;
+                  << data._begin << " for "
+                  << data._execution_time << "." << std::endl;
     }
 
 
@@ -302,18 +305,8 @@ void BeginScheduleAction<AtlasSchedule>::action() {
                                                                 -dependency_time_left);
             this->_atlas_model->_actions_to_do.push_back(
                 new BeginScheduleAction{this->_atlas_model, this->_schedule});
-#if 0
-            this->printables.push_back(
-                    new ScheduleChange(this->schedule->id, this->_atlas_model->timestamp,
-                                       change_type::shift, this->schedule->start));
-            this->printables.push_back(
-                    new ScheduleChange(this->schedule->id, this->_atlas_model->timestamp,
-                                       change_type::change_execution_time, this->schedule->length));
         } else {
-            this->printables.push_back(
-                    new ScheduleChange(this->schedule->id, this->_atlas_model->timestamp,
-                                       change_type::erase, -1));
-#endif
+            this->_schedule->add_change_delete(this->_atlas_model->_timestamp);
         }
         return;
     }
@@ -339,25 +332,21 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
     if (this->_schedule->_job->execution_time_left(this->_atlas_model->_timestamp) <= 0) {
 
         /* create a change object that deletes the ATLAS schedule */
-        /* TODO: there shouldnt be a -1 value for no value */
-#if 0
-        this->printables.push_back(new ScheduleChange(this->schedule->atlas_schedule->id,
-                                                      this->_atlas_model->timestamp, change_type::erase,
-                                                      -1));
-#endif
+        this->_schedule->_atlas_schedule->add_change_delete(this->_atlas_model->_timestamp);
+
         /* there is place for a new schedule */
         std::cerr << this->_atlas_model->_timestamp << ": Early CFS Schedule for job "
-                  << this->_schedule->_job->_id << "finished" << std::endl;
+                  << this->_schedule->_job->_id << " finished" << std::endl;
         this->_atlas_model->_actions_to_do.push_back(
             new FillAction(this->_atlas_model, this->_atlas_model->_timestamp));
     }
     /* visibility stays until now */
     std::cerr << this->_atlas_model->_timestamp << ": visibility ended for job "
               << this->_schedule->_job->_id << std::endl;
-#if 0
-    this->printables.push_back(new CfsVisibility(this->schedule->atlas_schedule,
-                                                 this->schedule->start, schedule->end()));
-#endif
+    ScheduleData data = this->_schedule->last_data();
+    this->_atlas_model->_cfs_visibilities.push_back(
+        new CfsVisibility(this->_schedule->_atlas_schedule->_id,
+                          data._begin, data._begin + data._execution_time));
     /* schedule no longer executes */
     if (this->_atlas_model->_cfs_schedule == this->_schedule) {
         this->_atlas_model->_cfs_schedule = nullptr;
@@ -396,12 +385,6 @@ void EndScheduleAction<RecoverySchedule>::action() {
             /* adjust recovery schedule in atlas_model */
             this->_schedule->add_change_end(this->_atlas_model->_timestamp,
                                             this->_atlas_model->_timestamp);
-#if 0
-            this->printables.push_back(
-                    new ScheduleChange(this->schedule->id, this->_atlas_model->timestamp,
-                                       change_type::change_execution_time,
-                                       this->_atlas_model->timestamp - this->schedule->start));
-#endif
         }
         /* schedule no longer executes */
         this->_atlas_model->_recovery_schedule = nullptr;
@@ -442,12 +425,6 @@ void EndScheduleAction<AtlasSchedule>::action() {
             /* adjust atlas schedule in atlas_model */
             this->_schedule->add_change_end(this->_atlas_model->_timestamp,
                                             this->_atlas_model->_timestamp);
-#if 0
-            this->printables.push_back(
-                    new ScheduleChange(this->schedule->id, this->_atlas_model->timestamp,
-                                       change_type::change_execution_time,
-                                       this->_atlas_model->timestamp - this->schedule->start));
-#endif
         }
     } else if (estimated_time_left <= 0) {
         std::cerr << this->_atlas_model->_timestamp << ": Atlas schedule ended for job "
