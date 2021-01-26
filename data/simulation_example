@@ -52,3 +52,6 @@ d k 3 2
 d k 5 4
 d k 6 5
 d k 7 6
+
+# unknown dependencies
+d u 10 9 # X2 has an unknown dependency from X1

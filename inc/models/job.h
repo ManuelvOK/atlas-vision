@@ -63,9 +63,14 @@ public:
 
     int time_executed(int timestamp) const;
 
+    bool all_dependencies_finished(int timestamp) const;
+
+    bool finished(int timestamp) const;
+
     virtual std::string to_string() const override;
 
     bool depends_on(const Job *job) const;
+
 
     void set_atlas_schedule(AtlasSchedule *schedule);
 };

@@ -23,6 +23,8 @@ void SubmissionAction::action() {
     /* iterate through the EDF sorted jobs in reversed order to add schedules while minimizing
      * slack. */
     int max_end = std::numeric_limits<int>::max();
+    std::cerr << this->_atlas_model->_timestamp << ": adjust or create Schedules ============"
+              << std::endl;
     for (auto job_it = this->_jobs.rbegin(); job_it != this->_jobs.rend(); ++job_it) {
         Job *job = *job_it;
         max_end = std::min(max_end, job->_deadline);
@@ -39,9 +41,9 @@ void SubmissionAction::action() {
             } else {
                 std::cerr << this->_atlas_model->_timestamp << ": Schedule for Job " << job->_id
                           << " need not be shifted. Max_end: " << max_end << " schedule_end: "
-                          << data.end() << "." << std::endl;
+                          << data.end() << " schedule_begin: " << data._begin << "." << std::endl;
             }
-            max_end = std::min(max_end, data._begin + shift_value);
+            max_end = std::min(max_end, job->_atlas_schedule->last_data()._begin);
             continue;
         }
 
@@ -61,7 +63,7 @@ void SubmissionAction::action() {
             new DeadlineAction(this->_atlas_model, s->_job->_deadline, s->_job));
         std::cerr << this->_atlas_model->_timestamp << ": Job " << job->_id
                   << " submitted and scheduled on ATLAS from " << begin << " for "
-                  << job->_execution_time << "." << std::endl;
+                  << job->_execution_time << ". Max_end was " << max_end << "." << std::endl;
         max_end = std::min(max_end, begin);
 
     }
@@ -242,6 +244,7 @@ void BeginScheduleAction<AtlasSchedule>::action() {
     /* TODO: check for all dependencies, not only the first one. this was quick and dirty */
     Job *dependent_job = job;
     int dependency_time_left = 0;
+    /* aggregate time that all the dependent jobs in the dependency chain have left to run */
     while (dependent_job->_known_dependencies.size() > 0) {
         int time_left = dependent_job->_known_dependencies[0]
             ->execution_time_left(this->_atlas_model->_timestamp);
@@ -260,8 +263,7 @@ void BeginScheduleAction<AtlasSchedule>::action() {
             new DependencySchedule(dependent_job, 0, this->_atlas_model->_timestamp,
                                    this->_atlas_model->_timestamp, length);
         dependent_job->_schedules.push_back(schedule);
-        this->_atlas_model->_atlas_schedules.insert(schedule);
-        this->_atlas_model->_schedules.insert(schedule);
+        this->_atlas_model->add_atlas_schedule(schedule);
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, schedule});
         if (this->_schedule->last_data()._execution_time > dependency_time_left) {
@@ -296,21 +298,28 @@ int EndScheduleAction<T>::time() const {
 
 template<>
 void EndScheduleAction<EarlyCfsSchedule>::action() {
+    Job *job = this->_schedule->_job;
+    int timestamp = this->_atlas_model->_timestamp;
+    /* check if there was any execution */
+    if (not job->all_dependencies_finished(timestamp)) {
+        std::cerr << timestamp << ": Cfs Schedule ended for job " << job->_id
+                  << ". But there were unknown dependencies. => Deleting schedule." << std::endl;
+        this->_schedule->add_change_delete(timestamp);
+    }
+
     /* check if execution is finished */
-    if (this->_schedule->_job->execution_time_left(this->_atlas_model->_timestamp) <= 0) {
+    if (job->execution_time_left(this->_atlas_model->_timestamp) <= 0) {
 
         /* create a change object that deletes the ATLAS schedule */
-        this->_schedule->_atlas_schedule->add_change_delete(this->_atlas_model->_timestamp);
+        this->_schedule->_atlas_schedule->add_change_delete(timestamp);
 
         /* there is place for a new schedule */
-        std::cerr << this->_atlas_model->_timestamp << ": Early CFS Schedule for job "
-                  << this->_schedule->_job->_id << " finished" << std::endl;
-        this->_atlas_model->_actions_to_do.push_back(
-            new FillAction(this->_atlas_model, this->_atlas_model->_timestamp));
+        std::cerr << timestamp << ": Early CFS Schedule for job " << job->_id << " finished"
+                  << std::endl;
+        this->_atlas_model->_actions_to_do.push_back(new FillAction(this->_atlas_model, timestamp));
     }
     /* visibility stays until now */
-    std::cerr << this->_atlas_model->_timestamp << ": visibility ended for job "
-              << this->_schedule->_job->_id << std::endl;
+    std::cerr << timestamp << ": visibility ended for job " << job->_id << std::endl;
     ScheduleData data = this->_schedule->last_data();
     this->_atlas_model->_cfs_visibilities.push_back(
         new CfsVisibility(this->_schedule->_atlas_schedule, data._begin,
@@ -377,34 +386,39 @@ void EndScheduleAction<RecoverySchedule>::action() {
 
 template<>
 void EndScheduleAction<AtlasSchedule>::action() {
+    Job *job = this->_schedule->_job;
+    int timestamp = this->_atlas_model->_timestamp;
     /* check if ATLAS schedule still exists */
-    if (this->_schedule->_job->execution_time_left(this->_schedule->last_data()._begin) <= 0) {
+    if (job->execution_time_left(this->_schedule->last_data()._begin) <= 0) {
         return;
     }
-    int time_left = this->_schedule->_job->execution_time_left(this->_atlas_model->_timestamp);
-    int estimated_time_left =
-        this->_schedule->_job->estimated_execution_time_left(this->_atlas_model->_timestamp);
+    int time_left = job->execution_time_left(timestamp);
+    int estimated_time_left = job->estimated_execution_time_left(timestamp);
     if (time_left <= 0) {
+        std::string early = estimated_time_left > 0 ? "early " : "";
         std::cerr << this->_atlas_model->_timestamp
-                  << ": Atlas schedule ended (early) for job " << this->_schedule->_job->_id
+                  << ": Atlas schedule ended " << early << "for job " << job->_id
                   << std::endl;
-        if (this->_atlas_model->_timestamp < this->_schedule->last_data()._begin
-                                                  + this->_schedule->last_data()._execution_time) {
+        ScheduleData data = this->_schedule->last_data();
+        if (timestamp < data._begin + data._execution_time) {
             /* adjust atlas schedule in atlas_model */
-            this->_schedule->add_change_end(this->_atlas_model->_timestamp,
-                                            this->_atlas_model->_timestamp);
+            this->_schedule->add_change_end(timestamp, timestamp);
         }
     } else if (estimated_time_left <= 0) {
-        std::cerr << this->_atlas_model->_timestamp << ": Atlas schedule ended for job "
-                  << this->_schedule->_job->_id << " but job was underestimated. => CFS."
-                  << std::endl;
+        std::cerr << timestamp << ": Atlas schedule ended for job " << job->_id
+                  << " but job was underestimated. => CFS." << std::endl;
         this->_atlas_model->_cfs_queue.push_back(this->_schedule->_job);
     } else {
-        std::cerr << this->_atlas_model->_timestamp << ": Atlas schedule ended for job "
-                  << this->_schedule->_job->_id
-                  << ". But schedule had not got all of its atlas time. => Recovery." << std::endl;
+        if (not job->all_dependencies_finished(timestamp)) {
+            std::cerr << timestamp << ": Atlas schedule ended for job " << job->_id
+                      << ". But there were unknown dependencies. => Recovery." << std::endl;
+            job->_atlas_schedule->add_change_delete(timestamp);
+        } else {
+            std::cerr << timestamp << ": Atlas schedule ended for job " << job->_id
+                      << ". But schedule had not got all of its atlas time. => Recovery." << std::endl;
+        }
         this->_atlas_model->_recovery_queue.push_back(this->_schedule->_job);
     }
     this->_atlas_model->_actions_to_do.push_back(
-        new FillAction(this->_atlas_model, this->_atlas_model->_timestamp));
+        new FillAction(this->_atlas_model, timestamp));
 }

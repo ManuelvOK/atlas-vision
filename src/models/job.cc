@@ -32,9 +32,13 @@ int Job::execution_time_left(int timestamp) const {
 
 int Job::estimated_execution_time_left(int timestamp) const {
     return this->_execution_time_estimate - this->time_executed(timestamp);
+
 }
 
 int Job::time_executed(int timestamp) const {
+    if (not this->all_dependencies_finished(timestamp)) {
+        return 0;
+    }
     int time_executed = 0;
     for (Schedule *s: this->_schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
@@ -45,6 +49,26 @@ int Job::time_executed(int timestamp) const {
         time_executed += value;
     }
     return time_executed;
+}
+
+bool Job::all_dependencies_finished(int timestamp) const {
+    for (const Job *j: this->_known_dependencies) {
+        if (j->finished(timestamp)) {
+            continue;
+        }
+        return false;
+    }
+    for (const Job *j: this->_unknown_dependencies) {
+        if (j->finished(timestamp)) {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+bool Job::finished(int timestamp) const {
+    return this->execution_time_left(timestamp) <= 0;
 }
 
 std::string Job::to_string() const {

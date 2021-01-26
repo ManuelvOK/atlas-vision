@@ -105,9 +105,9 @@ void Schedule::add_change_end(int timestamp, int end) {
 
 void Schedule::add_change_delete(int timestamp) {
     this->_end = timestamp;
-    //ScheduleData last_data = this->last_data();
-    //last_data._execution_time = 0;
-    //this->_data.emplace(timestamp, last_data);
+    ScheduleData last_data = this->last_data();
+    last_data._execution_time = 0;
+    this->_data.emplace(timestamp, last_data);
 }
 
 

@@ -71,7 +71,7 @@ void AtlasModel::tidy_up_queue(std::list<Job *> *queue) {
     std::list<Job *> old_queue(*queue);
     queue->clear();
     for (Job *j: old_queue) {
-        if (j->execution_time_left(this->_timestamp) > 0) {
+        if (not j->finished(this->_timestamp)) {
             queue->push_back(j);
         }
     }
