@@ -1,4 +1,4 @@
-<rect width="1100" height="600" bg="170" border="true" attributes="window">
+<rect width="1500" height="1000" bg="170" border="true" attributes="window">
     <rect width="580" height="530" x="20" y="20" border="true" attributes="player">
         <rect width="580" height="530" x="10" y="0" attributes="player-grid">
         </rect>
@@ -16,12 +16,12 @@
         <rect width="580" height="100" x="0" y="0" attributes="deadline">
         </rect>
     </rect>
-    <rect width="390" height="530" x="650" y="20" border="true" attributes="sidebar">
-        <rect width="80" height="400" x="0" y="0" border="true" attributes="legend">
+    <rect width="250" height="530" x="650" y="20" border="true" attributes="sidebar">
+        <rect width="80" height="400" x="0" y="0" attributes="legend">
         </rect>
-        <rect width="310" height="350" x="80" y="0" border="true" attributes="dependencies">
+        <rect width="170" height="350" x="80" y="0" attributes="dependencies">
         </rect>
-        <rect width="190" height="170" x="0" y="400" border="true" attributes="messages">
-        </rect>
+    </rect>
+    <rect width="500" height="930" x="920" y="20" border="true" attributes="messages">
     </rect>
 </rect>

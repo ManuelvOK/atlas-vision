@@ -317,7 +317,9 @@ static void create_message_drawables(std::vector<Message *> messages,
     SDL_GUI::Drawable *message_rect = default_interface_model->find_first_drawable("messages");
     int offset = 0;
     for (Message *message: messages) {
-        MessageText *t = new MessageText(message->_message, default_interface_model->font(),
+        std::stringstream ss;
+        ss << message->_timestamp << ": " << message->_message;
+        MessageText *t = new MessageText(ss.str(), default_interface_model->font(),
                                          message_rect->width(), offset);
         t->add_recalculation_callback([player_model, message, t](SDL_GUI::Drawable *) {
             if (player_model->_position >= message->_timestamp) {

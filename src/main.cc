@@ -7,7 +7,8 @@
 
 int main(int argc, char *argv[]) {
 
-    SDL_GUI::Application<AtlasPlugin, SDL_GUI::DefaultPlugin> app("Application", argc, argv);
+    SDL_GUI::Application<AtlasPlugin, SDL_GUI::DefaultPlugin> app("Application", argc, argv, 1500,
+                                                                  1000);
     app.run();
 
     return 0;

@@ -11,6 +11,12 @@ void AtlasModel::add_atlas_schedule(AtlasSchedule *schedule) {
     this->_schedules.insert(schedule);
 }
 
+void AtlasModel::add_message(int timestamp, std::string text) {
+    Message *message = new Message(timestamp, text);
+    this->_messages.push_back(message);
+    std::cerr << timestamp << ": " << text << std::endl;
+}
+
 const Schedule *AtlasModel::active_schedule(int timestamp) const {
     for (const Schedule *s: this->_schedules) {
         if (s->is_active_at_time(timestamp)) {

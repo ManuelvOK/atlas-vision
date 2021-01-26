@@ -53,6 +53,8 @@ public:
 
     void add_atlas_schedule(AtlasSchedule *schedule);
 
+    void add_message(int timestamp, std::string text);
+
     const Schedule *active_schedule(int timestamp) const;
     const Schedule *active_schedule_on_scheduler(SchedulerType scheduler, int timestamp) const;
     AtlasSchedule *next_atlas_schedule() const;
