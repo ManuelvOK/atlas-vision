@@ -28,6 +28,9 @@ void SimulationController::simulate() {
         /* sort actions */
         this->_atlas_model->_actions_to_do.sort(
             [](const SimulationAction *a, const SimulationAction *b) {
+                if (a->time() == b->time()) {
+                    return a->_weight < b->_weight;
+                }
                 return a->time() < b->time();
             });
 

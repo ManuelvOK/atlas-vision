@@ -15,7 +15,8 @@ class SimulationAction {
   protected:
     AtlasModel *_atlas_model;
   public:
-    SimulationAction(AtlasModel *atlas_model) : _atlas_model(atlas_model) {}
+    int _weight = 0;
+    SimulationAction(AtlasModel *atlas_model, int weight = 0);
     virtual ~SimulationAction() = default;
     virtual int time() const = 0;
     virtual void action() = 0;
@@ -24,8 +25,8 @@ class SimulationAction {
 class TimedAction : public SimulationAction {
   public:
     int _time;
-    TimedAction(AtlasModel *atlas_model,int time)
-        : SimulationAction(atlas_model), _time(time) {}
+    TimedAction(AtlasModel *atlas_model,int time, int weight = 0)
+        : SimulationAction(atlas_model, weight), _time(time) {}
     virtual int time() const override;
 };
 
@@ -33,7 +34,7 @@ class SubmissionAction : public TimedAction {
     std::vector<Job *> _jobs;
   public:
     SubmissionAction(AtlasModel *atlas_model, int time, std::vector<Job*> jobs)
-        : TimedAction(atlas_model, time), _jobs(jobs) {}
+        : TimedAction(atlas_model, time, -50), _jobs(jobs) {}
     virtual void action() override;
 };
 
@@ -41,7 +42,7 @@ class DeadlineAction : public TimedAction {
     Job *_job;
   public:
     DeadlineAction(AtlasModel *atlas_model, int time, Job *job)
-        : TimedAction(atlas_model, time), _job(job) {}
+        : TimedAction(atlas_model, time, -40), _job(job) {}
     virtual void action() override;
 };
 
@@ -61,7 +62,7 @@ class BeginScheduleAction : public SimulationAction {
     T *_schedule;
   public:
     BeginScheduleAction(AtlasModel *atlas_model, T *schedule)
-        : SimulationAction(atlas_model), _schedule(schedule) {}
+        : SimulationAction(atlas_model, 50), _schedule(schedule) {}
 
     virtual int time() const override;
     virtual void action() override;
@@ -73,7 +74,7 @@ class EndScheduleAction : public SimulationAction {
     T *_schedule;
   public:
     EndScheduleAction(AtlasModel *atlas_model, T *schedule)
-        : SimulationAction(atlas_model), _schedule(schedule) {}
+        : SimulationAction(atlas_model, 40), _schedule(schedule) {}
 //    EndScheduleAction(AtlasModel *atlas_model, Schedule *schedule)
 //        : Action(atlas_model), schedule(schedule) {}
     virtual int time() const override;

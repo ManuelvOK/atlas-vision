@@ -7,6 +7,10 @@
 
 #include <models/atlas_model.h>
 
+SimulationAction::SimulationAction(AtlasModel *atlas_model, int weight) :
+    _atlas_model(atlas_model),
+    _weight(weight) {}
+
 int TimedAction::time() const {
     return this->_time;
 }
