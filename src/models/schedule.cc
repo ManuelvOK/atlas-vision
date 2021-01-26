@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include <models/job.h>
+#include <util/parser.h>
 
 
 int Schedule::_next_id = 0;
@@ -13,6 +14,10 @@ static bool same_data(const ScheduleData &a, const ScheduleData &b) {
     return a._scheduler == b._scheduler
            and a._begin == b._begin
            and a._execution_time == b._execution_time;
+}
+
+int ScheduleData::end() const {
+    return this->_begin + this->_execution_time;
 }
 
 Schedule::Schedule(int id, Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
@@ -24,16 +29,7 @@ Schedule::Schedule(int id, Job *job, int core, SchedulerType scheduler, int subm
     Schedule::_next_id = std::max(Schedule::_next_id, id + 1);
     this->_data.emplace(submission_time,
                         ScheduleData{scheduler, begin, execution_time});
-    if (this->_job) {
-        this->_job_id = this->_job->_id;
-    }
 }
-Schedule::Schedule(int id, int job_id, int core, SchedulerType scheduler, int submission_time,
-                   int begin, int execution_time) :
-    Schedule(id, nullptr, core, scheduler, submission_time, begin, execution_time) {
-    this->_job_id = job_id;
-}
-
 
 Schedule::Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
                    int execution_time) :
@@ -42,36 +38,36 @@ Schedule::Schedule(Job *job, int core, SchedulerType scheduler, int submission_t
 Schedule::Schedule(const Schedule *s) :
     _id(Schedule::next_id()),
     _job(s->_job),
-    _job_id(s->_job_id),
     _core(s->_core),
     _submission_time(s->_submission_time),
     _data(s->_data) {
     Schedule::_next_id = std::max(Schedule::_next_id, this->_id + 1);
 }
 
-void Schedule::add_change(const ScheduleChange *change) {
+void Schedule::add_change(const ParsedChange &change) {
     /* get last data before change */
-    ScheduleData &old_data = this->data_at_time(change->_timestamp);
-    if (change->_type == ChangeType::erase) {
-        this->_end = change->_timestamp;
+    ScheduleData &old_data = this->data_at_time(change._timestamp);
+    ChangeType type = static_cast<ChangeType>(change._type);
+    if (type == ChangeType::erase) {
+        this->_end = change._timestamp;
         /* add information that the schedule does not run because of unknown dependencies */
         old_data._does_execute = false;
         return;
     }
     /* copy old data */
     ScheduleData new_data = old_data;
-    switch (change->_type) {
+    switch (type) {
         case ChangeType::shift:
-            new_data._begin = change->_value;
+            new_data._begin = change._value;
             break;
         case ChangeType::change_execution_time:
-            new_data._execution_time = change->_value;
+            new_data._execution_time = change._value;
             break;
         default: break;
     }
     if (not same_data(old_data, new_data)) {
-        this->_data.emplace(change->_timestamp, new_data);
-        this->_change_points.insert(change->_timestamp);
+        this->_data.emplace(change._timestamp, new_data);
+        this->_change_points.insert(change._timestamp);
     }
 }
 

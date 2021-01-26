@@ -71,3 +71,13 @@ std::string Job::to_string() const {
     }
     return ss.str();
 }
+
+bool Job::depends_on(const Job *job) const {
+    return std::find(this->_known_dependencies.begin(), this->_known_dependencies.end(), job)
+           != this->_known_dependencies.end();
+}
+
+void Job::set_atlas_schedule(AtlasSchedule *schedule) {
+    this->_atlas_schedule = schedule;
+    this->_schedules.push_back(schedule);
+}

@@ -12,30 +12,64 @@ class CfsVisibility;
 class Job;
 class Message;
 class Schedule;
-class ScheduleChange;
+
+/** Type of schedule change encoded as ascii chars */
+enum class ChangeType {
+    erase = 'd', // delete
+    shift = 'b', // begin
+    change_execution_time = 'e' //execution time
+};
+
+/** Change of a schedule in the simulation */
+struct ParsedChange {
+    int _schedule_id;   /**< ID of schedule */
+    int _timestamp;     /**< timestamp of schedules change */
+    char _type;         /**< typ of change */
+    int _value;         /**< value after change */
+};
+
+struct ParsedSchedule {
+    int _id;
+    int _job_id;
+    int _core;
+    char _scheduler;
+    int _submission_time;
+    int _begin;
+    int _execution_time;
+};
+
+struct ParsedVisibility {
+    int _schedule_id;
+    int _begin;
+    int _end;
+};
+
+struct ParsedDependency {
+    char _type;
+    int _dependent_job_id;
+    int _dependency_id;
+};
 
 /** A Parser for the Simulation input */
 class Parser {
-  public:
-    AtlasModel *_atlas_model;
     int _n_cores;                                   /**< number of cores */
     int _cfs_factor;                                /**< time factor on CFS scheduler */
-    std::vector<Job *> _jobs;                       /**< Job descriptions */
-    std::vector<ScheduleChange *> _changes;         /**< schedule change descriptions */
-    std::vector<CfsVisibility *> _cfs_visibilities; /**< CFS visibility descriptions */
-    std::vector<Message *> _messages;               /**< message descriptions */
+    std::vector<ParsedSchedule> _parsed_schedules;  /**< schedule descriptions */
+    std::vector<ParsedVisibility> _visibilities;    /**< CFS visibility descriptions */
+    std::vector<ParsedDependency> _dependencies;    /**< dependency descriptions */
 
-    /** schedule descriptions, mapped to its timestamp */
-    std::map<int, Schedule *> _schedules;
+    /**< schedule change descriptions mapped to their schedules */
+    std::map<int, std::vector<ParsedChange>> _changes;
 
-    /** description of dependencies between jobs */
-    std::vector<std::tuple<int, int, bool>> _dependencies;
+    std::map<int, Job *> _jobs;             /**< generated jobs mapped to their id */
+    std::map<int, Schedule *> _schedules;   /**< generated schedules mapped to their id */
+    std::vector<Message *> _messages;       /**< generated messages */
 
     /**
      * parses a full line of job description input format
      * @param line line to parse
      **/
-    void parse_line(std::string line);
+    void parse_line(std::string line, AtlasModel *atlas_model);
 
     /**
      * parse number of cores from input line
@@ -53,7 +87,7 @@ class Parser {
      * parse job from input line
      * @param line line to parse with index at first parameter
      */
-    void parse_job(std::stringstream *line);
+    void parse_job(std::stringstream *line, AtlasModel *atlas_model);
 
     /**
      * parse schedule from input line
@@ -85,4 +119,7 @@ class Parser {
      * @param line stringstream that points to first parameter of dependency specification
      **/
     void parse_dependency(std::stringstream *line);
+
+public:
+    void parse(std::istream *input, AtlasModel *atlas_model);
 };

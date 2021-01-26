@@ -53,60 +53,7 @@ AtlasModel *AtlasPlugin::atlas_model_from_stdin() const {
 AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
     Parser parser;
     AtlasModel *model = new AtlasModel();
-    parser._atlas_model = model;
-    std::string line;
-    while (std::getline(*input, line)) {
-        parser.parse_line(line);
-    }
-
-
-    bool succ = true;
-    model->_n_cores = parser._n_cores;
-    model->_cfs_factor = parser._cfs_factor;
-    model->_jobs = parser._jobs;
-    for (auto p: parser._schedules) {
-        Schedule *schedule = p.second;
-        /* TODO: what happens if the parsed schedules have a missing id? */
-        schedule->_job = model->_jobs[schedule->_job_id];
-        model->_schedules.push_back(schedule);
-    }
-    model->_cfs_visibilities = parser._cfs_visibilities;
-    model->_messages = parser._messages;
-
-    for (std::tuple<int, int, bool> d: parser._dependencies) {
-        int from = std::get<0>(d);
-        int to = std::get<1>(d);
-        bool known = std::get<2>(d);
-        if (static_cast<long>(model->_jobs.size()) < std::max(from, to)) {
-            std::cerr << "Error parsing dependency \"d " << from << " " << to
-                      << "\": job vector has size of " << model->_jobs.size() << std::endl;
-        }
-        if (known) {
-            model->_jobs[from]->_known_dependencies.push_back(model->_jobs[to]);
-        } else {
-            model->_jobs[from]->_unknown_dependencies.push_back(model->_jobs[to]);
-        }
-    }
-    /* apply changes */
-    for (const ScheduleChange *change: parser._changes) {
-        succ = succ && this->apply_schedule_change(model, change);
-    }
-
-    /* calculate dependency level */
-    for (Job *job: model->_jobs) {
-        job->calculate_dependency_level();
-    };
+    parser.parse(input, model);
 
     return model;
-}
-
-bool AtlasPlugin::apply_schedule_change(AtlasModel *model, const ScheduleChange *change) const {
-    if (static_cast<unsigned>(change->_schedule_id) >= model->_schedules.size()) {
-        std::cerr << "input error: validity\t- There is no Schedule with id "
-                  << change->_schedule_id << " to change" << std::endl;
-        return false;
-    }
-    Schedule *schedule = model->_schedules.at(change->_schedule_id);
-    schedule->add_change(change);
-    return true;
 }

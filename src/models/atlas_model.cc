@@ -1,13 +1,18 @@
 #include <models/atlas_model.h>
 
+bool compare_schedules(const Schedule *a, const Schedule *b) {
+    return a->last_data()._begin < b->last_data()._begin;
+}
+
+AtlasModel::AtlasModel() : _schedules(compare_schedules), _atlas_schedules(compare_schedules) {}
+
+void AtlasModel::add_atlas_schedule(AtlasSchedule *schedule) {
+    this->_atlas_schedules.insert(schedule);
+    this->_schedules.insert(schedule);
+}
+
 const Schedule *AtlasModel::active_schedule(int timestamp) const {
-    std::vector<Schedule *> schedules = this->_schedules;
-    std::sort(schedules.begin(), schedules.end(), [=](const Schedule *a, const Schedule *b) {
-            ScheduleData data_a = a->get_data_at_time(timestamp);
-            ScheduleData data_b = b->get_data_at_time(timestamp);
-            return (data_a._begin < data_b._begin);
-        });
-    for (const Schedule *s: schedules) {
+    for (const Schedule *s: this->_schedules) {
         if (s->is_active_at_time(timestamp)) {
             return s;
         }
@@ -16,13 +21,7 @@ const Schedule *AtlasModel::active_schedule(int timestamp) const {
 }
 
 const Schedule *AtlasModel::active_schedule_on_scheduler(SchedulerType scheduler, int timestamp) const {
-    std::vector<Schedule *> schedules = this->_schedules;
-    std::sort(schedules.begin(), schedules.end(), [=](const Schedule *a, const Schedule *b) {
-            ScheduleData data_a = a->get_data_at_time(timestamp);
-            ScheduleData data_b = b->get_data_at_time(timestamp);
-            return (data_a._begin < data_b._begin);
-        });
-    for (const Schedule *s: schedules) {
+    for (const Schedule *s: this->_schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
         if (s->is_active_at_time(timestamp) and data._scheduler == scheduler) {
             return s;
@@ -39,6 +38,28 @@ AtlasSchedule *AtlasModel::next_atlas_schedule() const {
         }
     }
     return nullptr;
+}
+
+std::vector<AtlasSchedule *> AtlasModel::next_atlas_schedules() const {
+    std::vector<AtlasSchedule *> next_schedules;
+    for (AtlasSchedule *s: this->_atlas_schedules) {
+        ScheduleData data = s->get_data_at_time(this->_timestamp);
+        if (data._begin >= this->_timestamp && s->_job->execution_time_left(this->_timestamp) > 0) {
+            next_schedules.push_back(s);
+        }
+    }
+    return next_schedules;
+}
+
+std::vector<Job *> AtlasModel::next_atlas_scheduled_jobs() const {
+    std::vector<Job *> next_jobs;
+    for (AtlasSchedule *s: this->_atlas_schedules) {
+        ScheduleData data = s->get_data_at_time(this->_timestamp);
+        if (data._begin >= this->_timestamp && s->_job->execution_time_left(this->_timestamp) > 0) {
+            next_jobs.push_back(s->_job);
+        }
+    }
+    return next_jobs;
 }
 
 void AtlasModel::tidy_up_queues() {

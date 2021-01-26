@@ -28,6 +28,8 @@ public:
 
     std::vector<Schedule *> _schedules;
 
+    AtlasSchedule *_atlas_schedule = nullptr;
+
     /** List of Jobs, the execution of this job depends on */
     std::vector<Job *> _known_dependencies;
     /** List of Jobs, the execution of this job depends on unknowingly */
@@ -62,5 +64,9 @@ public:
     int time_executed(int timestamp) const;
 
     virtual std::string to_string() const override;
+
+    bool depends_on(const Job *job) const;
+
+    void set_atlas_schedule(AtlasSchedule *schedule);
 };
 

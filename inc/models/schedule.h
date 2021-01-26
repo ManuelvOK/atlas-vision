@@ -4,10 +4,10 @@
 #include <set>
 #include <tuple>
 
-#include <models/schedule_change.h>
 #include <models/printable.h>
 
 class Job;
+class ParsedChange;
 
 /** type of scheduler encoded as ascii character */
 enum class SchedulerType {
@@ -21,6 +21,8 @@ struct ScheduleData {
     int _begin;                 /**< start time of schedule execution */
     int _execution_time;        /**< time the scheduled job runs */
     bool _does_execute = true;  /**< flag determining whether the schedule does run */
+
+    int end() const;
 };
 
 /** Object representing a schedule for a certain job */
@@ -31,7 +33,6 @@ class Schedule : public Printable {
 public:
     int _id;                            /**< id of this schedule */
     Job *_job;                          /**< the concerning job */
-    int _job_id;                        /**< id of the concerning job */
     int _core;                          /**< core on wich the job gets executed */
     int _submission_time;               /**< time this schedule gets submitted */
 
@@ -42,7 +43,7 @@ public:
     /**
      * Constructor
      * @param id schedule id
-     * @param job_id id of corresponding job
+     * @param job corresponding job
      * @param core id of cpu this schedule gets executed on
      * @param scheduler type of scheduler this schedule gets executed on
      * @param submission_time timestamp of schedules submission
@@ -50,9 +51,6 @@ public:
      * @param execution_time time the schedule gets executed
      */
     Schedule(int id, Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
-             int execution_time);
-
-    Schedule(int id, int job_id, int core, SchedulerType scheduler, int submission_time, int begin,
              int execution_time);
 
     Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
@@ -70,7 +68,7 @@ public:
      * Add a change to this schedule
      * @param change change object to add
      */
-    void add_change(const ScheduleChange *change);
+    void add_change(const ParsedChange &change);
 
     void add_change(int timestamp, int begin, int execution_time);
 

@@ -41,15 +41,6 @@ class AtlasPlugin: public SDL_GUI::PluginBase {
      * @return Model with all the parsed information
      */
     AtlasModel *parse_file(std::istream *input) const;
-
-    /**
-     * Apply a schedule change to a given Model.
-     * The schedule changes have to be applied after parsing everything
-     * @param model model to apply change to
-     * @param change change to apply
-     * @return true. TODO: this should have more than true as a return value
-     */
-    bool apply_schedule_change(AtlasModel *model, const ScheduleChange *change) const;
 public:
     /** Constructor */
     AtlasPlugin();

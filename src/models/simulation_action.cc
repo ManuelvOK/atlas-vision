@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <models/atlas_model.h>
@@ -11,93 +12,58 @@ int TimedAction::time() const {
 }
 
 void SubmissionAction::action() {
-    /* sort jobs EDF wise */
+    /* add scheduled jobs to the list of jobs to schedule */
+    std::vector<Job *> scheduled_jobs = this->_atlas_model->next_atlas_scheduled_jobs();
+    this->_jobs.insert(this->_jobs.end(), scheduled_jobs.begin(), scheduled_jobs.end());
+    /* sort jobs EDF wise while considering dependencies */
     std::sort(this->_jobs.begin(), this->_jobs.end(), [=](const Job *a, const Job *b) {
-            return (a->_deadline < b->_deadline);
-        });
+        return b->depends_on(a) or (not a->depends_on(b) and a->_deadline < b->_deadline);
+    });
 
     /* iterate through the EDF sorted jobs in reversed order to add schedules while minimizing
-     * slack.
-     * Since this is a reversed EDF sorted iteration and each schedule gets added EDF wise
-     * before all other jobs with same deadline, we do not have to iterate through the whole
-     * list of existing schedules everytime but begin at the last inserted one. This is why
-     * the iterator is stored outside the for loop. */
-    auto schedule_it = this->_atlas_model->_atlas_schedules.rbegin();
+     * slack. */
+    int max_end = std::numeric_limits<int>::max();
     for (auto job_it = this->_jobs.rbegin(); job_it != this->_jobs.rend(); ++job_it) {
         Job *job = *job_it;
-        auto schedule_insert_position = this->_atlas_model->_atlas_schedules.end();
+        max_end = std::min(max_end, job->_deadline);
 
-        /* reverse iterate over schedule list to find gap
-         * We are looking for the first job whose deadline is greater than the deadline
-         * of the job to insert. */
-        for (; schedule_it != this->_atlas_model->_atlas_schedules.rend(); ++schedule_it) {
-            /* we are looking for the job earlier in the timeline */
-            const Schedule *schedule = *schedule_it;
-            /* at after the first job whose deadline is less than ours, we get inserted
-             * and also: never insert a job before one that has already started executing or that is a known dependency */
-            std::vector<Job *> deps = job->_known_dependencies;
-            if (schedule->_job->_state != JobState::running
-                and std::find(deps.begin(), deps.end(), schedule->_job) == deps.end()
-                and job->_deadline <= schedule->_job->_deadline) {
-                /* Dereferencing a reverse iterator gives a different value then dereferencing
-                 * its non-reverse iterator (got calling base()). Thus, we have to adjust it
-                 * by substracting 1 */
-                schedule_insert_position = schedule_it.base() - 1;
+        /* if there already is a schedule, we might have to adjust it */
+        if (job->_atlas_schedule != nullptr) {
+            ScheduleData data = job->_atlas_schedule->last_data();
+            int shift_value = max_end - data.end();
+            if (shift_value < 0) {
+                job->_atlas_schedule->add_change_shift_relative(this->_atlas_model->_timestamp,
+                                                                shift_value);
+                std::cerr << this->_atlas_model->_timestamp << ": Schedule for Job " << job->_id
+                          << " shifted by " << shift_value << "." << std::endl;
             } else {
-                break;
+                std::cerr << this->_atlas_model->_timestamp << ": Schedule for Job " << job->_id
+                          << " need not be shifted. Max_end: " << max_end << " schedule_end: "
+                          << data.end() << "." << std::endl;
             }
+            max_end = std::min(max_end, data._begin + shift_value);
+            continue;
         }
 
-        /* calculate end of schedule to insert */
-        int end;
-        if (schedule_insert_position == this->_atlas_model->_atlas_schedules.end()) {
-            end = job->_deadline;
-        } else {
-            Schedule *s = *schedule_insert_position;
-            end = std::min(s->last_data()._begin, job->_deadline);
-        }
+        /* create a new schedule */
+        int begin = max_end - job->_execution_time;
+        AtlasSchedule *s = new AtlasSchedule (job, 0, this->_atlas_model->_timestamp, begin,
+                                              job->_execution_time);
+        job->set_atlas_schedule(s);
+        this->_atlas_model->add_atlas_schedule(s);
 
-        /* calculate start of schedule to insert */
-        int start = end - job->_execution_time_estimate;
-
-        /* TODO: get rid of magic 0 for CPU */
-        AtlasSchedule *schedule_to_insert =
-            new AtlasSchedule(job, 0, this->time(), start, job->_execution_time_estimate);
-        job->_schedules.push_back(schedule_to_insert);
-
-        /* shift remaining schedules if nesseccary */
-        for (; schedule_it != this->_atlas_model->_atlas_schedules.rend(); ++schedule_it) {
-            Schedule *s = *schedule_it;
-            const ScheduleData data = s->last_data();
-            /* check if preceeding element has to be shifted. This is the case if the end is
-             * greater than the current start. */
-            if (data._begin + data._execution_time > start) {
-                s->add_change_begin(this->_atlas_model->_timestamp, start - data._execution_time);
-                start -= data._execution_time;
-            } else {
-                break;
-            }
-        }
-
-        /* Schedule gets inserted at this point in code to make easier use out of existing
-         * reverse iterator */
-        auto it = this->_atlas_model->_atlas_schedules.insert(schedule_insert_position,
-                                                              schedule_to_insert);
-        this->_atlas_model->_schedules.push_back(schedule_to_insert);
-        schedule_it = std::make_reverse_iterator(++it);
-
-        /* queue an action to end the schedule. */
+        /* queue an action to begin the schedule. */
         this->_atlas_model->_actions_to_do.push_back(
-            new BeginScheduleAction{this->_atlas_model, schedule_to_insert});
+            new BeginScheduleAction{this->_atlas_model, s});
+
         /* queue an action for the deadline of the job */
         this->_atlas_model->_actions_to_do.push_back(
-            new DeadlineAction(this->_atlas_model, schedule_to_insert->_job->_deadline,
-                               schedule_to_insert->_job));
-        ScheduleData data = schedule_to_insert->last_data();
+            new DeadlineAction(this->_atlas_model, s->_job->_deadline, s->_job));
         std::cerr << this->_atlas_model->_timestamp << ": Job " << job->_id
-                  << " submitted and scheduled on ATLAS from "
-                  << data._begin << " for "
-                  << data._execution_time << "." << std::endl;
+                  << " submitted and scheduled on ATLAS from " << begin << " for "
+                  << job->_execution_time << "." << std::endl;
+        max_end = std::min(max_end, begin);
+
     }
 
 
@@ -149,7 +115,7 @@ void FillAction::action() {
                   << ". Time left: " << recovery_schedule->last_data()._execution_time << std::endl;
 
         this->_atlas_model->_recovery_schedules.push_back(recovery_schedule);
-        this->_atlas_model->_schedules.push_back(recovery_schedule);
+        this->_atlas_model->_schedules.insert(recovery_schedule);
 
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, recovery_schedule});
@@ -168,7 +134,7 @@ void FillAction::action() {
                   << std::endl;
         /* add cfs schedule to atlas_model */
         this->_atlas_model->_cfs_schedules.push_back(cfs_schedule);
-        this->_atlas_model->_schedules.push_back(cfs_schedule);
+        this->_atlas_model->_schedules.insert(cfs_schedule);
 
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, cfs_schedule});
@@ -198,7 +164,7 @@ void FillAction::action() {
 
         /* add cfs schedule to atlas_model */
         this->_atlas_model->_cfs_schedules.push_back(cfs_schedule);
-        this->_atlas_model->_schedules.push_back(cfs_schedule);
+        this->_atlas_model->_schedules.insert(cfs_schedule);
 
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, cfs_schedule});
@@ -294,8 +260,8 @@ void BeginScheduleAction<AtlasSchedule>::action() {
             new DependencySchedule(dependent_job, 0, this->_atlas_model->_timestamp,
                                    this->_atlas_model->_timestamp, length);
         dependent_job->_schedules.push_back(schedule);
-        this->_atlas_model->_atlas_schedules.push_back(schedule);
-        this->_atlas_model->_schedules.push_back(schedule);
+        this->_atlas_model->_atlas_schedules.insert(schedule);
+        this->_atlas_model->_schedules.insert(schedule);
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, schedule});
         if (this->_schedule->last_data()._execution_time > dependency_time_left) {
@@ -347,8 +313,8 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
               << this->_schedule->_job->_id << std::endl;
     ScheduleData data = this->_schedule->last_data();
     this->_atlas_model->_cfs_visibilities.push_back(
-        new CfsVisibility(this->_schedule->_atlas_schedule->_id,
-                          data._begin, data._begin + data._execution_time));
+        new CfsVisibility(this->_schedule->_atlas_schedule, data._begin,
+                          data._begin + data._execution_time));
     /* schedule no longer executes */
     if (this->_atlas_model->_cfs_schedule == this->_schedule) {
         this->_atlas_model->_cfs_schedule = nullptr;

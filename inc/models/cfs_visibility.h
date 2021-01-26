@@ -1,22 +1,24 @@
 #pragma once
 
 #include <models/printable.h>
+#include <models/schedule.h>
 
 /** the visibility of an ATLAS schedule fot the CFS scheduler */
 class CfsVisibility : public Printable {
 public:
-    int _schedule_id;   /**< ID of visible schedule */
-    int _begin;         /**< timestand of visibility begin */
-    int _end;           /**< timestand of visibility end */
+    int _schedule_id;               /**< ID of visible schedule */
+    Schedule *_schedule = nullptr;  /**< visible schedule */
+    int _begin;                     /**< timestand of visibility begin */
+    int _end;                       /**< timestand of visibility end */
 
     /**
      * Constructor
-     * @param schedule_id ID of visible schedule
+     * @param schedule visible schedule
      * @param begin timestamp of visibility begin
      * @param end timestand of visibility end
      */
-    CfsVisibility(int schedule_id, int begin, int end)
-        : _schedule_id(schedule_id), _begin(begin), _end(end) {}
+    CfsVisibility(Schedule *schedule, int begin, int end)
+        : _schedule(schedule), _begin(begin), _end(end) {}
 
     /**
      * check if the visibility contains a certain timestamp

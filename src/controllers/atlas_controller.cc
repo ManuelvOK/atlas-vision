@@ -82,8 +82,7 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
 static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
                                             InterfaceModel *interface_model,
                                             SDL_GUI::InterfaceModel *default_interface_model,
-                                            const PlayerModel *player_model,
-                                            AtlasModel *atlas_model);
+                                            const PlayerModel *player_model);
 
 
 /**
@@ -156,8 +155,7 @@ void AtlasController::init() {
                               this->_atlas_model, this->_player_model);
 
     create_CFS_visibility_drawables(this->_atlas_model->_cfs_visibilities, this->_interface_model,
-                                    this->_default_interface_model, this->_player_model,
-                                    this->_atlas_model);
+                                    this->_default_interface_model, this->_player_model);
     create_message_drawables(this->_atlas_model->_messages, this->_default_interface_model,
                              this->_player_model);
     create_dependency_graph(this->_atlas_model->_jobs, this->_default_interface_model,
@@ -304,11 +302,10 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
 static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
                                             InterfaceModel *interface_model,
                                             SDL_GUI::InterfaceModel *default_interface_model,
-                                            const PlayerModel *player_model,
-                                            AtlasModel *atlas_model) {
+                                            const PlayerModel *player_model) {
     SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
     for (CfsVisibility *visibility: visibilities) {
-        Schedule *schedule = atlas_model->_schedules.at(visibility->_schedule_id);
+        Schedule *schedule = visibility->_schedule;
         VisibilityLine *l = new VisibilityLine(interface_model, player_model, visibility, schedule);
         core_rect->add_child(l);
     }
