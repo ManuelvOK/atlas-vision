@@ -116,6 +116,11 @@ static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *defa
                           InterfaceModel *interface_model,
                           AtlasModel *atlas_model);
 
+static SDL_GUI::Drawable *create_job_information(const Job *job,
+                                                 SDL_GUI::InterfaceModel *default_interface_model,
+                                                 InterfaceModel *interface_model,
+                                                 AtlasModel *atlas_model);
+
 AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                                  InterfaceModel *interface_model,
                                  SDL_GUI::InterfaceModel *default_interface_model,
@@ -381,19 +386,49 @@ static void create_legend(std::vector<Job *> jobs, SDL_GUI::InterfaceModel *defa
                           InterfaceModel *interface_model, AtlasModel *atlas_model) {
     SDL_GUI::Drawable *legend_rect = default_interface_model->find_first_drawable("legend");
 
-    unsigned width = 0;
+    SDL_GUI::Position position(15, 15);
     for (int i = 0; i < static_cast<int>(jobs.size()); ++i) {
-        std::stringstream ss;
-        ss << i << ":";
-        SDL_GUI::Text *t = new SDL_GUI::Text(default_interface_model->font(), ss.str(),
-                                             {5, 10 + 25 * i});
-        legend_rect->add_child(t);
-        width = std::max(width, t->width());
+        const Job *job = jobs[i];
+        SDL_GUI::Drawable *info = create_job_information(job, default_interface_model,
+                                                         interface_model, atlas_model);
+        info->set_position(position);
+        legend_rect->add_child(info);
+
+        position._x += info->width() + 10;
+
+        if (position._x + info->width() > legend_rect->width() - 30) {
+            position._x = 15;
+            position._y += info->height() + 10;
+        }
     }
-    for (int i = 0; i < static_cast<int>(jobs.size()); ++i) {
-        JobRect *r = new JobRect(jobs[i], interface_model, atlas_model,
-                                 {10 + static_cast<int>(width), 7 + 25 * i}, 20, 20);
-        atlas_model->_drawables_jobs[r] = jobs[i];
-        legend_rect->add_child(r);
-    }
+}
+
+static SDL_GUI::Drawable *create_job_information(const Job *job,
+                                                 SDL_GUI::InterfaceModel *default_interface_model,
+                                                 InterfaceModel *interface_model,
+                                                 AtlasModel *atlas_model) {
+
+
+    /* create info text */
+    std::stringstream ss;
+    ss << "Job " << job->_id << std::endl;
+    ss << "sub: " << job->_submission_time << std::endl;
+    ss << "dl: " << job->_submission_time << std::endl;
+    ss << "est: " << job->_execution_time_estimate << std::endl;
+    ss << "real: " << job->_execution_time << std::endl;
+    SDL_GUI::Text *t = new SDL_GUI::Text(default_interface_model->font(), ss.str(),
+                                            {30, 5});
+
+    /* add rect in appropriate color */
+    JobRect *r = new JobRect(job, interface_model, atlas_model,
+                                {5, 5}, 20, t->height());
+    atlas_model->_drawables_jobs[r] = job;
+
+    /* create Wrapper */
+    SDL_GUI::Drawable *info = new SDL_GUI::Rect({0,0}, r->width() + t->width() + 10,
+                                                t->height() + 10);
+    info->add_child(t);
+    info->add_child(r);
+
+    return info;
 }

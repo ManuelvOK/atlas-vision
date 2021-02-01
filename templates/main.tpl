@@ -17,11 +17,11 @@
         </rect>
     </rect>
     <rect width="250" height="530" x="650" y="20" border="true" attributes="sidebar">
-        <rect width="80" height="400" x="0" y="0" attributes="legend">
-        </rect>
-        <rect width="170" height="350" x="80" y="0" attributes="dependencies">
+        <rect width="250" height="350" x="0" y="0" attributes="dependencies">
         </rect>
     </rect>
     <rect width="500" height="930" x="920" y="20" border="true" attributes="messages">
+    </rect>
+    <rect width="880" height="380" x="20" y="570" border="true" attributes="legend">
     </rect>
 </rect>
