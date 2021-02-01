@@ -52,9 +52,9 @@ void SubmissionAction::action() {
         }
 
         /* create a new schedule */
-        int begin = max_end - job->_execution_time;
+        int begin = max_end - job->_execution_time_estimate;
         AtlasSchedule *s = new AtlasSchedule (job, 0, timestamp, begin,
-                                              job->_execution_time);
+                                              job->_execution_time_estimate);
         job->set_atlas_schedule(s);
         this->_atlas_model->add_atlas_schedule(s);
 
@@ -68,7 +68,7 @@ void SubmissionAction::action() {
 
         std::stringstream message;
         message << "Job " << job->_id << " submitted and scheduled on ATLAS from " << begin
-                << " for " << job->_execution_time << ".";
+                << " for " << job->_execution_time_estimate << ".";
         this->_atlas_model->add_message(timestamp, message.str());
         max_end = std::min(max_end, begin);
 
@@ -114,7 +114,8 @@ void FillAction::action() {
         Job *job = this->_atlas_model->_recovery_queue.front();
 
         RecoverySchedule *recovery_schedule =
-            new RecoverySchedule(job, 0, timestamp, timestamp, job->execution_time_left(timestamp));
+            new RecoverySchedule(job, 0, timestamp, timestamp,
+                                 job->estimated_execution_time_left(timestamp));
 
         job->_schedules.push_back(recovery_schedule);
         std::stringstream message;
@@ -132,8 +133,9 @@ void FillAction::action() {
         Job *job = this->_atlas_model->_cfs_queue.front();
         /* Create Schedule on cfs and queue end action */
         LateCfsSchedule *cfs_schedule =
-            new LateCfsSchedule(job, 0, timestamp, timestamp, job->execution_time_left(timestamp)
-                                                              * this->_atlas_model->_cfs_factor);
+            new LateCfsSchedule(job, 0, timestamp, timestamp,
+                                job->estimated_execution_time_left(timestamp)
+                                * this->_atlas_model->_cfs_factor);
         job->_schedules.push_back(cfs_schedule);
 
         /* add cfs schedule to atlas_model */
@@ -153,7 +155,8 @@ void FillAction::action() {
         std::cerr << timestamp << ": next atlas schedule found for job " << job->_id << std::endl;
 
         /* create schedule on CFS based on next atlas schedule and adjust it */
-        int execution_time = job->execution_time_left(timestamp) * this->_atlas_model->_cfs_factor;
+        int execution_time = job->estimated_execution_time_left(timestamp)
+                             * this->_atlas_model->_cfs_factor;
         EarlyCfsSchedule *cfs_schedule = new EarlyCfsSchedule(next_atlas_schedule, timestamp,
                                                               timestamp, execution_time);
 
@@ -289,8 +292,14 @@ int EndScheduleAction<T>::time() const {
     if (this->_schedule->last_data()._scheduler == SchedulerType::CFS) {
         time_left_at_start *= this->_atlas_model->_cfs_factor;
     }
-    return this->_schedule->last_data()._begin
-           + std::min(time_left_at_start, this->_schedule->last_data()._execution_time);
+    int time = this->_schedule->last_data()._begin
+               + std::min(time_left_at_start, this->_schedule->last_data()._execution_time);
+
+    /* check if there is still time left when there should not. This means there are dependencies */
+    if (this->_schedule->_job->execution_time_left(time)) {
+        time = this->_schedule->last_data()._begin + this->_schedule->last_data()._execution_time;
+    }
+    return time;
 }
 
 template<>
