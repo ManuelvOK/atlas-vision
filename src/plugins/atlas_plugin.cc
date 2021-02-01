@@ -7,32 +7,29 @@
 
 
 AtlasPlugin::AtlasPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {
-    this->_command_line.register_option("simulate", "s");
-    this->_command_line.register_option("visualise", "v");
+    this->_command_line.register_flag("nosim", "n", "no_simulation");
+    this->_command_line.register_positional("input");
 }
 
 AtlasModel *AtlasPlugin::build_atlas_model() const {
-    AtlasModel *model;
-    std::string vision_input = this->_command_line.get_argument("visualise");
-    std::string simulation_input = this->_command_line.get_argument("simulate");
-    if (vision_input.size() and simulation_input.size()) {
-        std::cerr << "Both simulation and visualisation input given. Using visualisation input"
-                  << std::endl;
-    }
-    if (vision_input.size()) {
-        model = this->atlas_model_from_file(vision_input);
-        model->_simulated = true;
-    } else if (simulation_input.size()) {
-        model = this->atlas_model_from_file(simulation_input);
-    } else {
+    std::string input = this->_command_line.get_positional("input");
+
+    if (input == "") {
         std::cerr << "No input given." << std::endl;
         exit(1);
     }
-    /* sort jobs id wise */
-    std::sort(model->_jobs.begin(), model->_jobs.end(),
-              [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
 
-    return model;
+    if (input == "-") {
+        return this->atlas_model_from_stdin();
+    }
+
+    if (this->_command_line.get_flag("no_simulation")) {
+        AtlasModel *model = this->atlas_model_from_file(input);
+        model->_simulated = true;
+        return model;
+    }
+
+    return this->atlas_model_from_file(input);
 }
 
 AtlasModel *AtlasPlugin::atlas_model_from_file(std::string path) const {

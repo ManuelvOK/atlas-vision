@@ -4,6 +4,7 @@
 #include <SDL_GUI/inc/controllers/input_controller.h>
 #include <SDL_GUI/inc/plugins/default_plugin.h>
 #include <SDL_GUI/inc/plugins/plugin_base.h>
+#include <SDL_GUI/inc/util/command_line.h>
 
 #include <input_keys.h>
 #include <config/input_config.h>
@@ -15,11 +16,10 @@
 #include <models/interface_model.h>
 #include <models/player_model.h>
 #include <models/schedule_change.h>
-#include <util/command_line.h>
 
 /** The Main Plugin for this application. It does the simulation visioning. */
 class AtlasPlugin: public SDL_GUI::PluginBase {
-    CommandLine _command_line;
+    SDL_GUI::CommandLine _command_line;
 
     AtlasModel *build_atlas_model() const;
     /**

@@ -123,6 +123,10 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
         atlas_model->_jobs.push_back(p.second);
     }
 
+    /* sort jobs id wise */
+    std::sort(atlas_model->_jobs.begin(), atlas_model->_jobs.end(),
+              [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
+
     /* create Schedules, apply changes and put them into model */
     for (const ParsedSchedule &s: this->_parsed_schedules) {
         /* runtime check if referenced job exists with at() */
