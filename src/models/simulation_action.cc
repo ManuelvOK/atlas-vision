@@ -217,7 +217,7 @@ void BeginScheduleAction<EarlyCfsSchedule>::action() {
 
 template<>
 void BeginScheduleAction<RecoverySchedule>::action() {
-    /* CONTINUE: check dependencies ?!? */
+    /* TODO: check dependencies ?!? */
 
     /* stop cfs if running */
     this->endSchedule(this->_atlas_model->_cfs_schedule);

@@ -1,7 +1,12 @@
 #include <models/atlas_model.h>
 
 bool compare_schedules(const Schedule *a, const Schedule *b) {
-    return a->last_data()._begin < b->last_data()._begin;
+    int begin_a = a->last_data()._begin;
+    int begin_b = b->last_data()._begin;
+    if (begin_a == begin_b) {
+        return a->_id < b->_id;
+    }
+    return begin_a < begin_b;
 }
 
 AtlasModel::AtlasModel() : _schedules(compare_schedules), _atlas_schedules(compare_schedules) {}
