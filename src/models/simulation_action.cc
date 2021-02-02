@@ -331,7 +331,7 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
     ScheduleData data = this->_schedule->last_data();
     this->_atlas_model->_cfs_visibilities.push_back(
         new CfsVisibility(this->_schedule->_atlas_schedule, data._begin,
-                          data._begin + data._execution_time));
+                          timestamp));
     /* schedule no longer executes */
     if (this->_atlas_model->_cfs_schedule == this->_schedule) {
         this->_atlas_model->_cfs_schedule = nullptr;

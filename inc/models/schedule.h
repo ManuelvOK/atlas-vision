@@ -17,6 +17,7 @@ enum class SchedulerType {
 };
 
 struct ScheduleData {
+    int _timestamp;
     SchedulerType _scheduler;   /**< the scheduler this schedule is on */
     int _begin;                 /**< start time of schedule execution */
     int _execution_time;        /**< time the scheduled job runs */
@@ -30,6 +31,7 @@ class Schedule : public Printable {
     static int _next_id;
     ScheduleData &data_at_time(int timestamp);
     const ScheduleData &data_at_time(int timestamp) const;
+
 public:
     int _id;                            /**< id of this schedule */
     Job *_job;                          /**< the concerning job */
@@ -102,6 +104,7 @@ public:
      * @returns last ScheduleData in _data
      */
     ScheduleData last_data() const;
+    ScheduleData &last_data();
 
     /**
      * check if the schedule does exist at a given timestamp

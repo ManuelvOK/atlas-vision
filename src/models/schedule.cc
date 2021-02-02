@@ -28,7 +28,7 @@ Schedule::Schedule(int id, Job *job, int core, SchedulerType scheduler, int subm
     _submission_time(submission_time) {
     Schedule::_next_id = std::max(Schedule::_next_id, id + 1);
     this->_data.emplace(submission_time,
-                        ScheduleData{scheduler, begin, execution_time});
+                        ScheduleData{submission_time, scheduler, begin, execution_time});
 }
 
 Schedule::Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
@@ -56,6 +56,7 @@ void Schedule::add_change(const ParsedChange &change) {
     }
     /* copy old data */
     ScheduleData new_data = old_data;
+    new_data._timestamp = change._timestamp;
     switch (type) {
         case ChangeType::shift:
             new_data._begin = change._value;
@@ -72,42 +73,56 @@ void Schedule::add_change(const ParsedChange &change) {
 }
 
 void Schedule::add_change(int timestamp, int begin, int execution_time) {
-    ScheduleData last_data = this->last_data();
-    last_data._execution_time = execution_time;
-    last_data._begin = begin;
-    this->_data.emplace(timestamp, last_data);
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._execution_time = execution_time;
+    new_data._begin = begin;
+    this->_data.emplace(timestamp, new_data);
 }
 
 void Schedule::add_change_begin(int timestamp, int begin) {
-    ScheduleData last_data = this->last_data();
-    last_data._begin = begin;
-    this->_data.emplace(timestamp, last_data);
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._begin = begin;
+    this->_data.emplace(timestamp, new_data);
 }
 
 void Schedule::add_change_shift_relative(int timestamp, int shift) {
-    ScheduleData last_data = this->last_data();
-    last_data._begin += shift;
-    this->_data.emplace(timestamp, last_data);
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._begin += shift;
+    this->_data.emplace(timestamp, new_data);
 
 }
 
 void Schedule::add_change_execution_time_relative(int timestamp, int execution_time_difference) {
-    ScheduleData last_data = this->last_data();
-    last_data._execution_time += execution_time_difference;
-    this->_data.emplace(timestamp, last_data);
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._execution_time += execution_time_difference;
+    this->_data.emplace(timestamp, new_data);
 }
 
 void Schedule::add_change_end(int timestamp, int end) {
-    ScheduleData last_data = this->last_data();
-    last_data._execution_time = end - last_data._begin;
-    this->_data.emplace(timestamp, last_data);
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._execution_time = end - new_data._begin;
+    this->_data.emplace(timestamp, new_data);
 }
 
 void Schedule::add_change_delete(int timestamp) {
-    this->_end = timestamp;
     ScheduleData last_data = this->last_data();
-    last_data._execution_time = 0;
-    this->_data.emplace(timestamp, last_data);
+
+    /* when CFS schedules get deleted there has been an end change before */
+    if (last_data._timestamp == timestamp) {
+        this->_data.erase(last_data._timestamp);
+    }
+    ScheduleData &old_data = this->last_data();
+
+    this->_end = timestamp;
+    ScheduleData new_data = old_data;
+    old_data._does_execute = false;
+    new_data._execution_time = 0;
+    this->_data.emplace(timestamp, new_data);
 }
 
 
@@ -143,6 +158,9 @@ ScheduleData Schedule::get_vision_data_at_time(int timestamp) const {
         data._execution_time = std::max(0,std::min(data._execution_time, timestamp - data._begin));
     }
     if (not data._does_execute and timestamp >= data._begin) {
+        if (data._scheduler == SchedulerType::CFS) {
+            data._execution_time = 0;
+        }
         data._begin = timestamp + 1;
     }
     return data;
@@ -154,6 +172,11 @@ ScheduleData Schedule::get_data_at_time(int timestamp) const {
 
 ScheduleData Schedule::first_data() const {
     ScheduleData data = this->_data.begin()->second;
+    return data;
+}
+
+ScheduleData &Schedule::last_data() {
+    ScheduleData &data = this->_data.rbegin()->second;
     return data;
 }
 
@@ -239,7 +262,7 @@ CfsSchedule::CfsSchedule(AtlasSchedule *s, int submission_time, int begin, int e
     this->_submission_time = submission_time;
     this->_data.clear();
     this->_data.emplace(submission_time,
-                        ScheduleData{SchedulerType::CFS, begin, execution_time});
+                        ScheduleData{submission_time, SchedulerType::CFS, begin, execution_time});
 }
 
 RecoverySchedule::RecoverySchedule(const Schedule *s) :
