@@ -36,9 +36,9 @@ public:
     std::list<SimulationAction *> _actions_done;
 
     std::list<Job *> _cfs_queue;
-    CfsSchedule *_cfs_schedule;
+    CfsSchedule *_cfs_schedule = nullptr;
     std::list<Job *> _recovery_queue;
-    RecoverySchedule *_recovery_schedule;
+    RecoverySchedule *_recovery_schedule = nullptr;
 
     int _highlighted_job = -1;
     std::map<const SDL_GUI::Drawable *, const Job *> _drawables_jobs;

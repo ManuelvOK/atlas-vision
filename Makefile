@@ -21,7 +21,7 @@ DEPFLAGS     += -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 CXXFLAGSTAGS := -I/home/morion/.vim/tags
 
-LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image
+LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -lfontconfig
 LIBRARIES    := $(LIBDIR)/SDL_GUI.a
 
 # create directories
