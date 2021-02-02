@@ -320,12 +320,12 @@ static void create_message_drawables(std::vector<Message *> messages,
                                      SDL_GUI::InterfaceModel *default_interface_model,
                                      const PlayerModel *player_model) {
     SDL_GUI::Drawable *message_rect = default_interface_model->find_first_drawable("messages");
-    int offset = 0;
+    int offset = 5;
     for (Message *message: messages) {
         std::stringstream ss;
         ss << message->_timestamp << ": " << message->_message;
         MessageText *t = new MessageText(ss.str(), default_interface_model->font(),
-                                         message_rect->width(), offset);
+                                         message_rect->width() - 10, {5, offset});
         t->add_recalculation_callback([player_model, message, t](SDL_GUI::Drawable *) {
             if (player_model->_position >= message->_timestamp) {
                 t->activate();
@@ -334,7 +334,7 @@ static void create_message_drawables(std::vector<Message *> messages,
             }
         });
         message_rect->add_child(t);
-        offset += t->height();
+        offset += t->height() + 2;
     }
 }
 

@@ -20,7 +20,8 @@ public:
      * @param font font to use
      * @param width maximal width of textfield. Important for wrapping
      */
-    MessageText(const std::string message, TTF_Font *font, int width, int offset_y);
+    MessageText(const std::string message, TTF_Font *font, int width,
+                SDL_GUI::Position position = {0,0});
 
     /** Destructor */
     ~MessageText();

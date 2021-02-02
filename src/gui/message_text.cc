@@ -2,15 +2,16 @@
 
 #include <sstream>
 
-MessageText::MessageText(const std::string message, TTF_Font *font, int width, int offset_y) :
-    Drawable("MessageText", {0, offset_y}), _font(font), _text(message) {
+MessageText::MessageText(const std::string message, TTF_Font *font, int width,
+                         SDL_GUI::Position position) :
+    Drawable("MessageText", position), _font(font), _text(message) {
 
     /* TODO: get color from config */
-    SDL_Color color = {255, 255, 255, 255};
+    SDL_Color color = {0, 0, 0, 255};
     this->_surface_active = TTF_RenderText_Blended_Wrapped(this->_font, message.c_str(), color,
                                                            width);
     /* TODO: get color from config */
-    color = {255, 255, 255, 180};
+    color = {0, 0, 0, 100};
     this->_surface_inactive = TTF_RenderText_Blended_Wrapped(this->_font, message.c_str(), color,
                                                              width);
     SDL_FreeSurface(this->_surface);

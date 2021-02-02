@@ -13,7 +13,7 @@
         <rect width="580" height="530" x="10" y="0" attributes="player-position">
             <vertical-line color="red" height="530" x="0" attributes="player-position-line" />
         </rect>
-        <rect width="580" height="100" x="0" y="0" attributes="deadline">
+        <rect width="580" height="90" x="0" y="10" attributes="deadline">
         </rect>
     </rect>
     <rect width="250" height="530" x="650" y="20" border="true" attributes="sidebar">
