@@ -11,6 +11,10 @@ JobArrow::JobArrow(const Job *job, int pos_x, const InterfaceModel *interface_mo
     this->_default_style._color = this->_interface_model->get_color(this->_job->_id);
 }
 
+SDL_GUI::Drawable *JobArrow::clone() const {
+    return new JobArrow(*this);
+}
+
 void JobArrow::update() {
     /* TODO: get rid of magic number */
     this->set_x(10 + this->_interface_model->px_width(this->_pos_x) - this->_width / 2);

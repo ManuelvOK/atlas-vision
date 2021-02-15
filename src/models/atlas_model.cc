@@ -22,51 +22,57 @@ void AtlasModel::add_message(int timestamp, std::string text) {
     std::cerr << timestamp << ": " << text << std::endl;
 }
 
-const Schedule *AtlasModel::active_schedule(int timestamp) const {
+const Schedule *AtlasModel::active_schedule(unsigned core, int timestamp) const {
     for (const Schedule *s: this->_schedules) {
-        if (s->is_active_at_time(timestamp)) {
+        if (s->is_active_at_time(timestamp) and s->_core == core) {
             return s;
         }
     }
     return nullptr;
 }
 
-const Schedule *AtlasModel::active_schedule_on_scheduler(SchedulerType scheduler, int timestamp) const {
+const Schedule *AtlasModel::active_schedule_on_scheduler(unsigned core, SchedulerType scheduler, int timestamp) const {
     for (const Schedule *s: this->_schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
-        if (s->is_active_at_time(timestamp) and data._scheduler == scheduler) {
+        if (s->is_active_at_time(timestamp) and data._scheduler == scheduler and s->_core == core) {
             return s;
         }
     }
     return nullptr;
 }
 
-AtlasSchedule *AtlasModel::next_atlas_schedule() const {
+AtlasSchedule *AtlasModel::next_atlas_schedule(unsigned core) const {
     for (AtlasSchedule *s: this->_atlas_schedules) {
         ScheduleData data = s->get_data_at_time(this->_timestamp);
-        if (data._begin >= this->_timestamp && s->_job->execution_time_left(this->_timestamp) > 0) {
+        if (s->_core == core
+            and data._begin >= this->_timestamp
+            and s->_job->execution_time_left(this->_timestamp) > 0) {
             return s;
         }
     }
     return nullptr;
 }
 
-std::vector<AtlasSchedule *> AtlasModel::next_atlas_schedules() const {
+std::vector<AtlasSchedule *> AtlasModel::next_atlas_schedules(unsigned core) const {
     std::vector<AtlasSchedule *> next_schedules;
     for (AtlasSchedule *s: this->_atlas_schedules) {
         ScheduleData data = s->get_data_at_time(this->_timestamp);
-        if (data._begin >= this->_timestamp && s->_job->execution_time_left(this->_timestamp) > 0) {
+        if (s->_core == core
+            and data._begin >= this->_timestamp
+            and s->_job->execution_time_left(this->_timestamp) > 0) {
             next_schedules.push_back(s);
         }
     }
     return next_schedules;
 }
 
-std::vector<Job *> AtlasModel::next_atlas_scheduled_jobs() const {
+std::vector<Job *> AtlasModel::next_atlas_scheduled_jobs(unsigned core) const {
     std::vector<Job *> next_jobs;
     for (AtlasSchedule *s: this->_atlas_schedules) {
         ScheduleData data = s->get_data_at_time(this->_timestamp);
-        if (data._begin >= this->_timestamp && s->_job->execution_time_left(this->_timestamp) > 0) {
+        if (s->_core == core
+            and data._begin >= this->_timestamp
+            and s->_job->execution_time_left(this->_timestamp) > 0) {
             next_jobs.push_back(s->_job);
         }
     }
@@ -74,8 +80,12 @@ std::vector<Job *> AtlasModel::next_atlas_scheduled_jobs() const {
 }
 
 void AtlasModel::tidy_up_queues() {
-    this->tidy_up_queue(&this->_cfs_queue);
-    this->tidy_up_queue(&this->_recovery_queue);
+    for (auto &[key, value]: this->_cfs_queue) {
+        this->tidy_up_queue(&value);
+    }
+    for (auto &[key, value]: this->_recovery_queue) {
+        this->tidy_up_queue(&value);
+    }
 }
 
 void AtlasModel::tidy_up_queue(std::list<Job *> *queue) {

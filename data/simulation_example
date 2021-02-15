@@ -1,5 +1,8 @@
 # This is an example File for the ATLAS Scheduling algorith simulation
 #
+# Number of cores specification
+# > c number_of_cores
+#
 # CFS factor assumption
 #   since we don't know what happens if something is schedules on CFS, we assume a time factor to
 #   approximately simulate the situation. Example: "f 4" means one job knowingly running on CFS
@@ -12,6 +15,13 @@
 # dependency specification
 #   The depender depends on the dependency
 # > d depender dependency
+
+###################
+# NUMBER OF CORES #
+###################
+
+c 3
+
 
 ##############
 # CFS FACTOR #

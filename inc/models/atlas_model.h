@@ -35,10 +35,10 @@ public:
     std::list<SimulationAction *> _actions_to_do;
     std::list<SimulationAction *> _actions_done;
 
-    std::list<Job *> _cfs_queue;
-    CfsSchedule *_cfs_schedule = nullptr;
-    std::list<Job *> _recovery_queue;
-    RecoverySchedule *_recovery_schedule = nullptr;
+    std::map<unsigned, std::list<Job *>> _cfs_queue;
+    std::map<unsigned, CfsSchedule *> _cfs_schedule;
+    std::map<unsigned, std::list<Job *>> _recovery_queue;
+    std::map<unsigned, RecoverySchedule *> _recovery_schedule;
 
     int _highlighted_job = -1;
     std::map<const SDL_GUI::Drawable *, const Job *> _drawables_jobs;
@@ -55,11 +55,11 @@ public:
 
     void add_message(int timestamp, std::string text);
 
-    const Schedule *active_schedule(int timestamp) const;
-    const Schedule *active_schedule_on_scheduler(SchedulerType scheduler, int timestamp) const;
-    AtlasSchedule *next_atlas_schedule() const;
-    std::vector<AtlasSchedule *> next_atlas_schedules() const;
-    std::vector<Job *> next_atlas_scheduled_jobs() const;
+    const Schedule *active_schedule(unsigned core, int timestamp) const;
+    const Schedule *active_schedule_on_scheduler(unsigned core, SchedulerType scheduler, int timestamp) const;
+    AtlasSchedule *next_atlas_schedule(unsigned core) const;
+    std::vector<AtlasSchedule *> next_atlas_schedules(unsigned core) const;
+    std::vector<Job *> next_atlas_scheduled_jobs(unsigned core) const;
     void tidy_up_queues();
 
     void reset_for_simulation();

@@ -2,12 +2,14 @@
     <rect width="580" height="530" x="20" y="20" border="true" attributes="player">
         <rect width="580" height="530" x="10" y="0" attributes="player-grid">
         </rect>
-        <rect width="580" height="100" x="10" y="100" attributes="core-1">
-            <rect width="570" height="20" x="0" y="10" bg="180" border="true" attributes="atlas scheduler">
-            </rect>
-            <rect width="570" height="20" x="0" y="40" bg="190" border="true" attributes="recovery scheduler">
-            </rect>
-            <rect width="570" height="20" x="0" y="70" bg="200" border="true" attributes="cfs scheduler">
+        <rect width="580" height="400" x="10" y="100" attributes="cores">
+            <rect width="580" height="100" x="0" y="0" attributes="core-0">
+                <rect width="570" height="20" x="0" y="10" bg="180" border="true" attributes="atlas scheduler">
+                </rect>
+                <rect width="570" height="20" x="0" y="40" bg="190" border="true" attributes="recovery scheduler">
+                </rect>
+                <rect width="570" height="20" x="0" y="70" bg="200" border="true" attributes="cfs scheduler">
+                </rect>
             </rect>
         </rect>
         <rect width="580" height="530" x="10" y="0" attributes="player-position">

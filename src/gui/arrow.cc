@@ -16,6 +16,10 @@ Arrow::Arrow(std::string type, SDL_GUI::Position position, Direction direction) 
     this->init();
 }
 
+SDL_GUI::Drawable *Arrow::clone() const {
+    return new Arrow(*this);
+}
+
 void Arrow::init() {
     for (unsigned i = 0; i < 9; ++i) {
         /* TODO: get rid of magic 5 */

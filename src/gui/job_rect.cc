@@ -12,6 +12,10 @@ JobRect::JobRect(const Job *job, const InterfaceModel *interface_model,
     this->_default_style._has_border = true;
 }
 
+SDL_GUI::Drawable *JobRect::clone() const {
+    return new JobRect(*this);
+}
+
 void JobRect::update() {
     this->set_current_style(&this->_default_style);
     if (this->is_hidden()) {

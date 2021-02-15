@@ -11,6 +11,9 @@ public:
         UP,
         DOWN,
     };
+protected:
+    virtual SDL_GUI::Drawable *clone() const override;
+
 private:
     /** polygon shape for the arrow in up and down direction */
     const std::map<Direction, std::pair<std::array<short,9>, std::array<short,9>>> _coords= {

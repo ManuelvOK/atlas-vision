@@ -10,9 +10,12 @@
 class MessageText : public SDL_GUI::Drawable {
     SDL_Surface *_surface = nullptr;
     TTF_Font *_font;                /**< Font to use */
+    int _width;
     std::string _text;              /**< text to display */
     SDL_Surface *_surface_active;   /**< prerendered text for being active */
     SDL_Surface *_surface_inactive; /**< prerendered text for being inactive */
+
+    virtual SDL_GUI::Drawable *clone() const override;
 public:
     /**
      * Constructor
