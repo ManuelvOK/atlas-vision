@@ -17,18 +17,19 @@ int TimedAction::time() const {
 
 void SubmissionAction::action() {
     int timestamp = this->_atlas_model->_timestamp;
+    unsigned core = this->_core_assigner->get_core_for_job(this->_job);
     /* add scheduled jobs to the list of jobs to schedule */
-    std::vector<Job *> scheduled_jobs = this->_atlas_model->next_atlas_scheduled_jobs();
-    this->_jobs.insert(this->_jobs.end(), scheduled_jobs.begin(), scheduled_jobs.end());
+    std::vector<Job *> jobs = this->_atlas_model->next_atlas_scheduled_jobs(core);
+    jobs.push_back(this->_job);
     /* sort jobs EDF wise while considering dependencies */
-    std::sort(this->_jobs.begin(), this->_jobs.end(), [=](const Job *a, const Job *b) {
+    std::sort(jobs.begin(), jobs.end(), [=](const Job *a, const Job *b) {
         return b->depends_on(a) or (not a->depends_on(b) and a->_deadline < b->_deadline);
     });
 
     /* iterate through the EDF sorted jobs in reversed order to add schedules while minimizing
      * slack. */
     int max_end = std::numeric_limits<int>::max();
-    for (auto job_it = this->_jobs.rbegin(); job_it != this->_jobs.rend(); ++job_it) {
+    for (auto job_it = jobs.rbegin(); job_it != jobs.rend(); ++job_it) {
         Job *job = *job_it;
         max_end = std::min(max_end, job->_deadline);
 
@@ -53,7 +54,7 @@ void SubmissionAction::action() {
 
         /* create a new schedule */
         int begin = max_end - job->_execution_time_estimate;
-        AtlasSchedule *s = new AtlasSchedule (job, 0, timestamp, begin,
+        AtlasSchedule *s = new AtlasSchedule (job, core, timestamp, begin,
                                               job->_execution_time_estimate);
         job->set_atlas_schedule(s);
         this->_atlas_model->add_atlas_schedule(s);
@@ -76,12 +77,14 @@ void SubmissionAction::action() {
 
 
     /* check if there is an active schedule on CFS and if not, queue action to fill CFS */
-    if (not this->_atlas_model->active_schedule_on_scheduler(SchedulerType::CFS, this->_atlas_model->_timestamp)
-        and not this->_atlas_model->active_schedule_on_scheduler(SchedulerType::ATLAS, this->_atlas_model->_timestamp)) {
+    if (not this->_atlas_model->active_schedule_on_scheduler(core, SchedulerType::CFS,
+                                                             this->_atlas_model->_timestamp)
+        and not this->_atlas_model->active_schedule_on_scheduler(core, SchedulerType::ATLAS,
+                                                                 this->_atlas_model->_timestamp)) {
         std::cerr << this->_atlas_model->_timestamp << ": CFS is free and has to be filled."
                   << std::endl;
         this->_atlas_model->_actions_to_do.push_back(
-            new FillAction(this->_atlas_model, this->_atlas_model->_timestamp));
+            new FillAction(this->_atlas_model, this->_atlas_model->_timestamp, core));
     }
 }
 
@@ -100,8 +103,8 @@ void DeadlineAction::action() {
 void FillAction::action() {
     int timestamp = this->_atlas_model->_timestamp;
     /* check whether there is an active schedule anywhere. If so, do nothing */
-    if (this->_atlas_model->active_schedule(timestamp)) {
-        auto s = this->_atlas_model->active_schedule(timestamp);
+    auto s = this->_atlas_model->active_schedule(this->_core, timestamp);
+    if (s) {
         std::cerr << timestamp << ": tried to fill but job " << s->_job->_id << " was runing until "
                   << s->last_data()._begin + s->last_data()._execution_time << std::endl;
         return;
@@ -109,12 +112,12 @@ void FillAction::action() {
     this->_atlas_model->tidy_up_queues();
 
     /* Check if there is something on recovery */
-    if (not this->_atlas_model->_recovery_queue.empty()) {
+    if (not this->_atlas_model->_recovery_queue[this->_core].empty()) {
         /* Create Schedule on recovery and queue end action */
-        Job *job = this->_atlas_model->_recovery_queue.front();
+        Job *job = this->_atlas_model->_recovery_queue[this->_core].front();
 
         RecoverySchedule *recovery_schedule =
-            new RecoverySchedule(job, 0, timestamp, timestamp,
+            new RecoverySchedule(job, this->_core, timestamp, timestamp,
                                  job->estimated_execution_time_left(timestamp));
 
         job->_schedules.push_back(recovery_schedule);
@@ -129,11 +132,11 @@ void FillAction::action() {
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, recovery_schedule});
 
-    } else if (not this->_atlas_model->_cfs_queue.empty()) {
-        Job *job = this->_atlas_model->_cfs_queue.front();
+    } else if (not this->_atlas_model->_cfs_queue[this->_core].empty()) {
+        Job *job = this->_atlas_model->_cfs_queue[this->_core].front();
         /* Create Schedule on cfs and queue end action */
         LateCfsSchedule *cfs_schedule =
-            new LateCfsSchedule(job, 0, timestamp, timestamp,
+            new LateCfsSchedule(job, this->_core, timestamp, timestamp,
                                 job->estimated_execution_time_left(timestamp)
                                 * this->_atlas_model->_cfs_factor);
         job->_schedules.push_back(cfs_schedule);
@@ -146,7 +149,7 @@ void FillAction::action() {
             new BeginScheduleAction{this->_atlas_model, cfs_schedule});
     } else {
         /* find next schedule on ATLAS */
-        AtlasSchedule *next_atlas_schedule = this->_atlas_model->next_atlas_schedule();
+        AtlasSchedule *next_atlas_schedule = this->_atlas_model->next_atlas_schedule(this->_core);
         /* if there is none, abort */
         if (not next_atlas_schedule) {
             return;
@@ -198,7 +201,7 @@ void BeginScheduleAction<LateCfsSchedule>::action() {
             << this->_schedule->last_data()._execution_time;
     this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str());
 
-    this->_atlas_model->_cfs_schedule = this->_schedule;
+    this->_atlas_model->_cfs_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
     this->add_end_action();
 }
@@ -210,7 +213,7 @@ void BeginScheduleAction<EarlyCfsSchedule>::action() {
             << this->_schedule->last_data()._execution_time;
     this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str());
 
-    this->_atlas_model->_cfs_schedule = this->_schedule;
+    this->_atlas_model->_cfs_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
     this->add_end_action();
 }
@@ -220,9 +223,9 @@ void BeginScheduleAction<RecoverySchedule>::action() {
     /* TODO: check dependencies ?!? */
 
     /* stop cfs if running */
-    this->endSchedule(this->_atlas_model->_cfs_schedule);
+    this->endSchedule(this->_atlas_model->_cfs_schedule[this->_schedule->_core]);
 
-    this->_atlas_model->_recovery_schedule = this->_schedule;
+    this->_atlas_model->_recovery_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
     this->add_end_action();
 }
@@ -241,8 +244,8 @@ void BeginScheduleAction<AtlasSchedule>::action() {
     this->_atlas_model->add_message(timestamp, message.str());
 
     /* stop everything thats running */
-    this->endSchedule(this->_atlas_model->_cfs_schedule);
-    this->endSchedule(this->_atlas_model->_recovery_schedule);
+    this->endSchedule(this->_atlas_model->_cfs_schedule[this->_schedule->_core]);
+    this->endSchedule(this->_atlas_model->_recovery_schedule[this->_schedule->_core]);
 
     /* check dependencies */
     /* TODO: check for all dependencies, not only the first one. this was quick and dirty */
@@ -320,11 +323,15 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
 
         /* create a change object that deletes the ATLAS schedule */
         this->_schedule->_atlas_schedule->add_change_delete(timestamp);
+        if (this->_schedule->last_data().end() > timestamp) {
+            this->_schedule->add_change_end(timestamp, timestamp);
+        }
 
         /* there is place for a new schedule */
         std::cerr << timestamp << ": Early CFS Schedule for job " << job->_id << " finished"
                   << std::endl;
-        this->_atlas_model->_actions_to_do.push_back(new FillAction(this->_atlas_model, timestamp));
+        this->_atlas_model->_actions_to_do.push_back(
+            new FillAction(this->_atlas_model, timestamp, this->_schedule->_core));
     }
     /* visibility stays until now */
     std::cerr << timestamp << ": visibility ended for job " << job->_id << std::endl;
@@ -333,8 +340,8 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
         new CfsVisibility(this->_schedule->_atlas_schedule, data._begin,
                           timestamp));
     /* schedule no longer executes */
-    if (this->_atlas_model->_cfs_schedule == this->_schedule) {
-        this->_atlas_model->_cfs_schedule = nullptr;
+    if (this->_atlas_model->_cfs_schedule[this->_schedule->_core] == this->_schedule) {
+        this->_atlas_model->_cfs_schedule[this->_schedule->_core] = nullptr;
     }
 }
 
@@ -345,14 +352,15 @@ void EndScheduleAction<LateCfsSchedule>::action() {
         /* there is place for a new schedule */
         std::cerr << this->_atlas_model->_timestamp << ": Late CFS Schedule for job "
                   << this->_schedule->_job->_id << " finished" << std::endl;
-        this->_atlas_model->_cfs_queue.pop_front();
+        this->_atlas_model->_cfs_queue[this->_schedule->_core].pop_front();
         this->_atlas_model->_actions_to_do.push_back(
-            new FillAction(this->_atlas_model, this->_atlas_model->_timestamp));
+            new FillAction(this->_atlas_model, this->_atlas_model->_timestamp,
+                           this->_schedule->_core));
     }
 
     /* schedule no longer executes */
-    if (this->_atlas_model->_cfs_schedule == this->_schedule) {
-        this->_atlas_model->_cfs_schedule = nullptr;
+    if (this->_atlas_model->_cfs_schedule[this->_schedule->_core] == this->_schedule) {
+        this->_atlas_model->_cfs_schedule[this->_schedule->_core] = nullptr;
     }
 }
 
@@ -370,15 +378,15 @@ void EndScheduleAction<RecoverySchedule>::action() {
             this->_schedule->add_change_end(timestamp, timestamp);
         }
         /* schedule no longer executes */
-        this->_atlas_model->_recovery_schedule = nullptr;
-        this->_atlas_model->_recovery_queue.pop_front();
+        this->_atlas_model->_recovery_schedule[this->_schedule->_core] = nullptr;
+        this->_atlas_model->_recovery_queue[this->_schedule->_core].pop_front();
     } else if (estimated_time_left <= 0) {
         std::stringstream message;
         message << "Recovery schedule ended for job " << job->_id
                 << " but job was underestimated. Job gets queued for CFS (late)";
         this->_atlas_model->add_message(timestamp, message.str());
 
-        this->_atlas_model->_cfs_queue.push_back(job);
+        this->_atlas_model->_cfs_queue[this->_schedule->_core].push_back(job);
     } else {
         std::stringstream message;
         message << "Recovery schedule ended for job " << job->_id
@@ -386,9 +394,10 @@ void EndScheduleAction<RecoverySchedule>::action() {
         this->_atlas_model->add_message(timestamp, message.str());
 
         /* schedule no longer executes */
-        this->_atlas_model->_recovery_schedule = nullptr;
+        this->_atlas_model->_recovery_schedule[this->_schedule->_core] = nullptr;
     }
-    this->_atlas_model->_actions_to_do.push_back(new FillAction(this->_atlas_model, timestamp));
+    this->_atlas_model->_actions_to_do.push_back(
+        new FillAction(this->_atlas_model, timestamp, this->_schedule->_core));
 }
 
 template<>
@@ -417,7 +426,7 @@ void EndScheduleAction<AtlasSchedule>::action() {
                 << " but Job was underestimated. Job gets queued for CFS (late).";
         this->_atlas_model->add_message(timestamp, message.str());
 
-        this->_atlas_model->_cfs_queue.push_back(this->_schedule->_job);
+        this->_atlas_model->_cfs_queue[this->_schedule->_core].push_back(this->_schedule->_job);
     } else {
         std::stringstream message;
         if (not job->all_dependencies_finished(timestamp)) {
@@ -430,8 +439,8 @@ void EndScheduleAction<AtlasSchedule>::action() {
         }
         this->_atlas_model->add_message(timestamp, message.str());
 
-        this->_atlas_model->_recovery_queue.push_back(this->_schedule->_job);
+        this->_atlas_model->_recovery_queue[this->_schedule->_core].push_back(this->_schedule->_job);
     }
     this->_atlas_model->_actions_to_do.push_back(
-        new FillAction(this->_atlas_model, timestamp));
+        new FillAction(this->_atlas_model, timestamp, this->_schedule->_core));
 }

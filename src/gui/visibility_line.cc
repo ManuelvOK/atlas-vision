@@ -14,6 +14,10 @@ VisibilityLine::VisibilityLine(InterfaceModel *interface_model, const PlayerMode
     this->_end.set_position({0, end_y});
 }
 
+SDL_GUI::Drawable *VisibilityLine::clone() const {
+    return new VisibilityLine(*this);
+}
+
 void VisibilityLine::update() {
     /* hide if not active */
     if (this->_visibility->is_active_at_time(this->_player_model->_position)) {

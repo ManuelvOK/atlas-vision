@@ -11,6 +11,7 @@ class JobRect: public SDL_GUI::Rect, public JobHighlight {
 protected:
     const Job *_job;
     const InterfaceModel *_interface_model;
+    virtual SDL_GUI::Drawable *clone() const override;
 public:
     JobRect(const Job *job, const InterfaceModel *interface_model, const AtlasModel *atlas_model,
             SDL_GUI::Position position, int width, int height);

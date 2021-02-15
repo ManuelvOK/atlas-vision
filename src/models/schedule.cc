@@ -20,8 +20,8 @@ int ScheduleData::end() const {
     return this->_begin + this->_execution_time;
 }
 
-Schedule::Schedule(int id, Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
-                   int execution_time) :
+Schedule::Schedule(int id, Job *job, unsigned core, SchedulerType scheduler, int submission_time,
+                   int begin, int execution_time) :
     _id(id),
     _job(job),
     _core(core),
@@ -31,7 +31,7 @@ Schedule::Schedule(int id, Job *job, int core, SchedulerType scheduler, int subm
                         ScheduleData{submission_time, scheduler, begin, execution_time});
 }
 
-Schedule::Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
+Schedule::Schedule(Job *job, unsigned core, SchedulerType scheduler, int submission_time, int begin,
                    int execution_time) :
     Schedule(Schedule::next_id(), job, core, scheduler, submission_time, begin, execution_time) {}
 

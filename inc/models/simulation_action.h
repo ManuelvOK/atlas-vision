@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <controllers/core_assigner.h>
 #include <models/cfs_visibility.h>
 #include <models/printable.h>
 #include <models/schedule.h>
@@ -31,10 +32,13 @@ class TimedAction : public SimulationAction {
 };
 
 class SubmissionAction : public TimedAction {
-    std::vector<Job *> _jobs;
+    CoreAssigner *_core_assigner;
+    Job * _job;
   public:
-    SubmissionAction(AtlasModel *atlas_model, int time, std::vector<Job*> jobs)
-        : TimedAction(atlas_model, time, -50), _jobs(jobs) {}
+    SubmissionAction(CoreAssigner *core_assigner, AtlasModel *atlas_model, Job* job) :
+        TimedAction(atlas_model, job->_submission_time, -50),
+        _core_assigner(core_assigner),
+        _job(job) {}
     virtual void action() override;
 };
 
@@ -47,9 +51,10 @@ class DeadlineAction : public TimedAction {
 };
 
 class FillAction : public TimedAction {
+    unsigned _core;
   public:
-    FillAction(AtlasModel *atlas_model, int time)
-        : TimedAction(atlas_model, time) {}
+    FillAction(AtlasModel *atlas_model, int time, unsigned core)
+        : TimedAction(atlas_model, time), _core(core) {}
 
     virtual void action() override;
 };

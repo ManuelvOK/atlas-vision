@@ -19,6 +19,7 @@ class VisibilityLine : public SDL_GUI::Line {
     const CfsVisibility *_visibility;       /**< related visibility object */
     const Schedule *_schedule;              /**< related schedule */
 
+    virtual SDL_GUI::Drawable *clone() const override;
 public:
 
     /**

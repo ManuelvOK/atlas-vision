@@ -173,10 +173,18 @@ void AtlasController::init() {
 
 void AtlasController::reinit() {
     std::cout << "reinitialising atlas_controller" << std::endl;
-    this->_default_interface_model->find_first_drawable("core-1")->remove_children(
-        [](SDL_GUI::Drawable *d){
-            return d->_type != "Rect";
-        });
+    for (int i = 0; i < this->_atlas_model->_n_cores; ++i) {
+        std::stringstream rect_name;
+        rect_name << "core-" << i;
+        SDL_GUI::Drawable *core_rect =
+            this->_default_interface_model->find_first_drawable(rect_name.str());
+        if (core_rect) {
+            core_rect->remove_children([](SDL_GUI::Drawable *d){
+                return d->_type != "Rect";
+            });
+        }
+    }
+
     for (std::string id: {"deadline", "messages", "dependencies", "legend"}) {
         this->_default_interface_model->find_first_drawable(id)->remove_all_children();
     }
@@ -287,20 +295,33 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
                                       SDL_GUI::InterfaceModel *default_interface_model,
                                       AtlasModel *atlas_model,
                                       const PlayerModel *player_model) {
-    SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
+    std::vector<SDL_GUI::Drawable *> core_rects;
+    SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-0");
+    core_rects.push_back(core_rect);
+    SDL_GUI::Drawable *wrapper_rect = default_interface_model->find_first_drawable("cores");
+    for (int i = 1; i < atlas_model->_n_cores; ++i) {
+        SDL_GUI::Drawable *new_core = core_rect->deepcopy();
+        new_core->move({0, 120});
+        new_core->remove_attribute("core-0");
+        std::stringstream ss;
+        ss << "core-" << i;
+        new_core->add_attribute(ss.str());
+        core_rects.push_back(new_core);
+        wrapper_rect->add_child(new_core);
+    }
 
     std::map<SchedulerType, int> offsets;
     offsets[SchedulerType::ATLAS] = interface_config.schedule.ATLAS_offset_y;
     offsets[SchedulerType::recovery] = interface_config.schedule.recovery_offset_y;
     offsets[SchedulerType::CFS] = interface_config.schedule.CFS_offset_y;
 
-    for (Schedule * schedule: atlas_model->_schedules) {
+    for (Schedule *schedule: atlas_model->_schedules) {
         //std::cout << "creating Schedule drawable for schedule " << schedule->_id << std::endl;
         /* constructing Schedule */
         ScheduleRect *r = new ScheduleRect(schedule, interface_model, player_model, atlas_model,
                                            offsets);
         atlas_model->_drawables_jobs[r] = atlas_model->_jobs[schedule->_job->_id];
-        core_rect->add_child(r);
+        core_rects[schedule->_core]->add_child(r);
     }
 }
 
@@ -308,9 +329,12 @@ static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibil
                                             InterfaceModel *interface_model,
                                             SDL_GUI::InterfaceModel *default_interface_model,
                                             const PlayerModel *player_model) {
-    SDL_GUI::Drawable *core_rect = default_interface_model->find_first_drawable("core-1");
     for (CfsVisibility *visibility: visibilities) {
         Schedule *schedule = visibility->_schedule;
+        std::stringstream rect_name;
+        rect_name << "core-" << schedule->_core;
+        SDL_GUI::Drawable *core_rect =
+            default_interface_model->find_first_drawable(rect_name.str());
         VisibilityLine *l = new VisibilityLine(interface_model, player_model, visibility, schedule);
         core_rect->add_child(l);
     }

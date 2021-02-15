@@ -14,6 +14,7 @@ protected:
     int _pos_x;
     const InterfaceModel *_interface_model;
 
+    virtual SDL_GUI::Drawable *clone() const override;
 public:
     JobArrow(const Job *job, int pos_x, const InterfaceModel *interface_model,
              const AtlasModel *atlas_model, SDL_GUI::Position position,

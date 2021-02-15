@@ -35,7 +35,7 @@ class Schedule : public Printable {
 public:
     int _id;                            /**< id of this schedule */
     Job *_job;                          /**< the concerning job */
-    int _core;                          /**< core on wich the job gets executed */
+    unsigned _core;                     /**< core on wich the job gets executed */
     int _submission_time;               /**< time this schedule gets submitted */
 
     std::map<int, ScheduleData> _data;  /**< data for a given time period */
@@ -52,10 +52,10 @@ public:
      * @param begin time the schedule begins execution
      * @param execution_time time the schedule gets executed
      */
-    Schedule(int id, Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
-             int execution_time);
+    Schedule(int id, Job *job, unsigned core, SchedulerType scheduler, int submission_time,
+             int begin, int execution_time);
 
-    Schedule(Job *job, int core, SchedulerType scheduler, int submission_time, int begin,
+    Schedule(Job *job, unsigned core, SchedulerType scheduler, int submission_time, int begin,
              int execution_time);
 
     Schedule(const Schedule *s);

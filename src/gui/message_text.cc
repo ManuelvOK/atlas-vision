@@ -4,7 +4,7 @@
 
 MessageText::MessageText(const std::string message, TTF_Font *font, int width,
                          SDL_GUI::Position position) :
-    Drawable("MessageText", position), _font(font), _text(message) {
+    Drawable("MessageText", position), _font(font), _width(width), _text(message) {
 
     /* TODO: get color from config */
     SDL_Color color = {0, 0, 0, 255};
@@ -21,6 +21,10 @@ MessageText::MessageText(const std::string message, TTF_Font *font, int width,
 MessageText::~MessageText() {
     SDL_FreeSurface(this->_surface_active);
     SDL_FreeSurface(this->_surface_inactive);
+}
+
+SDL_GUI::Drawable *MessageText::clone() const {
+    return new MessageText(this->_text, this->_font, this->_width, this->_position);
 }
 
 void MessageText::activate() {

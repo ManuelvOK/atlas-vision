@@ -15,6 +15,10 @@ ScheduleRect::ScheduleRect(const Schedule *schedule, const InterfaceModel *inter
     this->_default_style._has_border = true;
 }
 
+SDL_GUI::Drawable *ScheduleRect::clone() const {
+    return new ScheduleRect(*this);
+}
+
 void ScheduleRect::update() {
     int timestamp = this->_player_model->_position;
     if (not this->_schedule->exists_at_time(timestamp)) {
