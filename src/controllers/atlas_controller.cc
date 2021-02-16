@@ -413,7 +413,7 @@ static SDL_GUI::Drawable *create_job_information(const Job *job,
     std::stringstream ss;
     ss << "Job " << job->_id << std::endl;
     ss << "sub: " << job->_submission_time << std::endl;
-    ss << "dl: " << job->_submission_time << std::endl;
+    ss << "dl: " << job->_deadline << std::endl;
     ss << "est: " << job->_execution_time_estimate << std::endl;
     ss << "real: " << job->_execution_time << std::endl;
     SDL_GUI::Text *t = new SDL_GUI::Text(default_interface_model->font(), ss.str(),
