@@ -113,14 +113,20 @@ void FillAction::action() {
         /* Create Schedule on recovery and queue end action */
         Job *job = this->_atlas_model->_recovery_queue.front();
 
+        int time_left = job->estimated_execution_time_left(timestamp);
+        Schedule *next_atlas_schedule = this->_atlas_model->next_atlas_schedule();
+        int time_to_next_atlas = time_left;
+        if (next_atlas_schedule) {
+            time_to_next_atlas = next_atlas_schedule->last_data()._begin - timestamp;
+        }
+        int recovery_time = std::min(time_left, time_to_next_atlas);
         RecoverySchedule *recovery_schedule =
-            new RecoverySchedule(job, 0, timestamp, timestamp,
-                                 job->estimated_execution_time_left(timestamp));
+            new RecoverySchedule(job, 0, timestamp, timestamp, recovery_time);
 
         job->_schedules.push_back(recovery_schedule);
         std::stringstream message;
-        message << "Execute job " << job->_id << " on recovery. Time left: "
-                << recovery_schedule->last_data()._execution_time;
+        message << "Execute job " << job->_id << " on recovery. Time left: " << time_left
+                << ", scheduled time: " << recovery_time;
         this->_atlas_model->add_message(timestamp, message.str());
 
         this->_atlas_model->_recovery_schedules.push_back(recovery_schedule);
@@ -300,6 +306,16 @@ int EndScheduleAction<T>::time() const {
         time = this->_schedule->last_data()._begin + this->_schedule->last_data()._execution_time;
     }
     return time;
+}
+
+template<>
+int EndScheduleAction<EarlyCfsSchedule>::time() const {
+    int timestamp = this->_atlas_model->_timestamp;
+    int execution_time_left = this->_schedule->_job->execution_time_left(timestamp);
+    execution_time_left *= this->_atlas_model->_cfs_factor;
+    Schedule *next_atlas_schedule = this->_atlas_model->next_atlas_schedule();
+    int next_atlas_begin = next_atlas_schedule->last_data()._begin;
+    return std::min(timestamp + execution_time_left, next_atlas_begin);
 }
 
 template<>

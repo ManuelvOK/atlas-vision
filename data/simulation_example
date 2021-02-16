@@ -55,3 +55,4 @@ d k 7 6
 
 # unknown dependencies
 d u 10 9 # X2 has an unknown dependency from X1
+d u  8 0 # 8 has an unknown dependency from 0
