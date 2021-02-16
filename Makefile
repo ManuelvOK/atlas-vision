@@ -14,7 +14,7 @@ OBJS    := $(patsubst $(SRCDIR)/%.cc, $(BUILD)/%.o, $(SRCSCC))
 DEPS    := $(patsubst $(SRCDIR)/%.cc, $(DEPDIR)/%.d, $(SRCSCC))
 
 
-CXXFLAGS     := -std=c++2a -Wall -Wextra -Wpedantic -ggdb -O0 `sdl2-config --cflags`
+CXXFLAGS     := -std=c++2a -Wall -Wextra -Wpedantic -ggdb -fno-inline-small-functions -O0 `sdl2-config --cflags`
 CXXFLAGS     += -I$(INCDIR) -I$(LIBDIR)
 
 DEPFLAGS     += -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
