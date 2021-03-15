@@ -5,6 +5,44 @@
 
 #include <models/atlas_model.h>
 
+void Job::add_known_dependency(Job *job) {
+    this->_known_dependencies.push_back(job);
+    job->_known_dependees.push_back(this);
+}
+
+void Job::add_unknown_dependency(Job *job) {
+    this->_unknown_dependencies.push_back(job);
+    job->_unknown_dependees.push_back(this);
+}
+
+std::vector<Job *> Job::known_dependencies() {
+    return this->_known_dependencies;
+}
+
+std::vector<Job *> Job::unknown_dependencies() {
+    return this->_unknown_dependencies;
+}
+
+std::vector<Job *> Job::dependencies() {
+    std::vector<Job *> ret = this->_known_dependencies;
+    ret.insert(ret.end(), this->_unknown_dependencies.begin(), this->_unknown_dependencies.end());
+    return ret;
+}
+
+std::vector<Job *> Job::known_dependees() {
+    return this->_known_dependees;
+}
+
+std::vector<Job *> Job::unknown_dependees() {
+    return this->_unknown_dependees;
+}
+
+std::vector<Job *> Job::dependees() {
+    std::vector<Job *> ret = this->_known_dependees;
+    ret.insert(ret.end(), this->_unknown_dependees.begin(), this->_unknown_dependees.end());
+    return ret;
+}
+
 int Job::calculate_dependency_level() {
     /* only calculate if already set */
     if (this->_dependency_level >= 0) {
@@ -42,6 +80,9 @@ int Job::time_executed(int timestamp) const {
     int time_executed = 0;
     for (Schedule *s: this->_schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
+        if (not data._does_execute) {
+            continue;
+        }
         int value = std::min(data._execution_time, std::max(0, timestamp - data._begin));
         if (data._scheduler == SchedulerType::CFS) {
             value /= this->_atlas_model->_cfs_factor;
@@ -99,6 +140,16 @@ std::string Job::to_string() const {
 bool Job::depends_on(const Job *job) const {
     return std::find(this->_known_dependencies.begin(), this->_known_dependencies.end(), job)
            != this->_known_dependencies.end();
+}
+
+Schedule *Job::schedule_at_time(int timestamp) {
+    for (Schedule *s: this->_schedules) {
+        ScheduleData data = s->get_data_at_time(timestamp);
+        if (data._begin >= timestamp && data.end() <= timestamp) {
+            return s;
+        }
+    }
+    return nullptr;
 }
 
 void Job::set_atlas_schedule(AtlasSchedule *schedule) {

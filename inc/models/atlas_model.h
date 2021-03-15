@@ -52,6 +52,8 @@ public:
     AtlasModel();
 
     void add_atlas_schedule(AtlasSchedule *schedule);
+    void add_recovery_schedule(RecoverySchedule *schedule);
+    void add_cfs_schedule(CfsSchedule *schedule);
 
     void add_message(int timestamp, std::string text);
 
@@ -60,7 +62,9 @@ public:
     AtlasSchedule *next_atlas_schedule(unsigned core) const;
     std::vector<AtlasSchedule *> next_atlas_schedules(unsigned core) const;
     std::vector<Job *> next_atlas_scheduled_jobs(unsigned core) const;
+
     void tidy_up_queues();
+    void resort_schedules();
 
     void reset_for_simulation();
 

@@ -15,6 +15,15 @@ enum class JobState {
 class AtlasModel;
 /** Object representing a job */
 class Job : public Printable {
+private:
+    /** List of Jobs, the execution of this job depends on */
+    std::vector<Job *> _known_dependencies;
+    /** List of Jobs, the execution of this job depends on unknowingly */
+    std::vector<Job *> _unknown_dependencies;
+    /** list of Jobs, whose execution depends on this job */
+    std::vector<Job *> _known_dependees;
+    /** list of Jobs, whose execution depends on this job unknowingly */
+    std::vector<Job *> _unknown_dependees;
 public:
     const AtlasModel *_atlas_model;
     int _id;                        /**< job id */
@@ -30,11 +39,6 @@ public:
 
     AtlasSchedule *_atlas_schedule = nullptr;
 
-    /** List of Jobs, the execution of this job depends on */
-    std::vector<Job *> _known_dependencies;
-    /** List of Jobs, the execution of this job depends on unknowingly */
-    std::vector<Job *> _unknown_dependencies;
-
     /**
      * Constructor
      * @param id job id
@@ -48,6 +52,54 @@ public:
         : _atlas_model(atlas_model), _id(id), _deadline(deadline),
         _execution_time_estimate(execution_time_estimate), _execution_time(execution_time),
         _submission_time(submission_time) {}
+
+    /**
+     * Add a job to the known dependencies
+     * @param job job to add
+     */
+    void add_known_dependency(Job *job);
+
+    /**
+     * Add a job to the unknown dependencies
+     * @param job job to add
+     */
+    void add_unknown_dependency(Job *job);
+
+    /**
+     * getter for this->_known_dependencies
+     * @return known_dependencies
+     */
+    std::vector<Job *> known_dependencies();
+
+    /**
+     * getter for this->_unknown_dependencies
+     * @return unknown_dependencies
+     */
+    std::vector<Job *> unknown_dependencies();
+
+    /**
+     * getter for this->_{un,}known_dependencies in one vector
+     * @return list of jobs this job depends on
+     */
+    std::vector<Job *> dependencies();
+
+    /**
+     * getter for this->_known_dependees
+     * @return known_dependees
+     */
+    std::vector<Job *> known_dependees();
+
+    /**
+     * getter for this->_unknown_dependees
+     * @return unknown_dependees
+     */
+    std::vector<Job *> unknown_dependees();
+
+    /**
+     * getter for this->_{un,}known_dependees in one vector
+     * @return list of jobs that depend on this job
+     */
+    std::vector<Job *> dependees();
 
     /**
      * calculate and set the level of this Job inside the dependency DAG
@@ -71,6 +123,7 @@ public:
 
     bool depends_on(const Job *job) const;
 
+    Schedule *schedule_at_time(int timestamp);
 
     void set_atlas_schedule(AtlasSchedule *schedule);
 };

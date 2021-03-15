@@ -111,9 +111,9 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
         Job *dependent_job = this->_jobs.at(d._dependent_job_id);
         Job *dependency_job = this->_jobs.at(d._dependency_id);
         if (d._type == 'k') {
-            dependent_job->_known_dependencies.push_back(dependency_job);
+            dependent_job->add_known_dependency(dependency_job);
         } else {
-            dependent_job->_unknown_dependencies.push_back(dependency_job);
+            dependent_job->add_unknown_dependency(dependency_job);
         }
     }
 

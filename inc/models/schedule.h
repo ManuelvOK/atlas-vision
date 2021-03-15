@@ -21,7 +21,7 @@ struct ScheduleData {
     SchedulerType _scheduler;   /**< the scheduler this schedule is on */
     int _begin;                 /**< start time of schedule execution */
     int _execution_time;        /**< time the scheduled job runs */
-    bool _does_execute = true;  /**< flag determining whether the schedule does run */
+    bool _does_execute = false; /**< flag determining whether the schedule does run */
 
     int end() const;
 };
@@ -41,6 +41,7 @@ public:
     std::map<int, ScheduleData> _data;  /**< data for a given time period */
     int _end = -1;                      /**< possible end of this schedule */
     std::set<int> _change_points;       /**< list of points at which changes happen */
+    bool _simulation_ended = false;
 
     /**
      * Constructor
@@ -74,7 +75,9 @@ public:
 
     void add_change(int timestamp, int begin, int execution_time);
 
-    void add_change_begin(int timestamp, int begin);
+    void add_change_begin(int timestamp, int begin, bool did_execute = true);
+
+    void add_change_does_execute(int timestamp, bool does_execute);
 
     void add_change_shift_relative(int timestamp, int shift);
 
@@ -83,6 +86,8 @@ public:
     void add_change_end(int timestamp, int end);
 
     void add_change_delete(int timestamp);
+
+    void end_simulation(int timestamp);
 
     /**
      * get relevant data for rendering for a given timestamp

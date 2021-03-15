@@ -386,7 +386,7 @@ static void create_dependency_graph(std::vector<Job *> jobs,
 
     for (Job *job: jobs) {
         JobRect *rect_from = rects[job->_id];
-        for (Job *dep: job->_known_dependencies) {
+        for (Job *dep: job->known_dependencies()) {
             JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
@@ -395,7 +395,7 @@ static void create_dependency_graph(std::vector<Job *> jobs,
             dep_rect->add_child(l);
         }
 
-        for (Job *dep: job->_unknown_dependencies) {
+        for (Job *dep: job->unknown_dependencies()) {
             JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};

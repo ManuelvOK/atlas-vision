@@ -77,21 +77,32 @@ void Schedule::add_change(int timestamp, int begin, int execution_time) {
     new_data._timestamp = timestamp;
     new_data._execution_time = execution_time;
     new_data._begin = begin;
-    this->_data.emplace(timestamp, new_data);
+    this->_data[timestamp] = new_data;
 }
 
-void Schedule::add_change_begin(int timestamp, int begin) {
-    ScheduleData new_data = this->last_data();
+void Schedule::add_change_begin(int timestamp, int begin, bool did_execute) {
+    ScheduleData &old_data = this->last_data();
+    ScheduleData new_data = old_data;
     new_data._timestamp = timestamp;
     new_data._begin = begin;
-    this->_data.emplace(timestamp, new_data);
+    if (not did_execute) {
+        old_data._does_execute = false;
+    }
+    this->_data[timestamp] = new_data;
+}
+
+void Schedule::add_change_does_execute(int timestamp, bool does_execute) {
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._does_execute = does_execute;
+    this->_data[timestamp] = new_data;
 }
 
 void Schedule::add_change_shift_relative(int timestamp, int shift) {
     ScheduleData new_data = this->last_data();
     new_data._timestamp = timestamp;
     new_data._begin += shift;
-    this->_data.emplace(timestamp, new_data);
+    this->_data[timestamp] = new_data;
 
 }
 
@@ -99,14 +110,14 @@ void Schedule::add_change_execution_time_relative(int timestamp, int execution_t
     ScheduleData new_data = this->last_data();
     new_data._timestamp = timestamp;
     new_data._execution_time += execution_time_difference;
-    this->_data.emplace(timestamp, new_data);
+    this->_data[timestamp] = new_data;
 }
 
 void Schedule::add_change_end(int timestamp, int end) {
     ScheduleData new_data = this->last_data();
     new_data._timestamp = timestamp;
     new_data._execution_time = end - new_data._begin;
-    this->_data.emplace(timestamp, new_data);
+    this->_data[timestamp] = new_data;
 }
 
 void Schedule::add_change_delete(int timestamp) {
@@ -122,7 +133,15 @@ void Schedule::add_change_delete(int timestamp) {
     ScheduleData new_data = old_data;
     old_data._does_execute = false;
     new_data._execution_time = 0;
-    this->_data.emplace(timestamp, new_data);
+    this->_data[timestamp] = new_data;
+}
+
+void Schedule::end_simulation(int timestamp) {
+    this->_simulation_ended = true;
+    ScheduleData data = this->last_data();
+    if (data._execution_time == 0 || not data._does_execute) {
+        this->_end = timestamp;
+    }
 }
 
 
@@ -160,8 +179,10 @@ ScheduleData Schedule::get_vision_data_at_time(int timestamp) const {
     if (not data._does_execute and timestamp >= data._begin) {
         if (data._scheduler == SchedulerType::CFS) {
             data._execution_time = 0;
+        } else {
+            data._execution_time = std::max(0, data.end() - timestamp);
         }
-        data._begin = timestamp + 1;
+        data._begin = timestamp; // + 1;
     }
     return data;
 }

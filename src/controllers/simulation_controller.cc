@@ -31,23 +31,39 @@ void SimulationController::simulate() {
         /* sort actions */
         this->_atlas_model->_actions_to_do.sort(
             [](const SimulationAction *a, const SimulationAction *b) {
+                /* sort unsuccessful actions to the end */
+                if (a->_success != b->_success) {
+                    return a->_success > b->_success;
+                }
+
+                /* sort different action types regarding their weight */
                 if (a->time() == b->time()) {
                     return a->_weight < b->_weight;
                 }
+
+                /* regular sort regarding time */
                 return a->time() < b->time();
             });
 
+        /* reset sucess on all actions */
+        for (SimulationAction *action: this->_atlas_model->_actions_to_do) {
+            action->_success = true;
+        }
+
         /* pop first action */
         SimulationAction *action = this->_atlas_model->_actions_to_do.front();
-        this->_atlas_model->_actions_to_do.pop_front();
 
         /* update state timestamp */
-        this->_atlas_model->_timestamp = action->time();
+        this->_atlas_model->_timestamp = std::max(action->time(), this->_atlas_model->_timestamp);
 
         /* execute action */
         action->action();
 
+        if (not action->_success) {
+            continue;
+        }
         /* put action to executed actions list */
+        this->_atlas_model->_actions_to_do.pop_front();
         this->_atlas_model->_actions_done.push_back(action);
     }
 

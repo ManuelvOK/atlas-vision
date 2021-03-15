@@ -17,6 +17,7 @@ class SimulationAction {
     AtlasModel *_atlas_model;
   public:
     int _weight = 0;
+    bool _success = true;
     SimulationAction(AtlasModel *atlas_model, int weight = 0);
     virtual ~SimulationAction() = default;
     virtual int time() const = 0;
@@ -54,14 +55,14 @@ class FillAction : public TimedAction {
     unsigned _core;
   public:
     FillAction(AtlasModel *atlas_model, int time, unsigned core)
-        : TimedAction(atlas_model, time), _core(core) {}
+        : TimedAction(atlas_model, time, 60), _core(core) {}
 
     virtual void action() override;
 };
 
 template <typename T>
 class BeginScheduleAction : public SimulationAction {
-    void endSchedule(Schedule *schedule);
+    void end_schedule(Schedule *schedule);
     void add_end_action() const;
   protected:
     T *_schedule;

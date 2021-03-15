@@ -16,6 +16,16 @@ void AtlasModel::add_atlas_schedule(AtlasSchedule *schedule) {
     this->_schedules.insert(schedule);
 }
 
+void AtlasModel::add_recovery_schedule(RecoverySchedule *schedule) {
+    this->_recovery_schedules.push_back(schedule);
+    this->_schedules.insert(schedule);
+}
+
+void AtlasModel::add_cfs_schedule(CfsSchedule *schedule) {
+    this->_cfs_schedules.push_back(schedule);
+    this->_schedules.insert(schedule);
+}
+
 void AtlasModel::add_message(int timestamp, std::string text) {
     Message *message = new Message(timestamp, text);
     this->_messages.push_back(message);
@@ -85,6 +95,20 @@ void AtlasModel::tidy_up_queues() {
     }
     for (auto &[key, value]: this->_recovery_queue) {
         this->tidy_up_queue(&value);
+    }
+}
+
+void AtlasModel::resort_schedules() {
+    auto old_schedules = this->_schedules;
+    this->_schedules.clear();
+    for (Schedule *s: old_schedules) {
+        this->_schedules.insert(s);
+    }
+
+    auto old_atlas_schedules = this->_atlas_schedules;
+    this->_atlas_schedules.clear();
+    for (AtlasSchedule *s: old_atlas_schedules) {
+        this->_atlas_schedules.insert(s);
     }
 }
 
