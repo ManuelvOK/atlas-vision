@@ -61,6 +61,7 @@ AtlasSchedule *AtlasModel::next_atlas_schedule(unsigned core) const {
         ScheduleData data = s->get_data_at_time(this->_timestamp);
         if (s->_core == core
             and data._begin >= this->_timestamp
+            and data._execution_time > 0
             and s->_job->execution_time_left(this->_timestamp) > 0) {
             return s;
         }

@@ -317,16 +317,28 @@ template<>
 void BeginScheduleAction<AtlasSchedule>::action() {
     int timestamp = this->_atlas_model->_timestamp;
     Job *job = this->_schedule->_job;
+
     /* check if ATLAS schedule still exists */
     if (job->execution_time_left(timestamp) <= 0) {
         return;
     }
+
     /* check if there is a schedule already running */
-    this->_schedule->add_change_does_execute(timestamp, true);
-    std::stringstream message;
-    message << "Execute job " << job->_id << " on core " << this->_schedule->_core
-            << " ATLAS. Time left: " << this->_schedule->last_data()._execution_time;
-    this->_atlas_model->add_message(timestamp, message.str());
+    Schedule *current_schedule = job->schedule_at_time(timestamp);
+    if (current_schedule
+        && current_schedule != this->_schedule
+        && current_schedule->last_data()._scheduler == SchedulerType::ATLAS) {
+        std::cerr << timestamp << ": job " << job->_id << " already runs somewhere else"
+                  << std::endl;
+        return;
+    }
+
+    /* update begin time if necessary */
+    ScheduleData data = this->_schedule->last_data();
+    if (data._begin != timestamp) {
+        this->_schedule->add_change_begin(timestamp, timestamp, false);
+        this->_schedule->add_change_end(timestamp, data.end());
+    }
 
     /* stop everything thats running */
     this->end_schedule(this->_atlas_model->_cfs_schedule[this->_schedule->_core]);
@@ -348,6 +360,13 @@ void BeginScheduleAction<AtlasSchedule>::action() {
         dependency_time_left = time_left;
     }
     if (dependent_job != job) {
+        Schedule *dependent_schedule = dependent_job->schedule_at_time(timestamp);
+        if (dependent_schedule && dependent_schedule->last_data()._scheduler == SchedulerType::ATLAS) {
+            std::cerr << timestamp << ": job " << job->_id << " depends on job "
+                      << dependent_job->_id << " that is already running. Waiting." << std::endl;
+            this->_success = false;
+            return;
+        }
         std::cerr << timestamp << ": job " << job->_id << " depends on job " << dependent_job->_id
                   << ". Inserting ATLAS dependency schedule" << std::endl;
         int length = std::min(this->_schedule->last_data()._execution_time, dependency_time_left);
@@ -370,6 +389,13 @@ void BeginScheduleAction<AtlasSchedule>::action() {
         }
         return;
     }
+
+    this->_schedule->add_change_does_execute(timestamp, true);
+    std::stringstream message;
+    message << "Execute job " << job->_id << " on core " << this->_schedule->_core
+            << " ATLAS. Time left: " << this->_schedule->last_data()._execution_time;
+    this->_atlas_model->add_message(timestamp, message.str());
+
 
     /* add EndAction */
     this->add_end_action();
@@ -514,10 +540,12 @@ template<>
 void EndScheduleAction<AtlasSchedule>::action() {
     Job *job = this->_schedule->_job;
     int timestamp = this->_atlas_model->_timestamp;
+
     /* check if ATLAS schedule still exists */
     if (job->execution_time_left(this->_schedule->last_data()._begin) <= 0) {
         return;
     }
+
     int time_left = job->execution_time_left(timestamp);
     int estimated_time_left = job->estimated_execution_time_left(timestamp);
     if (time_left <= 0) {
@@ -548,6 +576,9 @@ void EndScheduleAction<AtlasSchedule>::action() {
                     << " but it had not got all of its atlas time. Job gets queued for Recovery.";
         }
         this->_atlas_model->add_message(timestamp, message.str());
+
+        /* do not show schedules that did not run */
+        this->_schedule->end_simulation(timestamp);
 
         this->_atlas_model->_recovery_queue[this->_schedule->_core].push_back(this->_schedule->_job);
     }

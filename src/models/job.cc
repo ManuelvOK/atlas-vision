@@ -145,7 +145,7 @@ bool Job::depends_on(const Job *job) const {
 Schedule *Job::schedule_at_time(int timestamp) {
     for (Schedule *s: this->_schedules) {
         ScheduleData data = s->get_data_at_time(timestamp);
-        if (data._begin >= timestamp && data.end() <= timestamp) {
+        if (data._begin <= timestamp && data.end() >= timestamp) {
             return s;
         }
     }

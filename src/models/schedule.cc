@@ -151,7 +151,7 @@ void Schedule::add_change_delete(int timestamp) {
 void Schedule::end_simulation(int timestamp) {
     this->_simulation_ended = true;
     ScheduleData data = this->last_data();
-    if (data._execution_time == 0 || not data._does_execute) {
+    if (data._execution_time == 0 or not data._does_execute) {
         this->_end = timestamp;
     }
 }
