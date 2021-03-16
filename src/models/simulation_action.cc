@@ -53,7 +53,7 @@ void SubmissionAction::action() {
                                                                 shift_value);
                 std::stringstream message;
                 message << "Schedule for Job " << job->_id << " shifted by " << shift_value << ".";
-                this->_atlas_model->add_message(timestamp, message.str());
+                this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
             }
             max_end = std::min(max_end, job->_atlas_schedule->last_data()._begin);
             this->_atlas_model->resort_schedules();
@@ -78,7 +78,7 @@ void SubmissionAction::action() {
         std::stringstream message;
         message << "Job " << job->_id << " submitted and scheduled on core " << core
                 << " ATLAS from " << begin << " for " << job->_execution_time_estimate << ".";
-        this->_atlas_model->add_message(timestamp, message.str());
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
         max_end = std::min(max_end, begin);
 
     }
@@ -214,7 +214,8 @@ void BeginScheduleAction<LateCfsSchedule>::action() {
     message << "Execute job " << this->_schedule->_job->_id << " on core "
             << this->_schedule->_core << " CFS (late). Time left: "
             << this->_schedule->last_data()._execution_time;
-    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str());
+    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str(),
+                                    {this->_schedule->_job->_id});
 
     this->_atlas_model->_cfs_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
@@ -255,7 +256,8 @@ void BeginScheduleAction<EarlyCfsSchedule>::action() {
     std::stringstream message;
     message << "Execute job " << this->_schedule->_job->_id << " on core "
             << this->_schedule->_core << " CFS (early).";
-    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str());
+    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str(),
+                                    {this->_schedule->_job->_id});
 
     /* add EndAction */
     this->add_end_action();
@@ -306,7 +308,7 @@ void BeginScheduleAction<RecoverySchedule>::action() {
     std::stringstream message;
     message << "Execute job " << this->_schedule->_job->_id << " on core " << this->_schedule->_core
             << " recovery. Scheduled time: " << this->_schedule->last_data()._execution_time;
-    this->_atlas_model->add_message(timestamp, message.str());
+    this->_atlas_model->add_message(timestamp, message.str(), {this->_schedule->_job->_id});
 
     this->_atlas_model->_recovery_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
@@ -394,7 +396,7 @@ void BeginScheduleAction<AtlasSchedule>::action() {
     std::stringstream message;
     message << "Execute job " << job->_id << " on core " << this->_schedule->_core
             << " ATLAS. Time left: " << this->_schedule->last_data()._execution_time;
-    this->_atlas_model->add_message(timestamp, message.str());
+    this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
 
 
     /* add EndAction */
@@ -520,14 +522,14 @@ void EndScheduleAction<RecoverySchedule>::action() {
         std::stringstream message;
         message << "Recovery schedule ended for job " << job->_id
                 << " but job was underestimated. Job gets queued for CFS (late)";
-        this->_atlas_model->add_message(timestamp, message.str());
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
 
         this->_atlas_model->_cfs_queue[this->_schedule->_core].push_back(job);
     } else {
         std::stringstream message;
         message << "Recovery schedule ended for job " << job->_id
                 << " but had not got all of its atlas time. Job stays on recovery.";
-        this->_atlas_model->add_message(timestamp, message.str());
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
 
         /* schedule no longer executes */
         this->_atlas_model->_recovery_schedule[this->_schedule->_core] = nullptr;
@@ -562,7 +564,7 @@ void EndScheduleAction<AtlasSchedule>::action() {
         std::stringstream message;
         message << "ATLAS schedule ended for job " << job->_id
                 << " but Job was underestimated. Job gets queued for CFS (late).";
-        this->_atlas_model->add_message(timestamp, message.str());
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
 
         this->_atlas_model->_cfs_queue[this->_schedule->_core].push_back(this->_schedule->_job);
     } else {
@@ -575,7 +577,7 @@ void EndScheduleAction<AtlasSchedule>::action() {
             message << "ATLAS schedule ended for job " << job->_id
                     << " but it had not got all of its atlas time. Job gets queued for Recovery.";
         }
-        this->_atlas_model->add_message(timestamp, message.str());
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
 
         /* do not show schedules that did not run */
         this->_schedule->end_simulation(timestamp);

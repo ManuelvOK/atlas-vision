@@ -31,8 +31,8 @@ void AtlasModel::add_early_cfs_schedule(EarlyCfsSchedule *schedule) {
     this->add_cfs_schedule(schedule);
 }
 
-void AtlasModel::add_message(int timestamp, std::string text) {
-    Message *message = new Message(timestamp, text);
+void AtlasModel::add_message(int timestamp, std::string text, std::set<int> jobs) {
+    Message *message = new Message(timestamp, text, jobs);
     this->_messages.push_back(message);
     std::cerr << timestamp << ": " << text << std::endl;
 }

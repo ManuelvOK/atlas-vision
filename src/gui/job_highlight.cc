@@ -16,8 +16,8 @@ SDL_GUI::Style *JobHighlight::highlight_style() {
 }
 
 bool JobHighlight::is_highlighted() {
-    if (this->_atlas_model->_highlighted_job != this->_job->_id) {
-        return false;
+    if (this->_atlas_model->_highlighted_jobs.contains(this->_job->_id)) {
+        return true;
     }
-    return true;
+    return false;
 }

@@ -41,14 +41,16 @@ public:
     std::map<unsigned, std::list<Job *>> _recovery_queue;
     std::map<unsigned, RecoverySchedule *> _recovery_schedule;
 
-    int _highlighted_job = -1;
-    std::map<const SDL_GUI::Drawable *, const Job *> _drawables_jobs;
+    std::set<int> _highlighted_jobs;
+    std::map<const SDL_GUI::Drawable *, std::set<int>> _drawables_jobs;
+    std::map<const SDL_GUI::Drawable *, Message *> _drawables_messages;
+    std::map<Message *, SDL_GUI::Drawable *> _messages_underlines;
 
     bool _dirty = true;
     bool _simulated = false;
 
-    /** list of atlas schedules visibile for cfs scheduler */
-    //std::vector<CfsVisibility *> _cfs_visibilities;
+    Message *_hovered_message = nullptr;
+    std::vector<std::string> _debug_messages;
 
     AtlasModel();
 
@@ -57,7 +59,7 @@ public:
     void add_cfs_schedule(CfsSchedule *schedule);
     void add_early_cfs_schedule(EarlyCfsSchedule *schedule);
 
-    void add_message(int timestamp, std::string text);
+    void add_message(int timestamp, std::string text, std::set<int> jobs = std::set<int>());
 
     const Schedule *active_schedule(unsigned core, int timestamp) const;
     const Schedule *active_schedule_on_scheduler(unsigned core, SchedulerType scheduler, int timestamp) const;

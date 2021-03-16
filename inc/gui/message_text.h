@@ -16,6 +16,9 @@ class MessageText : public SDL_GUI::Drawable {
     SDL_Surface *_surface_inactive; /**< prerendered text for being inactive */
 
     virtual SDL_GUI::Drawable *clone() const override;
+
+    void change_surface(SDL_Surface *surface);
+
 public:
     /**
      * Constructor
@@ -36,8 +39,4 @@ public:
     void deactivate();
 
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
-
-    unsigned width() const override;
-
-    unsigned height() const override;
 };

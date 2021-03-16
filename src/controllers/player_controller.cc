@@ -63,16 +63,19 @@ void PlayerController::evaluate_input() {
         this->_player_model->zoom_out(1.25);
     }
 
-    if (this->_input_model->is_pressed(InputKey::RIGHT_CLICK)) {
-        if (this->_input_model->_player_hovered) {
-            this->_player_model->set_position_with_click(this->_input_model->_mouse_in_player._x);
+    if (this->_input_model->_player_hovered) {
+        if (this->_input_model->is_pressed(InputKey::RIGHT_CLICK)) {
+                this->_player_model->set_position_with_click(this->_input_model->_mouse_in_player._x);
         }
-    }
-    if (this->_input_model->is_down(InputKey::CLICK)) {
-        this->_dragging = true;
-    }
-    if (this->_input_model->is_up(InputKey::CLICK)) {
-        this->_dragging = false;
+        if (this->_input_model->is_down(InputKey::CLICK)) {
+            this->_dragging = true;
+        }
+        if (this->_input_model->is_up(InputKey::CLICK)) {
+            this->_dragging = false;
+        }
+    } else if (this->_input_model->is_down(InputKey::CLICK)
+               and this->_atlas_model->_hovered_message) {
+        this->_player_model->set_position(this->_atlas_model->_hovered_message->_timestamp);
     }
 }
 

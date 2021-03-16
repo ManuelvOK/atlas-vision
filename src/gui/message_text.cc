@@ -15,7 +15,7 @@ MessageText::MessageText(const std::string message, TTF_Font *font, int width,
     this->_surface_inactive = TTF_RenderText_Blended_Wrapped(this->_font, message.c_str(), color,
                                                              width);
     SDL_FreeSurface(this->_surface);
-    this->_surface = this->_surface_inactive;
+    this->change_surface(this->_surface_inactive);
 }
 
 MessageText::~MessageText() {
@@ -23,16 +23,22 @@ MessageText::~MessageText() {
     SDL_FreeSurface(this->_surface_inactive);
 }
 
+void MessageText::change_surface(SDL_Surface *surface) {
+    this->_surface = surface;
+    Positionable::_width = surface->w;
+    this->_height = surface->h;
+}
+
 SDL_GUI::Drawable *MessageText::clone() const {
     return new MessageText(this->_text, this->_font, this->_width, this->_position);
 }
 
 void MessageText::activate() {
-    this->_surface = this->_surface_active;
+    this->change_surface(this->_surface_active);
 }
 
 void MessageText::deactivate() {
-    this->_surface = this->_surface_inactive;
+    this->change_surface(this->_surface_inactive);
 }
 
 void MessageText::draw(SDL_Renderer *renderer, SDL_GUI::Position position) const {
@@ -40,12 +46,4 @@ void MessageText::draw(SDL_Renderer *renderer, SDL_GUI::Position position) const
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, this->_surface);
     SDL_RenderCopy(renderer, texture, NULL, &dstrect);
     SDL_DestroyTexture(texture);
-}
-
-unsigned MessageText::width() const {
-    return this->_surface->w;
-}
-
-unsigned MessageText::height() const {
-    return this->_surface->h;
 }
