@@ -31,6 +31,7 @@ public:
 
     std::set<AtlasSchedule *, decltype(&compare_schedules)> _atlas_schedules;
     std::vector<CfsSchedule *> _cfs_schedules;
+    std::vector<EarlyCfsSchedule *> _early_cfs_schedules;
     std::vector<RecoverySchedule *> _recovery_schedules;
     std::list<SimulationAction *> _actions_to_do;
     std::list<SimulationAction *> _actions_done;
@@ -47,13 +48,14 @@ public:
     bool _simulated = false;
 
     /** list of atlas schedules visibile for cfs scheduler */
-    std::vector<CfsVisibility *> _cfs_visibilities;
+    //std::vector<CfsVisibility *> _cfs_visibilities;
 
     AtlasModel();
 
     void add_atlas_schedule(AtlasSchedule *schedule);
     void add_recovery_schedule(RecoverySchedule *schedule);
     void add_cfs_schedule(CfsSchedule *schedule);
+    void add_early_cfs_schedule(EarlyCfsSchedule *schedule);
 
     void add_message(int timestamp, std::string text);
 

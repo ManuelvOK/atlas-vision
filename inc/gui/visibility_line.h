@@ -16,7 +16,7 @@ class VisibilityLine : public SDL_GUI::Line {
     const InterfaceModel *_interface_model; /**< The applications interface model */
     const PlayerModel *_player_model;       /**< The applications player model */
 
-    const CfsVisibility *_visibility;       /**< related visibility object */
+    const CfsVisibility _visibility;       /**< related visibility object */
     const Schedule *_schedule;              /**< related schedule */
 
     virtual SDL_GUI::Drawable *clone() const override;
@@ -30,7 +30,7 @@ public:
      * @param schedule related schedule
      */
     VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model,
-                   const CfsVisibility *visibility, const Schedule *schedule);
+                   const CfsVisibility visibility, const Schedule *schedule);
 
     void update() override;
 };

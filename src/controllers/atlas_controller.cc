@@ -76,10 +76,11 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
  * @param visibilities list of visibilities to add drawables for
  * @param interface_model the applicatoins interface model
  * @param default_interface_model the interface model of the SDL_GUI library
+
  * @param atlas_model the applications atlas model
  * @param player_model the applications player model
  */
-static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
+static void create_CFS_visibility_drawables(std::vector<EarlyCfsSchedule *> early_cfs_schedules,
                                             InterfaceModel *interface_model,
                                             SDL_GUI::InterfaceModel *default_interface_model,
                                             const PlayerModel *player_model);
@@ -159,7 +160,7 @@ void AtlasController::init() {
     create_schedule_drawables(this->_interface_model, this->_default_interface_model,
                               this->_atlas_model, this->_player_model);
 
-    create_CFS_visibility_drawables(this->_atlas_model->_cfs_visibilities, this->_interface_model,
+    create_CFS_visibility_drawables(this->_atlas_model->_early_cfs_schedules, this->_interface_model,
                                     this->_default_interface_model, this->_player_model);
     create_message_drawables(this->_atlas_model->_messages, this->_default_interface_model,
                              this->_player_model);
@@ -325,17 +326,17 @@ static void create_schedule_drawables(InterfaceModel *interface_model,
     }
 }
 
-static void create_CFS_visibility_drawables(std::vector<CfsVisibility *> visibilities,
+static void create_CFS_visibility_drawables(std::vector<EarlyCfsSchedule *> early_cfs_schedules,
                                             InterfaceModel *interface_model,
                                             SDL_GUI::InterfaceModel *default_interface_model,
                                             const PlayerModel *player_model) {
-    for (CfsVisibility *visibility: visibilities) {
-        Schedule *schedule = visibility->_schedule;
+    for (EarlyCfsSchedule *schedule: early_cfs_schedules) {
+        CfsVisibility visibility = schedule->create_visibility();
         std::stringstream rect_name;
         rect_name << "core-" << schedule->_core;
         SDL_GUI::Drawable *core_rect =
             default_interface_model->find_first_drawable(rect_name.str());
-        VisibilityLine *l = new VisibilityLine(interface_model, player_model, visibility, schedule);
+        VisibilityLine *l = new VisibilityLine(interface_model, player_model, visibility, visibility._schedule);
         core_rect->add_child(l);
     }
 }

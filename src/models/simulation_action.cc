@@ -234,7 +234,7 @@ void BeginScheduleAction<EarlyCfsSchedule>::action() {
     if (this->_atlas_model->_cfs_schedule[this->_schedule->_core] != this->_schedule) {
         this->_atlas_model->_cfs_schedule[this->_schedule->_core] = this->_schedule;
         this->_schedule->_job->_schedules.push_back(this->_schedule);
-        this->_atlas_model->add_cfs_schedule(this->_schedule);
+        this->_atlas_model->add_early_cfs_schedule(this->_schedule);
     }
 
     /* check if dependencies have finished */
@@ -321,6 +321,7 @@ void BeginScheduleAction<AtlasSchedule>::action() {
     if (job->execution_time_left(timestamp) <= 0) {
         return;
     }
+    /* check if there is a schedule already running */
     this->_schedule->add_change_does_execute(timestamp, true);
     std::stringstream message;
     message << "Execute job " << job->_id << " on core " << this->_schedule->_core
@@ -442,12 +443,7 @@ void EndScheduleAction<EarlyCfsSchedule>::action() {
         this->_atlas_model->_actions_to_do.push_back(
             new FillAction(this->_atlas_model, timestamp, this->_schedule->_core));
     }
-    /* visibility stays until now */
-    std::cerr << timestamp << ": visibility ended for job " << job->_id << std::endl;
-    ScheduleData first_data = this->_schedule->first_data();
-    this->_atlas_model->_cfs_visibilities.push_back(
-        new CfsVisibility(this->_schedule->_atlas_schedule, first_data._begin,
-                          timestamp));
+
     if (this->_schedule->last_data().end() > timestamp) {
         this->_schedule->add_change_end(timestamp, timestamp);
     }

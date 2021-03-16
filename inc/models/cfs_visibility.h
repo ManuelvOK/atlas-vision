@@ -7,7 +7,7 @@
 class CfsVisibility : public Printable {
 public:
     int _schedule_id;               /**< ID of visible schedule */
-    Schedule *_schedule = nullptr;  /**< visible schedule */
+    const Schedule *_schedule = nullptr;  /**< visible schedule */
     int _begin;                     /**< timestand of visibility begin */
     int _end;                       /**< timestand of visibility end */
 
@@ -17,7 +17,7 @@ public:
      * @param begin timestamp of visibility begin
      * @param end timestand of visibility end
      */
-    CfsVisibility(Schedule *schedule, int begin, int end)
+    CfsVisibility(const Schedule *schedule, int begin, int end)
         : _schedule(schedule), _begin(begin), _end(end) {}
 
     /**

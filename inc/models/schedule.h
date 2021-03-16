@@ -8,6 +8,7 @@
 
 class Job;
 class ParsedChange;
+class CfsVisibility;
 
 /** type of scheduler encoded as ascii character */
 enum class SchedulerType {
@@ -164,8 +165,8 @@ class EarlyCfsSchedule : public CfsSchedule {
   public:
     using CfsSchedule::CfsSchedule;
     AtlasSchedule *_atlas_schedule = nullptr;
-    EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int begin, int execution_time)
-        : CfsSchedule(s, submission_time, begin, execution_time), _atlas_schedule(s) {}
+    EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int begin, int execution_time);
+    CfsVisibility create_visibility() const;
 };
 
 class LateCfsSchedule : public CfsSchedule {

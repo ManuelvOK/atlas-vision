@@ -3,7 +3,7 @@
 #include <config/interface_config.h>
 
 VisibilityLine::VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model,
-                               const CfsVisibility *visibility, const Schedule *schedule)
+                               const CfsVisibility visibility, const Schedule *schedule)
     : SDL_GUI::Line(), _interface_model(interface_model), _player_model(player_model),
     _visibility(visibility), _schedule(schedule) {
     int begin_y = interface_config.schedule.CFS_offset_y + 0.5
@@ -20,7 +20,7 @@ SDL_GUI::Drawable *VisibilityLine::clone() const {
 
 void VisibilityLine::update() {
     /* hide if not active */
-    if (this->_visibility->is_active_at_time(this->_player_model->_position)) {
+    if (this->_visibility.is_active_at_time(this->_player_model->_position)) {
         this->show();
     } else {
         this->hide();

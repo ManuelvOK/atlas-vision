@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <models/cfs_visibility.h>
 #include <models/job.h>
 #include <util/parser.h>
 
@@ -42,6 +43,17 @@ Schedule::Schedule(const Schedule *s) :
     _submission_time(s->_submission_time),
     _data(s->_data) {
     Schedule::_next_id = std::max(Schedule::_next_id, this->_id + 1);
+}
+
+EarlyCfsSchedule::EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int begin,
+                                   int execution_time)
+    : CfsSchedule(s, submission_time, begin, execution_time),
+    _atlas_schedule(s) {
+    //this->_visibility = new CfsVisibility(this, begin, this->_atlas_schedule->last_data()._begin);
+}
+
+CfsVisibility EarlyCfsSchedule::create_visibility() const {
+    return CfsVisibility(this->_atlas_schedule, this->first_data()._begin, std::min(this->last_data().end(), this->_atlas_schedule->last_data()._begin));
 }
 
 void Schedule::add_change(const ParsedChange &change) {
