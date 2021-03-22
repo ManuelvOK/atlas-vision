@@ -16,22 +16,7 @@ protected:
 
 private:
     /** polygon shape for the arrow in up and down direction */
-    const std::map<Direction, std::pair<std::array<short,9>, std::array<short,9>>> _coords= {
-        {
-            Direction::DOWN,
-            {
-                {40, 60, 60, 90, 100,  50,  0, 10, 40},
-                { 0,  0, 80, 50,  60, 110, 60, 50, 80}
-            },
-        },
-        {
-            Direction::UP,
-            {
-                { 40,  60, 60, 90, 100, 50,  0, 10, 40},
-                {110, 110, 30, 60,  50,  0, 50, 60, 30}
-            },
-        },
-    };
+    static const std::map<Direction, std::pair<std::array<short,9>, std::array<short,9>>> _coords;
     std::array<short, 9> _coords_x;
     std::array<short, 9> _coords_y;
 
@@ -63,4 +48,12 @@ public:
     void draw(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
 
     void draw_border(SDL_Renderer *renderer, SDL_GUI::Position position) const override;
+
+    static unsigned height(Direction direction);
+
+    virtual unsigned height() const override;
+
+    static unsigned width(Direction direction);
+
+    virtual unsigned width() const override;
 };

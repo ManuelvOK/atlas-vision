@@ -4,6 +4,7 @@
 
 #include <SDL_GUI/inc/gui/util.h>
 
+#include <models/schedule.h>
 
 void InterfaceModel::init_colors(int n_jobs) {
     this->_colors.clear();
@@ -46,4 +47,18 @@ float InterfaceModel::unit_width(int pixel) const {
 
 float InterfaceModel::unit_height(int pixel) const {
     return std::ceil(pixel / this->_unit_height);
+}
+
+int InterfaceModel::scheduler_offset(SchedulerType t) const {
+    static const std::map<SchedulerType, int> position = {{SchedulerType::ATLAS, 0}, {SchedulerType::recovery, 1}, {SchedulerType::CFS, 2}};
+    int scheduler_height_before = position.at(t) * interface_config.unit.height_px;
+    int distance_before = (1 + position.at(t)) * interface_config.player.scheduler_distance_px;
+    return scheduler_height_before + distance_before;
+}
+
+int InterfaceModel::core_rect_height() const {
+    static const int n_schedulers = 3;
+    int scheduler_height = n_schedulers * interface_config.unit.height_px;
+    int distance = (1 + n_schedulers) * interface_config.player.scheduler_distance_px;
+    return scheduler_height + distance;
 }

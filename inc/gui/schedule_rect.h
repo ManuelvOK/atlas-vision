@@ -12,12 +12,10 @@ protected:
     const Schedule *_schedule;
     const InterfaceModel *_interface_model;
     const PlayerModel *_player_model;
-    const std::map<SchedulerType, int> _offsets;
     virtual SDL_GUI::Drawable *clone() const override;
 public:
     ScheduleRect(const Schedule *schedule, const InterfaceModel *interface_model,
-                 const PlayerModel *player_model, const AtlasModel *atlas_model,
-                 const std::map<SchedulerType, int> offsets);
+                 const PlayerModel *player_model, const AtlasModel *atlas_model);
 
     void update() override;
 };

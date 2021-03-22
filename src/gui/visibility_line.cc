@@ -6,11 +6,11 @@ VisibilityLine::VisibilityLine(InterfaceModel *interface_model, const PlayerMode
                                const CfsVisibility visibility, const Schedule *schedule)
     : SDL_GUI::Line(), _interface_model(interface_model), _player_model(player_model),
     _visibility(visibility), _schedule(schedule) {
-    int begin_y = interface_config.schedule.CFS_offset_y + 0.5
-                  * this->_interface_model->px_height(1);
+    int begin_y = this->_interface_model->scheduler_offset(SchedulerType::CFS)
+                  + 0.5 * this->_interface_model->px_height(1);
     this->set_position({0, begin_y});
-    int end_y = interface_config.schedule.ATLAS_offset_y - begin_y + 0.5
-                * this->_interface_model->px_height(1);
+    int end_y = this->_interface_model->scheduler_offset(SchedulerType::ATLAS)
+                - begin_y + 0.5 * this->_interface_model->px_height(1);
     this->_end.set_position({0, end_y});
 }
 

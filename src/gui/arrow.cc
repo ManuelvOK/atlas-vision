@@ -4,6 +4,26 @@
 
 #include <SDL2/SDL2_gfxPrimitives.h>
 
+
+const std::map<Arrow::Direction, std::pair<std::array<short,9>, std::array<short,9>>>
+Arrow::_coords =
+{
+    {
+        Direction::DOWN,
+        {
+            {40, 60, 60, 90, 100,  50,  0, 10, 40},
+            { 0,  0, 80, 50,  60, 110, 60, 50, 80}
+        },
+    },
+    {
+        Direction::UP,
+        {
+            { 40,  60, 60, 90, 100, 50,  0, 10, 40},
+            {110, 110, 30, 60,  50,  0, 50, 60, 30}
+        },
+    },
+};
+
 Arrow::Arrow(SDL_GUI::Position position, Direction direction) :
     Drawable("Arrow", position),
     _direction(direction) {
@@ -66,4 +86,26 @@ void Arrow::draw_border(SDL_Renderer *renderer, SDL_GUI::Position position) cons
     polygonRGBA(renderer, pos_x.data(), pos_y.data(), 9, this->_current_style->_border_color._r,
                 this->_current_style->_border_color._g, this->_current_style->_border_color._b,
                 255);
+}
+
+unsigned Arrow::height(Direction direction) {
+    auto coords_y = Arrow::_coords.at(direction).second;
+    int max_y = *std::max_element(coords_y.begin(), coords_y.end());
+    int min_y = *std::min_element(coords_y.begin(), coords_y.end());
+    return (max_y - min_y) / 5;
+}
+
+unsigned Arrow::height() const {
+    return Arrow::height(this->_direction);
+}
+
+unsigned Arrow::width(Direction direction) {
+    auto coords_x = Arrow::_coords.at(direction).first;
+    int max_x = *std::max_element(coords_x.begin(), coords_x.end());
+    int min_x = *std::min_element(coords_x.begin(), coords_x.end());
+    return (max_x - min_x) / 5;
+}
+
+unsigned Arrow::width() const {
+    return Arrow::width(this->_direction);
 }

@@ -13,6 +13,7 @@
  * Model for more interface related data.
  * TODO: this should inherit from SDL_GUI::InterfaceModel.
  */
+enum class SchedulerType;
 class InterfaceModel : public SDL_GUI::ModelBase {
 public:
     /**
@@ -44,34 +45,46 @@ public:
     /**
      * convert width unit to pixel value
      * @param unit unit value to convert into pixel
-     * @returns width pixel value of unit
+     * @return width pixel value of unit
      */
     int px_width(float unit) const;
 
     /**
      * convert height unit to pixel value
      * @param unit unit value to convert into pixel
-     * @returns height pixel value of unit
+     * @return height pixel value of unit
      */
     int px_height(float unit) const;
 
     /**
      * convert width pixel to unit value
      * @param pixel pixel value to convert into unit
-     * @returns width unit value of pixel
+     * @return width unit value of pixel
      */
     float unit_width(int pixel) const;
 
     /**
      * convert height pixel to unit value
      * @param pixel pixel value to convert into unit
-     * @returns height unit value of pixel
+     * @return height unit value of pixel
      */
     float unit_height(int pixel) const;
 
     /**
      * get the width of the player in pixels
-     * @returns width of the player in pixels
+     * @return width of the player in pixels
      */
     int get_player_width_px() const;
+
+    /**
+     * get the y-offset of the given scheduler inside the core rect
+     * @return schedulers offset insode core rect
+     */
+    int scheduler_offset(SchedulerType t) const;
+
+    /**
+     * get the height of a single core rect
+     * @return height of a core rect
+     */
+    int core_rect_height() const;
 };
