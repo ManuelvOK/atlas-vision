@@ -28,18 +28,18 @@ const std::map<std::set<SDL_Scancode>, std::map<SDL_Scancode, InputKey>> keyboar
                 {SDL_SCANCODE_RSHIFT, InputKey::SHIFT},
             }
     },
-//    {
-//        {SDL_SCANCODE_LSHIFT}, {
-//                                   {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
-//                                   {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
-//                               }
-//    },
-//    {
-//        {SDL_SCANCODE_RSHIFT}, {
-//                                   {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
-//                                   {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
-//                               }
-//    },
+    {
+        {SDL_SCANCODE_LSHIFT}, {
+                                   {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
+                                   {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
+                               }
+    },
+    {
+        {SDL_SCANCODE_RSHIFT}, {
+                                   {SDL_SCANCODE_L, InputKey::PLAYER_SCROLL_LEFT},
+                                   {SDL_SCANCODE_H, InputKey::PLAYER_SCROLL_RIGHT},
+                               }
+    },
 };
 
 /** config for window events */
