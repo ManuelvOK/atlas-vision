@@ -55,12 +55,22 @@ void PlayerController::evaluate_input() {
         this->_player_model->zoom_out();
     }
 
-    if (this->_input_model->mouse_wheel()._y > 0) {
-        this->_player_model->zoom_in(1.25);
-    }
+    if (this->_input_model->is_pressed(InputKey::SHIFT)) {
+        if (this->_input_model->mouse_wheel()._y > 0) {
+            this->_player_model->scroll_left(this->_input_model->mouse_wheel()._y * 45);
+        }
 
-    if (this->_input_model->mouse_wheel()._y < 0) {
-        this->_player_model->zoom_out(1.25);
+        if (this->_input_model->mouse_wheel()._y < 0) {
+            this->_player_model->scroll_right(-this->_input_model->mouse_wheel()._y * 45);
+        }
+    } else {
+        if (this->_input_model->mouse_wheel()._y > 0) {
+            this->_player_model->zoom_in(1.25);
+        }
+
+        if (this->_input_model->mouse_wheel()._y < 0) {
+            this->_player_model->zoom_out(1.25);
+        }
     }
 
     if (this->_input_model->_player_hovered) {

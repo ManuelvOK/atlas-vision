@@ -15,4 +15,5 @@ enum class InputKey {
     CLICK,
     RIGHT_CLICK,
     REINIT,
+    SHIFT,
 };
