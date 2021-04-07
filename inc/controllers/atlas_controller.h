@@ -2,12 +2,11 @@
 
 #include <SDL_GUI/inc/application.h>
 #include <SDL_GUI/inc/controllers/controller_base.h>
-#include <SDL_GUI/inc/models/input_model.h>
 #include <SDL_GUI/inc/models/interface_model.h>
 
-#include <input_keys.h>
 #include <models/atlas_model.h>
 #include <models/interface_model.h>
+#include <models/input_model.h>
 #include <models/player_model.h>
 
 /** Controller for everything related to the scheduler */
@@ -16,7 +15,7 @@ class AtlasController : public SDL_GUI::ControllerBase {
     AtlasModel *_atlas_model;                           /**< Model for the scheduler */
     InterfaceModel *_interface_model;                   /**< The Applications interface model */
     SDL_GUI::InterfaceModel *_default_interface_model;  /**< The interface model from the library */
-    const SDL_GUI::InputModel<InputKey> *_input_model;  /**< The applications input model */
+    InputModel *_input_model;  /**< The applications input model */
     const PlayerModel *_player_model;                   /**< Model for the schedule player */
 
 
@@ -82,6 +81,9 @@ class AtlasController : public SDL_GUI::ControllerBase {
     */
     void create_CFS_visibility_drawables(std::vector<EarlyCfsSchedule *> early_cfs_schedules);
 
+    /** create callback to change input state on mouseover */
+    void init_message_rect();
+
     /**
     * create drawables for all the event messages
     * @param messages list of messages to create drawables for
@@ -119,7 +121,7 @@ public:
     AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                     InterfaceModel *interface_model,
                     SDL_GUI::InterfaceModel *default_interface_model,
-                    const SDL_GUI::InputModel<InputKey> *input_model,
+                    InputModel *input_model,
                     const PlayerModel *player_model);
 
     void update() override;

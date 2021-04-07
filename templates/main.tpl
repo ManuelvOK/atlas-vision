@@ -24,7 +24,7 @@
         <rect width="250" height="200" x="0" y="330" border="true" attributes="debug">
         </rect>
     </rect>
-    <rect width="500" height="930" x="920" y="20" border="true" attributes="messages">
+    <rect width="500" height="530" x="920" y="20" border="true" attributes="messages">
     </rect>
     <rect width="880" height="380" x="20" y="570" border="true" attributes="legend">
     </rect>

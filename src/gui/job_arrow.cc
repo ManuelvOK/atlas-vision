@@ -19,11 +19,11 @@ void JobArrow::update() {
     /* TODO: get rid of magic number */
     this->set_x(10 + this->_interface_model->px_width(this->_pos_x) - this->_width / 2);
 
-    this->set_current_style(&this->_default_style);
+    this->_style = this->_default_style;
     if (this->is_hidden()) {
         return;
     }
     if (this->is_highlighted()) {
-        this->set_current_style(this->highlight_style());
+        this->_style = this->highlight_style();
     }
 }

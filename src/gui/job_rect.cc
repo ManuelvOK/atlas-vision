@@ -17,11 +17,11 @@ SDL_GUI::Drawable *JobRect::clone() const {
 }
 
 void JobRect::update() {
-    this->set_current_style(&this->_default_style);
+    this->_style = this->_default_style;
     if (this->is_hidden()) {
         return;
     }
     if (this->is_highlighted()) {
-        this->set_current_style(this->highlight_style());
+        this->_style = this->highlight_style();
     }
 }

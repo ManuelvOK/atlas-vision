@@ -55,36 +55,38 @@ void PlayerController::evaluate_input() {
         this->_player_model->zoom_out();
     }
 
-    if (this->_input_model->is_pressed(InputKey::SHIFT)) {
-        if (this->_input_model->mouse_wheel()._y > 0) {
-            this->_player_model->scroll_left(this->_input_model->mouse_wheel()._y * 45);
-        }
+    if (this->_input_model->state() == InputState::IN_PLAYER) {
+        if (this->_input_model->is_pressed(InputKey::SHIFT)) {
+            if (this->_input_model->mouse_wheel()._y > 0) {
+                this->_player_model->scroll_left(this->_input_model->mouse_wheel()._y * 45);
+            }
 
-        if (this->_input_model->mouse_wheel()._y < 0) {
-            this->_player_model->scroll_right(-this->_input_model->mouse_wheel()._y * 45);
-        }
-    } else {
-        if (this->_input_model->mouse_wheel()._y > 0) {
-            this->_player_model->zoom_in(1.25);
-        }
+            if (this->_input_model->mouse_wheel()._y < 0) {
+                this->_player_model->scroll_right(-this->_input_model->mouse_wheel()._y * 45);
+            }
+        } else {
+            if (this->_input_model->mouse_wheel()._y > 0) {
+                this->_player_model->zoom_in(1.25);
+            }
 
-        if (this->_input_model->mouse_wheel()._y < 0) {
-            this->_player_model->zoom_out(1.25);
+            if (this->_input_model->mouse_wheel()._y < 0) {
+                this->_player_model->zoom_out(1.25);
+            }
         }
     }
 
-    if (this->_input_model->_player_hovered) {
-        if (this->_input_model->is_pressed(InputKey::RIGHT_CLICK)) {
-                this->_player_model->set_position_with_click(this->_input_model->_mouse_in_player._x);
-        }
-        if (this->_input_model->is_down(InputKey::CLICK)) {
-            this->_dragging = true;
-        }
-        if (this->_input_model->is_up(InputKey::CLICK)) {
-            this->_dragging = false;
-        }
-    } else if (this->_input_model->is_down(InputKey::CLICK)
-               and this->_atlas_model->_hovered_message) {
+    if (this->_input_model->is_pressed(InputKey::PLAYER_SET_POSITION)) {
+        this->_player_model->set_position_with_click(this->_input_model->_mouse_in_player._x);
+    }
+    if (this->_input_model->is_down(InputKey::PLAYER_DRAG)) {
+        this->_dragging = true;
+    }
+    if (this->_input_model->is_up(InputKey::PLAYER_DRAG)) {
+        this->_dragging = false;
+    }
+
+    if (this->_input_model->is_down(InputKey::MESSAGE_CLICK)
+            and this->_atlas_model->_hovered_message) {
         this->_player_model->set_position(this->_atlas_model->_hovered_message->_timestamp);
     }
 }
@@ -131,10 +133,12 @@ void PlayerController::init() {
     player->add_recalculation_callback([input_model, player_model](SDL_GUI::Drawable *d) {
             SDL_GUI::Position mouse_position = input_model->mouse_position();
             if (d->is_inside(mouse_position)) {
-                input_model->_player_hovered = true;
                 input_model->_mouse_in_player = mouse_position - d->absolute_position();
-            } else {
-                input_model->_player_hovered = false;
+                if (input_model->state() != InputState::IN_PLAYER) {
+                    input_model->set_state(InputState::IN_PLAYER, false);
+                }
+            } else if (input_model->state() == InputState::IN_PLAYER) {
+                input_model->set_state(InputState::ALL, false);
             }
         });
 
@@ -147,9 +151,9 @@ void PlayerController::init() {
         SDL_GUI::VerticalLine *l = new SDL_GUI::VerticalLine();
         /* every 5th line has a different color */
         if (i % grid_dark_distance == 0) {
-            l->_default_style._color = SDL_GUI::RGB(interface_config.player.grid_dark_grey);
+            l->_style._color = SDL_GUI::RGB(interface_config.player.grid_dark_grey);
         } else {
-            l->_default_style._color = SDL_GUI::RGB(interface_config.player.grid_grey);
+            l->_style._color = SDL_GUI::RGB(interface_config.player.grid_grey);
         }
         l->set_height(height);
         l->add_recalculation_callback([interface_model, i](SDL_GUI::Drawable *d) {
@@ -165,5 +169,6 @@ void PlayerController::init() {
                 d->set_width(interface_model->px_width(max_position));
             });
     }
+
     this->_player_model->_dirty = false;
 }

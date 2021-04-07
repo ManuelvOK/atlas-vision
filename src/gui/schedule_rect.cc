@@ -30,11 +30,11 @@ void ScheduleRect::update() {
     this->set_x(this->_interface_model->px_width(data._begin));
     this->set_y(this->_interface_model->scheduler_offset(data._scheduler));
     this->set_width(this->_interface_model->px_width(data._execution_time));
-    this->set_current_style(&this->_default_style);
+    this->_style = this->_default_style;
     if (this->is_hidden()) {
         return;
     }
     if (this->is_highlighted()) {
-        this->set_current_style(this->highlight_style());
+        this->_style = this->highlight_style();
     }
 }

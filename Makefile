@@ -21,8 +21,11 @@ DEPFLAGS     += -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 CXXFLAGSTAGS := -I/home/morion/.vim/tags
 
+SDL_GUI_LIB    := $(LIBDIR)/libSDL_GUI.a
+SDL_GUI_EXTDIR := $(LIBDIR)/SDL_GUI
+
+LIBRARIES    := $(SDL_GUI_LIB)
 LIBS         := -lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_image -lfontconfig
-LIBRARIES    := $(LIBDIR)/SDL_GUI.a
 
 # create directories
 $(foreach dirname,$(dir $(OBJS)) $(dir $(DEPS)),$(shell $(MKDIR) $(dirname)))
@@ -64,8 +67,8 @@ $(DEPS):
 $(TARGET): $(OBJS) $(LIBRARIES)
 	$(CXX) -o $@ $^ $(LIBS)
 
-$(LIBRARIES): $(LIBDIR)/%.a: $(LIBDIR)/%/
-	$(MAKE) -C $(LIBDIR)/$* lib
-	ln -fs $(CURDIR)/$(LIBDIR)/$*/build/$*.a $(LIBDIR)/$*.a
+$(SDL_GUI_LIB): $(SDL_GUI_EXTDIR)
+	$(MAKE) -C $< lib
+	ln -fs $(CURDIR)/$</build/libSDL_GUI.a $@
 
 -include $(wildcard $(DEPS))

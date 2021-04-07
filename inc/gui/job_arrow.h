@@ -13,6 +13,7 @@ protected:
     const Job *_job;
     int _pos_x;
     const InterfaceModel *_interface_model;
+    SDL_GUI::Style _default_style;
 
     virtual SDL_GUI::Drawable *clone() const override;
 public:

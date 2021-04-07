@@ -6,7 +6,6 @@
 #include <SDL_GUI/inc/plugins/plugin_base.h>
 #include <SDL_GUI/inc/util/command_line.h>
 
-#include <input_keys.h>
 #include <config/input_config.h>
 #include <controllers/atlas_controller.h>
 #include <controllers/player_controller.h>
@@ -58,7 +57,7 @@ public:
         this->_command_line.parse(argc, argv);
 
         /* Models */
-        InputModel *input_model = new InputModel();
+        InputModel *input_model = new InputModel(InputState::ALL);
         app->add_model(input_model);
 
         PlayerModel *player_model = new PlayerModel();
@@ -70,9 +69,10 @@ public:
         AtlasModel *atlas_model = this->build_atlas_model();
 
         /* Controllers */
-        SDL_GUI::InputController<InputKey> *input_controller =
-            new SDL_GUI::InputController<InputKey>(input_model, keyboard_input_config,
-                                                   window_event_config, mouse_input_config);
+        SDL_GUI::InputController<InputKey, InputState> *input_controller =
+            new SDL_GUI::InputController<InputKey, InputState>(
+                input_model, keyboard_input_config, window_event_config,
+                mouse_input_config);
         app->add_controller(input_controller);
 
 

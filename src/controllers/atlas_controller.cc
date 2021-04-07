@@ -17,7 +17,7 @@
 AtlasController::AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
                                  InterfaceModel *interface_model,
                                  SDL_GUI::InterfaceModel *default_interface_model,
-                                 const SDL_GUI::InputModel<InputKey> *input_model,
+                                 InputModel *input_model,
                                  const PlayerModel *player_model) :
     _application(application),
     _atlas_model(atlas_model),
@@ -46,6 +46,8 @@ void AtlasController::init() {
     this->create_schedule_drawables();
 
     this->create_CFS_visibility_drawables(this->_atlas_model->_early_cfs_schedules);
+
+    this->init_message_rect();
     this->create_message_drawables(this->_atlas_model->_messages);
     this->create_dependency_graph(this->_atlas_model->_jobs);
     this->create_legend(this->_atlas_model->_jobs);
@@ -111,20 +113,32 @@ void AtlasController::update() {
         this->_atlas_model->_messages_underlines[this->_atlas_model->_hovered_message]->hide();
     }
 
-    /* hovered message */
-    this->_atlas_model->_hovered_message = nullptr;
-    std::map<const SDL_GUI::Drawable *, Message *> drawables_messages =
-        this->_atlas_model->_drawables_messages;
-    first_hovered = std::find_if(hovered.begin(), hovered.end(),
-        [drawables_messages, mouse_position](SDL_GUI::Drawable *d) {
-            return drawables_messages.contains(d)
-                   and not d->is_hidden()
-                   and d->is_inside_clip_rect(mouse_position);
-        });
-    if (first_hovered != hovered.end()) {
-        this->_atlas_model->_hovered_message =
-            this->_atlas_model->_drawables_messages[*first_hovered];
-        this->_atlas_model->_messages_underlines[this->_atlas_model->_hovered_message]->show();
+    if (this->_input_model->state() == InputState::IN_MESSAGES) {
+        /* hovered message */
+        this->_atlas_model->_hovered_message = nullptr;
+        std::map<const SDL_GUI::Drawable *, Message *> drawables_messages =
+            this->_atlas_model->_drawables_messages;
+        first_hovered = std::find_if(hovered.begin(), hovered.end(),
+            [drawables_messages, mouse_position](SDL_GUI::Drawable *d) {
+                return drawables_messages.contains(d)
+                    and not d->is_hidden()
+                    and d->is_inside_clip_rect(mouse_position);
+            });
+        if (first_hovered != hovered.end()) {
+            this->_atlas_model->_hovered_message =
+                this->_atlas_model->_drawables_messages[*first_hovered];
+            this->_atlas_model->_messages_underlines[this->_atlas_model->_hovered_message]->show();
+        }
+        /* scrolling */
+        SDL_GUI::Drawable *message_rect =
+            this->_default_interface_model->find_first_drawable("messages");
+        if (this->_input_model->mouse_wheel()._y > 0) {
+            message_rect->scroll_down(40);
+        }
+
+        if (this->_input_model->mouse_wheel()._y < 0) {
+            message_rect->scroll_up(40);
+        }
     }
 
     /* draw debug messages */
@@ -309,6 +323,23 @@ void AtlasController::create_CFS_visibility_drawables(std::vector<EarlyCfsSchedu
     }
 }
 
+void AtlasController::init_message_rect() {
+    SDL_GUI::Drawable *message_rect =
+        this->_default_interface_model->find_first_drawable("messages");
+    message_rect->enable_scrolling_y();
+    message_rect->set_enforcing_limits(true);
+    message_rect->add_recalculation_callback([this](SDL_GUI::Drawable *d) {
+            SDL_GUI::Position mouse_position = this->_input_model->mouse_position();
+            if (d->is_inside(mouse_position)) {
+                if (this->_input_model->state() != InputState::IN_MESSAGES) {
+                    this->_input_model->set_state(InputState::IN_MESSAGES, false);
+                }
+            } else if (this->_input_model->state() == InputState::IN_MESSAGES) {
+                this->_input_model->set_state(InputState::ALL, false);
+            }
+        });
+}
+
 void AtlasController::create_message_drawables(std::vector<Message *> messages) {
     SDL_GUI::Drawable *message_rect =
         this->_default_interface_model->find_first_drawable("messages");
@@ -332,11 +363,15 @@ void AtlasController::create_message_drawables(std::vector<Message *> messages) 
         offset += t->height() + 2;
 
         SDL_GUI::Line *l = new SDL_GUI::Line(SDL_GUI::Position(5, offset - 3),
-                                             SDL_GUI::Position(t->width(), 0));
+                                             SDL_GUI::Position(t->width(), offset - 3));
         l->hide();
         this->_atlas_model->_messages_underlines[message] = l;
         message_rect->add_child(l);
     }
+    int overflow = offset - message_rect->height();
+    std::cout << "overflow: " << overflow << std::endl;
+
+    message_rect->set_min_limit({0, -std::max(0, overflow)});
 }
 
 void AtlasController::create_dependency_graph(std::vector<Job *> jobs) {
@@ -366,8 +401,8 @@ void AtlasController::create_dependency_graph(std::vector<Job *> jobs) {
             JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
-            SDL_GUI::Line *l = new SDL_GUI::Line(begin, end - begin);
-            l->_default_style._color = SDL_GUI::RGB("black");
+            SDL_GUI::Line *l = new SDL_GUI::Line(begin, end);
+            l->_style._color = SDL_GUI::RGB("black");
             dep_rect->add_child(l);
         }
 
@@ -375,8 +410,8 @@ void AtlasController::create_dependency_graph(std::vector<Job *> jobs) {
             JobRect *rect_to = rects[dep->_id];
             SDL_GUI::Position begin = rect_from->position() + SDL_GUI::Position{10, 0};
             SDL_GUI::Position end = rect_to->position() + SDL_GUI::Position{10, 20};
-            SDL_GUI::Line *l = new SDL_GUI::Line(begin, end - begin);
-            l->_default_style._color = SDL_GUI::RGB("red");
+            SDL_GUI::Line *l = new SDL_GUI::Line(begin, end);
+            l->_style._color = SDL_GUI::RGB("red");
             dep_rect->add_child(l);
         }
       }

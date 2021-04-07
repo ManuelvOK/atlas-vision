@@ -3,7 +3,6 @@
 #include <SDL_GUI/inc/controllers/controller_base.h>
 #include <SDL_GUI/inc/models/interface_model.h>
 
-#include <input_keys.h>
 #include <models/atlas_model.h>
 #include <models/input_model.h>
 #include <models/interface_model.h>

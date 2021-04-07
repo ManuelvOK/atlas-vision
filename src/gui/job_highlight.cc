@@ -5,14 +5,14 @@ JobHighlight::JobHighlight(const Job *job, const InterfaceModel *interface_model
                            const AtlasModel *atlas_model) :
     _job(job),
     _atlas_model(atlas_model) {
-    this->_style._color = interface_model->get_color(this->_job->_id);
-    this->_style._has_background = true;
-    this->_style._has_border = true;
-    this->_style._border_color = SDL_GUI::RGB("white");
+    this->_highlight_style._color = interface_model->get_color(this->_job->_id);
+    this->_highlight_style._has_background = true;
+    this->_highlight_style._has_border = true;
+    this->_highlight_style._border_color = SDL_GUI::RGB("white");
 }
 
-SDL_GUI::Style *JobHighlight::highlight_style() {
-    return &this->_style;
+SDL_GUI::Style JobHighlight::highlight_style() {
+    return this->_highlight_style;
 }
 
 bool JobHighlight::is_highlighted() {

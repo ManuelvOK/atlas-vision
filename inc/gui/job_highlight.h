@@ -9,11 +9,11 @@
 class JobHighlight {
 private:
     const Job *_job;
-    SDL_GUI::Style _style;
+    SDL_GUI::Style _highlight_style;
     const AtlasModel *_atlas_model;
 protected:
     JobHighlight(const Job *job, const InterfaceModel *interface_model,
                  const AtlasModel *atlas_model);
-    SDL_GUI::Style *highlight_style();
+    SDL_GUI::Style highlight_style();
     bool is_highlighted();
 };
