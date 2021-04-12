@@ -146,6 +146,7 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
     for (const ParsedVisibility &v: this->_visibilities) {
         /* runtime check if referenced schedule exists with at() */
         Schedule *schedule = this->_schedules.at(v._schedule_id);
+        (void) schedule;
         //CfsVisibility *visibility = new CfsVisibility(schedule, v._begin, v._end);
         //atlas_model->_cfs_visibilities.push_back(visibility);
     }
