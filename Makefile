@@ -82,10 +82,10 @@ $(TARGET): $(OBJS) $(LIBRARIES)
 
 $(SDL_GUI_LIB): $(SDL_GUI_EXTDIR)
 	$(MAKE) -C $< lib
-	ln -fs $(CURDIR)/$</build/libSDL_GUI.a $@
+	ln -fs "$(CURDIR)/$</build/libSDL_GUI.a" $@
 
 $(SDL2_GFX_LIB): | $(SDL_GUI_LIB)
-	ln -fs $(CURDIR)/$(SDL_GUI_EXTDIR)/build/libSDL2_gfx.a $@
+	ln -fs "$(CURDIR)/$(SDL_GUI_EXTDIR)/build/libSDL2_gfx.a" $@
 
 $(SDL_GUI_INCDIR): $(SDL_GUI_HEADERS)
 
@@ -94,6 +94,6 @@ $(LIBRARIES): | $(LIBDIR)/
 .SECONDEXPANSION:
 
 $(LIB_HEADERS): | $(LIBINCDIR)/ $$(@D)/
-	ln -fs $(CURDIR)/$< $@
+	ln -fs "$(CURDIR)/$<" $@
 
 -include $(wildcard $(DEPS))
