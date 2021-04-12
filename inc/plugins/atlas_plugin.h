@@ -1,10 +1,10 @@
 #pragma once
 
-#include <SDL_GUI/inc/application.h>
-#include <SDL_GUI/inc/controllers/input_controller.h>
-#include <SDL_GUI/inc/plugins/default_plugin.h>
-#include <SDL_GUI/inc/plugins/plugin_base.h>
-#include <SDL_GUI/inc/util/command_line.h>
+#include <SDL_GUI/application.h>
+#include <SDL_GUI/controllers/input_controller.h>
+#include <SDL_GUI/plugins/default_plugin.h>
+#include <SDL_GUI/plugins/plugin_base.h>
+#include <SDL_GUI/util/command_line.h>
 
 #include <config/input_config.h>
 #include <controllers/atlas_controller.h>

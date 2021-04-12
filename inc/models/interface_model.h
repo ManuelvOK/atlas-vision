@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include <SDL_GUI/inc/models/model_base.h>
-#include <SDL_GUI/inc/gui/rgb.h>
+#include <SDL_GUI/models/model_base.h>
+#include <SDL_GUI/gui/rgb.h>
 
 #include <models/player_model.h>
 

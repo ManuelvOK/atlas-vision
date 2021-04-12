@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_GUI/inc/gui/primitives/rect.h>
+#include <SDL_GUI/gui/primitives/rect.h>
 
 #include <models/atlas_model.h>
 #include <models/interface_model.h>

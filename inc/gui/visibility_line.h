@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_GUI/inc/gui/primitives/line.h>
+#include <SDL_GUI/gui/primitives/line.h>
 
 #include <models/cfs_visibility.h>
 #include <models/interface_model.h>

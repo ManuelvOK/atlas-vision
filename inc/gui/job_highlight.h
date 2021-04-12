@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_GUI/inc/gui/style.h>
+#include <SDL_GUI/gui/style.h>
 
 #include <models/atlas_model.h>
 #include <models/interface_model.h>

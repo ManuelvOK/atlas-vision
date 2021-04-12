@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_GUI/inc/gui/position.h>
+#include <SDL_GUI/gui/position.h>
 
 #include <gui/arrow.h>
 #include <gui/job_highlight.h>

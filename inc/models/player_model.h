@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_GUI/inc/models/model_base.h>
+#include <SDL_GUI/models/model_base.h>
 
 /**
  * Model for all schedule player related data.

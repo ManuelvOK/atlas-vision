@@ -7,7 +7,7 @@ The library has the following dependencies:
 
  * sdl2
  * sdl2_ttf
- * rapidxml
+ * sdl2_image
  * fontconfig
 
 # Building

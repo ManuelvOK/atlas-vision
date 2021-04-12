@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <SDL_GUI/inc/application.h>
-#include <SDL_GUI/inc/plugins/default_plugin.h>
+#include <SDL_GUI/application.h>
+#include <SDL_GUI/plugins/default_plugin.h>
 
 #include <plugins/atlas_plugin.h>
 

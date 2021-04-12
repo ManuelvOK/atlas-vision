@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include <SDL_GUI/inc/gui/primitives/vertical_line.h>
+#include <SDL_GUI/gui/primitives/vertical_line.h>
 
 #include <config/interface_config.h>
 

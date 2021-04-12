@@ -4,8 +4,8 @@
 #include <limits>
 #include <sstream>
 
-#include <SDL_GUI/inc/gui/drawable.h>
-#include <SDL_GUI/inc/gui/rgb.h>
+#include <SDL_GUI/gui/drawable.h>
+#include <SDL_GUI/gui/rgb.h>
 
 #include <config/interface_config.h>
 #include <gui/job_arrow.h>

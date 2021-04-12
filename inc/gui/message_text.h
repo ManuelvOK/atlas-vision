@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL_ttf.h>
 
-#include <SDL_GUI/inc/gui/primitives/text.h>
+#include <SDL_GUI/gui/primitives/text.h>
 
 #include <models/message.h>
 

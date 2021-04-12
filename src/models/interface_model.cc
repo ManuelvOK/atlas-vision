@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <SDL_GUI/inc/gui/util.h>
+#include <SDL_GUI/gui/util.h>
 
 #include <models/schedule.h>
 

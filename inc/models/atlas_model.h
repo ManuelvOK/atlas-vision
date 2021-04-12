@@ -4,8 +4,8 @@
 #include <map>
 #include <set>
 
-#include <SDL_GUI/inc/gui/drawable.h>
-#include <SDL_GUI/inc/models/model_base.h>
+#include <SDL_GUI/gui/drawable.h>
+#include <SDL_GUI/models/model_base.h>
 
 #include <models/cfs_visibility.h>
 #include <models/job.h>

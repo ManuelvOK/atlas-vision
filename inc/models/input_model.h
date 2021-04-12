@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SDL_GUI/inc/models/input_model.h>
-#include <SDL_GUI/inc/gui/position.h>
+#include <SDL_GUI/models/input_model.h>
+#include <SDL_GUI/gui/position.h>
 
 #include <config/input_config.h>
 

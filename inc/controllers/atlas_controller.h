@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SDL_GUI/inc/application.h>
-#include <SDL_GUI/inc/controllers/controller_base.h>
-#include <SDL_GUI/inc/models/interface_model.h>
+#include <SDL_GUI/application.h>
+#include <SDL_GUI/controllers/controller_base.h>
+#include <SDL_GUI/models/interface_model.h>
 
 #include <models/atlas_model.h>
 #include <models/interface_model.h>
