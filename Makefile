@@ -32,7 +32,7 @@ SDL2_GFX_LIB    := $(LIBDIR)/libSDL2_gfx.a
 
 LIBRARIES   := $(SDL_GUI_LIB) $(SDL2_GFX_LIB)
 LIB_HEADERS := $(SDL_GUI_INCDIR)
-DYN_LIBS    := -lSDL2 -lSDL2_ttf -lSDL2_image -lfontconfig
+DYN_LIBS    := `sdl2-config --libs` -lSDL2_ttf -lSDL2_image -lfontconfig
 
 # create directories
 $(foreach dirname,$(dir $(OBJS)) $(dir $(DEPS)),$(shell $(MKDIR) $(dirname)))
