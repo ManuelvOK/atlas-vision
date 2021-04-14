@@ -72,7 +72,7 @@ public:
         SDL_GUI::InputController<InputKey, InputState> *input_controller =
             new SDL_GUI::InputController<InputKey, InputState>(
                 input_model, keyboard_input_config, window_event_config,
-                mouse_input_config);
+                mouse_input_config, InputKey::QUIT);
         app->add_controller(input_controller);
 
 

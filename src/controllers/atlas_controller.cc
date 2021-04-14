@@ -369,7 +369,6 @@ void AtlasController::create_message_drawables(std::vector<Message *> messages) 
         message_rect->add_child(l);
     }
     int overflow = offset - message_rect->height();
-    std::cout << "overflow: " << overflow << std::endl;
 
     message_rect->set_min_limit({0, -std::max(0, overflow)});
 }
