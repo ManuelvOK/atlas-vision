@@ -144,7 +144,7 @@ void FillAction::action() {
         /* Create Schedule on cfs and queue end action */
         LateCfsSchedule *cfs_schedule =
             new LateCfsSchedule(job, this->_core, timestamp, timestamp,
-                                job->estimated_execution_time_left(timestamp)
+                                job->execution_time_left(timestamp)
                                 * this->_atlas_model->_cfs_factor);
 
         this->_atlas_model->_actions_to_do.push_back(
