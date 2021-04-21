@@ -56,7 +56,6 @@ void AtlasController::init() {
 }
 
 void AtlasController::reinit() {
-    std::cout << "reinitialising atlas_controller" << std::endl;
     for (int i = 0; i < this->_atlas_model->_n_cores; ++i) {
         std::stringstream rect_name;
         rect_name << "core-" << i;

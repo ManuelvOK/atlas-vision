@@ -1,0 +1,37 @@
+# This is an example File for the ATLAS Scheduling algorith simulation
+#
+# job specification
+# > j deadline execution_time_estimate execution_time submission_time
+#
+# CFS factor assumption
+#   since we don't know what happens if something is schedules on CFS, we assume a time factor to
+#   approximately simulate the situation. Example: "f 4" means one job knowingly running on CFS
+#   takes four times the execution time.
+# > f factor
+c 1
+
+##############
+# CFS FACTOR #
+##############
+
+f 4
+
+
+########
+# JOBS #
+########
+
+j 18000 2000 2000 0000 #A1 id=0
+j 25000 1000 1000 0000 #A2 id=1
+j 14000 4000 3000 5000 #A3 id=2
+j 32000 2000 2000 5000 #A4 id=3
+
+j 20000 1000 1000 0000 #B1 id=4
+j 24000 2000 2000 2000 #B2 id=5
+j 28000 1000 1000 2000 #B3 id=6
+j 32000 2000 2000 6000 #B4 id=7
+
+j 16000 2000 2000 0000 #X0 id=8
+j 24000 3000 3000 0000 #X1 id=9
+j 20000 2000 2000 0000 #X2 id=10
+j 22000 1000 1000 6000 #X3 id=11

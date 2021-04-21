@@ -51,9 +51,8 @@ void SubmissionAction::action() {
             if (shift_value < 0) {
                 job->_atlas_schedule->add_change_shift_relative(timestamp,
                                                                 shift_value);
-                std::stringstream message;
-                message << "Schedule for Job " << job->_id << " shifted by " << shift_value << ".";
-                this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
+                std::cout << "Schedule for Job " << job->_id << " shifted by " << shift_value
+                          << "." << std::endl;
             }
             max_end = std::min(max_end, job->_atlas_schedule->last_data()._begin);
             this->_atlas_model->resort_schedules();
@@ -206,16 +205,17 @@ int BeginScheduleAction<T>::time() const{
 
 template<>
 void BeginScheduleAction<LateCfsSchedule>::action() {
+    int timestamp = this->_atlas_model->_timestamp;
     this->_schedule->_job->_schedules.push_back(this->_schedule);
     this->_atlas_model->add_cfs_schedule(this->_schedule);
 
-    this->_schedule->add_change_does_execute(this->_atlas_model->_timestamp, true);
+    this->_schedule->add_change_does_execute(timestamp, true);
     std::stringstream message;
+    int time_left = this->_schedule->_job->execution_time_left(timestamp);
     message << "Execute job " << this->_schedule->_job->_id << " on core "
             << this->_schedule->_core << " CFS (late). Time left: "
-            << this->_schedule->last_data()._execution_time;
-    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str(),
-                                    {this->_schedule->_job->_id});
+            << time_left << " (" << time_left * this->_atlas_model->_cfs_factor << " on CFS)";
+    this->_atlas_model->add_message(timestamp, message.str(), {this->_schedule->_job->_id});
 
     this->_atlas_model->_cfs_schedule[this->_schedule->_core] = this->_schedule;
     /* add EndAction */
@@ -254,10 +254,11 @@ void BeginScheduleAction<EarlyCfsSchedule>::action() {
 
     this->_schedule->add_change_does_execute(timestamp, true);
     std::stringstream message;
+    int time_left = this->_schedule->_job->execution_time_left(timestamp);
     message << "Execute job " << this->_schedule->_job->_id << " on core "
-            << this->_schedule->_core << " CFS (early).";
-    this->_atlas_model->add_message(this->_atlas_model->_timestamp, message.str(),
-                                    {this->_schedule->_job->_id});
+            << this->_schedule->_core << " CFS (late). Time left: "
+            << time_left << " (" << time_left * this->_atlas_model->_cfs_factor << " on CFS)";
+    this->_atlas_model->add_message(timestamp, message.str(), {this->_schedule->_job->_id});
 
     /* add EndAction */
     this->add_end_action();
@@ -369,21 +370,29 @@ void BeginScheduleAction<AtlasSchedule>::action() {
             this->_success = false;
             return;
         }
-        std::cerr << timestamp << ": job " << job->_id << " depends on job " << dependent_job->_id
-                  << ". Inserting ATLAS dependency schedule" << std::endl;
+        std::stringstream message;
+        message << timestamp << ": job " << job->_id << " depends on job " << dependent_job->_id
+                << ". Inserting ATLAS dependency schedule" << std::endl;
+        this->_atlas_model->add_message(timestamp, message.str(), {job->_id});
         int length = std::min(this->_schedule->last_data()._execution_time, dependency_time_left);
+
         DependencySchedule *schedule =
-            new DependencySchedule(dependent_job, this->_schedule->_core, timestamp, timestamp, length);
+            new DependencySchedule(dependent_job, this->_schedule->_core, timestamp, timestamp,
+                                   length, false);
         dependent_job->_schedules.push_back(schedule);
         this->_atlas_model->add_atlas_schedule(schedule);
         this->_atlas_model->_actions_to_do.push_back(
             new BeginScheduleAction{this->_atlas_model, schedule});
+
+        this->_schedule->add_change_does_execute(timestamp, false);
+
         if (this->_schedule->last_data()._execution_time > dependency_time_left) {
             /* dependency schedule comes to an end before schedule would finish */
-            std::cerr << timestamp << ": theres time for job " << job->_id
+            std::cerr << timestamp << ": there's time for job " << job->_id
                       << " after added schedule finished." << std::endl;
-            this->_schedule->add_change_shift_relative(timestamp, length);
-            this->_schedule->add_change_execution_time_relative(timestamp, -dependency_time_left);
+            this->_schedule->add_change_shift_relative(timestamp + dependency_time_left, length);
+            this->_schedule->add_change_execution_time_relative(timestamp + dependency_time_left,
+                                                                -dependency_time_left);
             this->_atlas_model->_actions_to_do.push_back(
                 new BeginScheduleAction{this->_atlas_model, this->_schedule});
         } else {

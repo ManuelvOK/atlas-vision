@@ -22,19 +22,21 @@ int ScheduleData::end() const {
 }
 
 Schedule::Schedule(int id, Job *job, unsigned core, SchedulerType scheduler, int submission_time,
-                   int begin, int execution_time) :
+                   int begin, int execution_time, bool end_known) :
     _id(id),
     _job(job),
     _core(core),
     _submission_time(submission_time) {
     Schedule::_next_id = std::max(Schedule::_next_id, id + 1);
     this->_data.emplace(submission_time,
-                        ScheduleData{submission_time, scheduler, begin, execution_time});
+                        ScheduleData{submission_time, scheduler, begin, execution_time, false,
+                        end_known});
 }
 
 Schedule::Schedule(Job *job, unsigned core, SchedulerType scheduler, int submission_time, int begin,
-                   int execution_time) :
-    Schedule(Schedule::next_id(), job, core, scheduler, submission_time, begin, execution_time) {}
+                   int execution_time, bool end_known) :
+    Schedule(Schedule::next_id(), job, core, scheduler, submission_time, begin, execution_time,
+             end_known) {}
 
 Schedule::Schedule(const Schedule *s) :
     _id(Schedule::next_id()),
@@ -53,7 +55,9 @@ EarlyCfsSchedule::EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int be
 }
 
 CfsVisibility EarlyCfsSchedule::create_visibility() const {
-    return CfsVisibility(this->_atlas_schedule, this->first_data()._begin, std::min(this->last_data().end(), this->_atlas_schedule->last_data()._begin));
+    return CfsVisibility(this->_atlas_schedule, this->first_data()._begin,
+                         std::min(this->last_data().end(),
+                                  this->_atlas_schedule->last_data()._begin));
 }
 
 void Schedule::add_change(const ParsedChange &change) {
@@ -107,6 +111,13 @@ void Schedule::add_change_does_execute(int timestamp, bool does_execute) {
     ScheduleData new_data = this->last_data();
     new_data._timestamp = timestamp;
     new_data._does_execute = does_execute;
+    this->_data[timestamp] = new_data;
+}
+
+void Schedule::add_change_end_known(int timestamp, bool end_known) {
+    ScheduleData new_data = this->last_data();
+    new_data._timestamp = timestamp;
+    new_data._end_known = end_known;
     this->_data[timestamp] = new_data;
 }
 
@@ -185,15 +196,11 @@ ScheduleData Schedule::get_vision_data_at_time(int timestamp) const {
 
     ScheduleData data = this->data_at_time(timestamp);
 
-    if (data._scheduler == SchedulerType::CFS) {
+    if (not data._end_known) {
         data._execution_time = std::max(0,std::min(data._execution_time, timestamp - data._begin));
     }
     if (not data._does_execute and timestamp >= data._begin) {
-        if (data._scheduler == SchedulerType::CFS) {
-            data._execution_time = 0;
-        } else {
-            data._execution_time = std::max(0, data.end() - timestamp);
-        }
+        data._execution_time = std::max(0, data.end() - timestamp);
         data._begin = timestamp; // + 1;
     }
     return data;
@@ -295,7 +302,7 @@ CfsSchedule::CfsSchedule(AtlasSchedule *s, int submission_time, int begin, int e
     this->_submission_time = submission_time;
     this->_data.clear();
     this->_data.emplace(submission_time,
-                        ScheduleData{submission_time, SchedulerType::CFS, begin, execution_time});
+                        ScheduleData{submission_time, SchedulerType::CFS, begin, execution_time, false, false});
 }
 
 RecoverySchedule::RecoverySchedule(const Schedule *s) :

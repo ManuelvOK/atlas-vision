@@ -1,0 +1,67 @@
+# This is an example File for the ATLAS Scheduling algorith simulation
+#
+# Number of cores specification
+# > c number_of_cores
+#
+# CFS factor assumption
+#   since we don't know what happens if something is schedules on CFS, we assume a time factor to
+#   approximately simulate the situation. Example: "f 4" means one job knowingly running on CFS
+#   takes four times the execution time.
+# > f factor
+#
+# job specification
+# > j id deadline execution_time_estimate execution_time submission_time
+#
+# dependency specification
+#   The depender depends on the dependency
+# > d depender dependency
+
+###################
+# NUMBER OF CORES #
+###################
+
+c 1
+
+
+##############
+# CFS FACTOR #
+##############
+
+f 4
+
+
+########
+# JOBS #
+########
+
+j 0  18000 2000 1750 0000 #A1 id=0
+j 1  25000 1000 1000 0000 #A2 id=1
+j 2  25000 1000 1000 5000 #A3 id=2
+j 3  32000 2000 2000 5000 #A4 id=3
+
+j 4  20000 1000  500 0000 #B1 id=4
+j 5  24000 2000 2500 2000 #B2 id=5
+j 6  28000 1000 1000 2000 #B3 id=6
+j 7  32000 2000 2000 7000 #B4 id=7
+
+j 8  16000 2000 2000 0000 #X0 id=8
+j 9  24000 3000 3000 0000 #X1 id=9
+j 10 20000 2000 1400 0000 #X2 id=10
+j 11 22000 1000 1000 7000 #X3 id=11
+
+################
+# DEPENDENCIES #
+################
+
+# task with jobs 0 1 2 3 in that order
+d k 1 0
+d k 2 1
+d k 3 2
+
+# task with jobs 4 5 6 7 in that order
+d k 5 4
+d k 6 5
+d k 7 6
+
+# unknown dependencies
+d u 10 9 # X2 has an unknown dependency from X1

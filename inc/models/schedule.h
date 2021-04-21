@@ -23,6 +23,7 @@ struct ScheduleData {
     int _begin;                 /**< start time of schedule execution */
     int _execution_time;        /**< time the scheduled job runs */
     bool _does_execute = false; /**< flag determining whether the schedule does run */
+    bool _end_known = true;     /**< flag determining whether the end of the schedule is known */
 
     int end() const;
 };
@@ -53,12 +54,13 @@ public:
      * @param submission_time timestamp of schedules submission
      * @param begin time the schedule begins execution
      * @param execution_time time the schedule gets executed
+     * @param end_known flag determining if the end is known at start
      */
     Schedule(int id, Job *job, unsigned core, SchedulerType scheduler, int submission_time,
-             int begin, int execution_time);
+             int begin, int execution_time, bool end_known = true);
 
     Schedule(Job *job, unsigned core, SchedulerType scheduler, int submission_time, int begin,
-             int execution_time);
+             int execution_time, bool end_known = true);
 
     Schedule(const Schedule *s);
 
@@ -79,6 +81,8 @@ public:
     void add_change_begin(int timestamp, int begin, bool did_execute = true);
 
     void add_change_does_execute(int timestamp, bool does_execute);
+
+    void add_change_end_known(int timestamp, bool does_execute);
 
     void add_change_shift_relative(int timestamp, int shift);
 
@@ -139,10 +143,14 @@ public:
 class AtlasSchedule : public Schedule {
   public:
     using Schedule::Schedule;
-    AtlasSchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time)
-        : Schedule(id, job, core, SchedulerType::ATLAS, submission_time, begin, execution_time) {}
-    AtlasSchedule(Job *job, int core, int submission_time, int begin, int execution_time)
-        : Schedule(job, core, SchedulerType::ATLAS, submission_time, begin, execution_time) {}
+    AtlasSchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time,
+                  bool end_known = true)
+        : Schedule(id, job, core, SchedulerType::ATLAS, submission_time, begin, execution_time,
+                   end_known) {}
+    AtlasSchedule(Job *job, int core, int submission_time, int begin, int execution_time,
+                  bool end_known = true)
+        : Schedule(job, core, SchedulerType::ATLAS, submission_time, begin, execution_time,
+                   end_known) {}
 
 };
 
@@ -155,9 +163,10 @@ class CfsSchedule : public Schedule {
   public:
     using Schedule::Schedule;
     CfsSchedule(int id, Job *job, int core, int submission_time, int begin, int execution_time)
-        : Schedule(id, job, core, SchedulerType::CFS, submission_time, begin, execution_time) {}
+        : Schedule(id, job, core, SchedulerType::CFS, submission_time, begin, execution_time,
+                   false) {}
     CfsSchedule(Job *job, int core, int submission_time, int begin, int execution_time)
-        : Schedule(job, core, SchedulerType::CFS, submission_time, begin, execution_time) {}
+        : Schedule(job, core, SchedulerType::CFS, submission_time, begin, execution_time, false) {}
     CfsSchedule(AtlasSchedule *s, int submission_time, int begin, int execution_time);
 };
 
