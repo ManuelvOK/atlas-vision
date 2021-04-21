@@ -441,19 +441,31 @@ SDL_GUI::Drawable *AtlasController::create_job_information(const Job *job) {
     ss << "sub: " << job->_submission_time << std::endl;
     ss << "dl: " << job->_deadline << std::endl;
     ss << "est: " << job->_execution_time_estimate << std::endl;
+    SDL_GUI::Text *t1 = new SDL_GUI::Text(this->_default_interface_model->font(), ss.str(),
+                                          {30, 5});
+
+    ss.str("");
     ss << "real: " << job->_execution_time << std::endl;
-    SDL_GUI::Text *t = new SDL_GUI::Text(this->_default_interface_model->font(), ss.str(),
-                                            {30, 5});
+    SDL_GUI::Text *t2 = new SDL_GUI::Text(this->_default_interface_model->font(), ss.str(),
+                                          {30, static_cast<int>(5 + t1->height())});
+
+    if (job->_execution_time_estimate < job->_execution_time) {
+        t2->set_color(SDL_GUI::RGB(155, 0, 0, 255));
+    } else if (job->_execution_time_estimate > job->_execution_time) {
+        t2->set_color(SDL_GUI::RGB(0, 155, 0, 255));
+    }
 
     /* add rect in appropriate color */
     JobRect *r = new JobRect(job, this->_interface_model, this->_atlas_model,
-                                {5, 5}, 20, t->height());
+                             {5, 5}, 20, t1->height() + t2->height());
     this->_atlas_model->_drawables_jobs[r].insert(job->_id);
 
     /* create Wrapper */
-    SDL_GUI::Drawable *info = new SDL_GUI::Rect({0,0}, r->width() + t->width() + 10,
-                                                t->height() + 10);
-    info->add_child(t);
+    SDL_GUI::Drawable *info =
+        new SDL_GUI::Rect({0,0}, r->width() + std::max(t1->width(), t2->width()) + 10,
+                          t1->height() + t2->height() + 10);
+    info->add_child(t1);
+    info->add_child(t2);
     info->add_child(r);
 
     return info;
