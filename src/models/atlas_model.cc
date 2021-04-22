@@ -1,15 +1,6 @@
 #include <models/atlas_model.h>
 
-bool compare_schedules(const Schedule *a, const Schedule *b) {
-    int begin_a = a->last_data()._begin;
-    int begin_b = b->last_data()._begin;
-    if (begin_a == begin_b) {
-        return a->_id < b->_id;
-    }
-    return begin_a < begin_b;
-}
-
-AtlasModel::AtlasModel() : _schedules(compare_schedules), _atlas_schedules(compare_schedules) {}
+AtlasModel::AtlasModel() : SimulationModel(), _atlas_schedules(compare_schedules) {}
 
 void AtlasModel::add_atlas_schedule(AtlasSchedule *schedule) {
     this->_atlas_schedules.insert(schedule);
@@ -29,21 +20,6 @@ void AtlasModel::add_cfs_schedule(CfsSchedule *schedule) {
 void AtlasModel::add_early_cfs_schedule(EarlyCfsSchedule *schedule) {
     this->_early_cfs_schedules.push_back(schedule);
     this->add_cfs_schedule(schedule);
-}
-
-void AtlasModel::add_message(int timestamp, std::string text, std::set<int> jobs) {
-    Message *message = new Message(timestamp, text, jobs);
-    this->_messages.push_back(message);
-    std::cerr << timestamp << ": " << text << std::endl;
-}
-
-const Schedule *AtlasModel::active_schedule(unsigned core, int timestamp) const {
-    for (const Schedule *s: this->_schedules) {
-        if (s->is_active_at_time(timestamp) and s->_core == core) {
-            return s;
-        }
-    }
-    return nullptr;
 }
 
 const Schedule *AtlasModel::active_schedule_on_scheduler(unsigned core, SchedulerType scheduler, int timestamp) const {
@@ -105,11 +81,7 @@ void AtlasModel::tidy_up_queues() {
 }
 
 void AtlasModel::resort_schedules() {
-    auto old_schedules = this->_schedules;
-    this->_schedules.clear();
-    for (Schedule *s: old_schedules) {
-        this->_schedules.insert(s);
-    }
+    SimulationModel::resort_schedules();
 
     auto old_atlas_schedules = this->_atlas_schedules;
     this->_atlas_schedules.clear();
@@ -126,21 +98,4 @@ void AtlasModel::tidy_up_queue(std::list<Job *> *queue) {
             queue->push_back(j);
         }
     }
-}
-
-void AtlasModel::reset_for_simulation() {
-    this->_timestamp = 0;
-
-    for (Schedule *schedule: this->_schedules) {
-        delete schedule;
-    }
-    this->_schedules.clear();
-
-    for (Job *job: this->_jobs) {
-        job->_schedules.clear();
-    }
-    for (SimulationAction *action: this->_actions_done) {
-        delete action;
-    }
-    this->_actions_done.clear();
 }

@@ -10,11 +10,12 @@
 #include <config/interface_config.h>
 
 PlayerController::PlayerController(PlayerModel *player_model, InputModel *input_model,
-                                   const AtlasModel *atlas_model, InterfaceModel *interface_model,
+                                   const SimulationModel *simulation_model,
+                                   InterfaceModel *interface_model,
                                    SDL_GUI::InterfaceModel *default_interface_model) :
     _player_model(player_model),
     _input_model(input_model),
-    _atlas_model(atlas_model),
+    _simulation_model(simulation_model),
     _interface_model(interface_model),
     _default_interface_model(default_interface_model) {
     this->init();
@@ -86,8 +87,8 @@ void PlayerController::evaluate_input() {
     }
 
     if (this->_input_model->is_down(InputKey::MESSAGE_CLICK)
-            and this->_atlas_model->_hovered_message) {
-        this->_player_model->set_position(this->_atlas_model->_hovered_message->_timestamp);
+            and this->_simulation_model->_hovered_message) {
+        this->_player_model->set_position(this->_simulation_model->_hovered_message->_timestamp);
     }
 }
 
@@ -102,7 +103,7 @@ void PlayerController::drag() {
 void PlayerController::init() {
     /* set max position */
     int max_position = 0;
-    for (Schedule * schedule: this->_atlas_model->_schedules) {
+    for (Schedule * schedule: this->_simulation_model->_schedules) {
         max_position = std::max(max_position, schedule->get_maximal_end());
     }
     max_position = (max_position / 20 + 10) * 20;

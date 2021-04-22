@@ -16,7 +16,7 @@ protected:
     virtual SDL_GUI::Drawable *clone() const override;
 public:
     ScheduleRect(const Schedule *schedule, const InterfaceModel *interface_model,
-                 const PlayerModel *player_model, const AtlasModel *atlas_model);
+                 const PlayerModel *player_model, const SimulationModel *simulation_model);
 
     void update() override;
 };

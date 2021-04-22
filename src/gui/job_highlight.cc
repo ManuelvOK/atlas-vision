@@ -2,9 +2,9 @@
 
 
 JobHighlight::JobHighlight(const Job *job, const InterfaceModel *interface_model,
-                           const AtlasModel *atlas_model) :
+                           const SimulationModel *simulation_model) :
     _job(job),
-    _atlas_model(atlas_model) {
+    _simulation_model(simulation_model) {
     this->_highlight_style._color = interface_model->get_color(this->_job->_id);
     this->_highlight_style._has_background = true;
     this->_highlight_style._has_border = true;
@@ -16,7 +16,7 @@ SDL_GUI::Style JobHighlight::highlight_style() {
 }
 
 bool JobHighlight::is_highlighted() {
-    if (this->_atlas_model->_highlighted_jobs.contains(this->_job->_id)) {
+    if (this->_simulation_model->_highlighted_jobs.contains(this->_job->_id)) {
         return true;
     }
     return false;

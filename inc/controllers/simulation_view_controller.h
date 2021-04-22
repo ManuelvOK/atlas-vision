@@ -4,26 +4,27 @@
 #include <SDL_GUI/controllers/controller_base.h>
 #include <SDL_GUI/models/interface_model.h>
 
-#include <models/atlas_model.h>
 #include <models/interface_model.h>
 #include <models/input_model.h>
 #include <models/player_model.h>
+#include <models/simulation_model.h>
 
-/** Controller for everything related to the scheduler */
-class AtlasController : public SDL_GUI::ControllerBase {
+class SimulationViewController : public SDL_GUI::ControllerBase {
+protected:
     SDL_GUI::ApplicationBase *_application;             /**< The application */
-    AtlasModel *_atlas_model;                           /**< Model for the scheduler */
+    SimulationModel *_simulation_model;                 /**< Model for the scheduler */
     InterfaceModel *_interface_model;                   /**< The Applications interface model */
     SDL_GUI::InterfaceModel *_default_interface_model;  /**< The interface model from the library */
-    InputModel *_input_model;  /**< The applications input model */
+    InputModel *_input_model;                           /**< The applications input model */
     const PlayerModel *_player_model;                   /**< Model for the schedule player */
-
 
     /**
      * initialise the controller. This is called from the constructor and creates all the drawables
      * for the scheduler with their recalculation callbacks.
      */
-    void init();
+    virtual void init();
+
+    virtual void reset();
 
     void reinit();
 
@@ -68,18 +69,12 @@ class AtlasController : public SDL_GUI::ControllerBase {
     /**
      * Create drawables for all schedules and register callbacks to reposition/hide them on occasion.
      */
-    void create_schedule_drawables();
+    virtual void create_schedule_drawables() = 0;
 
     /**
      * set the Style of the scheduler as given in the config
      */
-    void init_cores_rect();
-
-    /**
-    * Create drawables for all visibilities
-    * @param early_cfs_schedules list of schedules to add visibility drawables for
-    */
-    void create_CFS_visibility_drawables(std::vector<EarlyCfsSchedule *> early_cfs_schedules);
+    virtual void init_cores_rect() = 0;
 
     /** create callback to change input state on mouseover */
     void init_message_rect();
@@ -91,38 +86,25 @@ class AtlasController : public SDL_GUI::ControllerBase {
     void create_message_drawables(std::vector<Message *> messages);
 
     /**
-    * create all the drawables for the dependency graph of the jobs
-    * @param jobs jobs to draw dependency graph for
-    */
-    void create_dependency_graph(std::vector<Job *> jobs);
-
-    /**
     * create all the drawables for the visual color to job number mapping
     */
-    void create_legend(std::vector<Job *> jobs);
+    virtual void create_legend(std::vector<Job *> jobs);
 
     /**
     * Create the Drawable that holds all information for one Job
     * @param job The job to create the drawable for
     * @return Jobs information drawable for the legend
     */
-    SDL_GUI::Drawable *create_job_information(const Job *job);
+    virtual SDL_GUI::Drawable *create_job_information(const Job *job) = 0;
 
 public:
-    /**
-     * Constructor
-     * @param application The application
-     * @param atlas_model model for the scheduler
-     * @param interface_model The applications interface model
-     * @param default_interface_model The interface model from the SDL_GUI library
-     * @param input_model the applications input model
-     * @param player_model Model for the schedule player
-     */
-    AtlasController(SDL_GUI::ApplicationBase *application, AtlasModel *atlas_model,
-                    InterfaceModel *interface_model,
-                    SDL_GUI::InterfaceModel *default_interface_model,
-                    InputModel *input_model,
-                    const PlayerModel *player_model);
+    SimulationViewController(SDL_GUI::ApplicationBase *applicastion,
+                             SimulationModel *simulation_model,
+                             InterfaceModel *interface_model,
+                             SDL_GUI::InterfaceModel *default_interface_model,
+                             InputModel *input_model,
+                             const PlayerModel *player_model);
 
-    void update() override;
+    virtual void update() override;
+
 };

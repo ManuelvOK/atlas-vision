@@ -8,12 +8,15 @@
 #include <models/player_model.h>
 
 class SimulationController: public SDL_GUI::ControllerBase {
-    AtlasModel *_atlas_model;
+protected:
+    SimulationModel *_simulation_model;
     PlayerModel *_player_model;
     SDL_GUI::InterfaceModel *_interface_model;
     CoreAssigner *_core_assigner;
+
+    virtual void bootstrap_simulation() = 0;
 public:
-    SimulationController(AtlasModel *atlas_model, PlayerModel *player_model,
+    SimulationController(SimulationModel *simulation_model, PlayerModel *player_model,
                          SDL_GUI::InterfaceModel *interface_model);
 
     ~SimulationController();

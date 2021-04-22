@@ -1,4 +1,4 @@
-#include <plugins/atlas_plugin.h>
+#include <plugins/simulation_plugin.h>
 
 #include <fstream>
 #include <string>
@@ -6,12 +6,13 @@
 #include <util/parser.h>
 
 
-AtlasPlugin::AtlasPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {
+SimulationPlugin::SimulationPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {
     this->_command_line.register_flag("nosim", "n", "no_simulation");
+    this->_command_line.register_flag("cbs", "c", "simulate_cbs");
     this->_command_line.register_positional("input");
 }
 
-AtlasModel *AtlasPlugin::build_atlas_model() const {
+AtlasModel *SimulationPlugin::build_atlas_model() const {
     std::string input = this->_command_line.get_positional("input");
 
     if (input == "") {
@@ -32,7 +33,11 @@ AtlasModel *AtlasPlugin::build_atlas_model() const {
     return this->atlas_model_from_file(input);
 }
 
-AtlasModel *AtlasPlugin::atlas_model_from_file(std::string path) const {
+CbsModel *SimulationPlugin::build_cbs_model() const {
+    return new CbsModel;
+}
+
+AtlasModel *SimulationPlugin::atlas_model_from_file(std::string path) const {
     std::ifstream input_file(path);
     if (not input_file.is_open()) {
         std::cerr << "Could not open file: " << path << std::endl;
@@ -43,11 +48,11 @@ AtlasModel *AtlasPlugin::atlas_model_from_file(std::string path) const {
     return model;
 }
 
-AtlasModel *AtlasPlugin::atlas_model_from_stdin() const {
+AtlasModel *SimulationPlugin::atlas_model_from_stdin() const {
     return parse_file(&std::cin);
 }
 
-AtlasModel *AtlasPlugin::parse_file(std::istream *input) const {
+AtlasModel *SimulationPlugin::parse_file(std::istream *input) const {
     Parser parser;
     AtlasModel *model = new AtlasModel();
     parser.parse(input, model);

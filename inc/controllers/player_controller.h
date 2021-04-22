@@ -3,7 +3,7 @@
 #include <SDL_GUI/controllers/controller_base.h>
 #include <SDL_GUI/models/interface_model.h>
 
-#include <models/atlas_model.h>
+#include <models/simulation_model.h>
 #include <models/input_model.h>
 #include <models/interface_model.h>
 #include <models/player_model.h>
@@ -11,10 +11,10 @@
 
 /** controller for drawing a certain position in the schedule. */
 class PlayerController : public SDL_GUI::ControllerBase {
-    PlayerModel *_player_model;         /**< Model for the player */
-    InputModel *_input_model;           /**< The applications input model */
-    const AtlasModel *_atlas_model;           /**< The applications atlas mdel */
-    InterfaceModel *_interface_model;   /**< The applications interface model */
+    PlayerModel *_player_model;               /**< Model for the player */
+    InputModel *_input_model;                 /**< The applications input model */
+    const SimulationModel *_simulation_model; /**< The applications simulation model */
+    InterfaceModel *_interface_model;         /**< The applications interface model */
 
     /** the interface model from the SDL_GUI library */
     SDL_GUI::InterfaceModel *_default_interface_model;
@@ -37,12 +37,12 @@ public:
      * Constructor
      * @param player_model model for the player
      * @param input_model the applications input model
-     * @param atlas_model the applications atlas model
+     * @param simulation_model the applications simulation model
      * @param interface_model the applications interface model
      * @param default_interface_model interface model from the SDL_GUI library
      */
     PlayerController(PlayerModel *player_model, InputModel *input_model,
-                     const AtlasModel *atlas_model, InterfaceModel *interface_model,
+                     const SimulationModel *simulation_model, InterfaceModel *interface_model,
                      SDL_GUI::InterfaceModel *default_interface_model);
 
     void update() override;

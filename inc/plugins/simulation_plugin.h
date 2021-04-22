@@ -7,20 +7,26 @@
 #include <SDL_GUI/util/command_line.h>
 
 #include <config/input_config.h>
-#include <controllers/atlas_controller.h>
+#include <controllers/atlas_view_controller.h>
+#include <controllers/atlas_simulation_controller.h>
+#include <controllers/cbs_view_controller.h>
+#include <controllers/cbs_simulation_controller.h>
 #include <controllers/player_controller.h>
-#include <controllers/simulation_controller.h>
 #include <models/atlas_model.h>
+#include <models/cbs_model.h>
 #include <models/input_model.h>
 #include <models/interface_model.h>
 #include <models/player_model.h>
 #include <models/schedule_change.h>
+#include <models/simulation_model.h>
+
 
 /** The Main Plugin for this application. It does the simulation visioning. */
-class AtlasPlugin: public SDL_GUI::PluginBase {
+class SimulationPlugin: public SDL_GUI::PluginBase {
     SDL_GUI::CommandLine _command_line;
 
     AtlasModel *build_atlas_model() const;
+    CbsModel *build_cbs_model() const;
     /**
      * Read simulation output from file
      * @param path file to read from
@@ -42,7 +48,7 @@ class AtlasPlugin: public SDL_GUI::PluginBase {
     AtlasModel *parse_file(std::istream *input) const;
 public:
     /** Constructor */
-    AtlasPlugin();
+    SimulationPlugin();
 
     /**
      * Create all the needed Models, Controllers and Views
@@ -66,8 +72,6 @@ public:
         InterfaceModel *interface_model = new InterfaceModel(player_model);
         app->add_model(interface_model);
 
-        AtlasModel *atlas_model = this->build_atlas_model();
-
         /* Controllers */
         SDL_GUI::InputController<InputKey, InputState> *input_controller =
             new SDL_GUI::InputController<InputKey, InputState>(
@@ -75,20 +79,41 @@ public:
                 mouse_input_config, InputKey::QUIT);
         app->add_controller(input_controller);
 
-
         SDL_GUI::DefaultPlugin &default_plugin = std::get<SDL_GUI::DefaultPlugin>(previous);
         SDL_GUI::InterfaceModel *default_interface_model = default_plugin.interface_model();
-        SimulationController *simulation_controller =
-            new SimulationController(atlas_model, player_model, default_interface_model);
-        app->add_controller(simulation_controller);
 
-        AtlasController *atlas_controller = new AtlasController(app, atlas_model, interface_model,
-                                                                default_interface_model,
-                                                                input_model, player_model);
-        app->add_controller(atlas_controller);
+        SimulationModel *simulation_model;
+        if (this->_command_line.get_flag("simulate_cbs")) {
+            CbsModel *cbs_model = this->build_cbs_model();
+            app->add_model(cbs_model);
+            simulation_model = cbs_model;
+
+            CbsSimulationController *simulation_controller =
+                new CbsSimulationController(cbs_model, player_model, default_interface_model);
+            app->add_controller(simulation_controller);
+
+            CbsViewController *cbs_view_controller =
+                new CbsViewController(app, cbs_model, interface_model, default_interface_model,
+                                  input_model, player_model);
+            app->add_controller(cbs_view_controller);
+
+        } else {
+            AtlasModel *atlas_model = this->build_atlas_model();
+            app->add_model(atlas_model);
+            simulation_model = atlas_model;
+
+            AtlasSimulationController *simulation_controller =
+                new AtlasSimulationController(atlas_model, player_model, default_interface_model);
+            app->add_controller(simulation_controller);
+
+            AtlasViewController *atlas_view_controller =
+                new AtlasViewController(app, atlas_model, interface_model, default_interface_model,
+                                        input_model, player_model);
+            app->add_controller(atlas_view_controller);
+        }
 
         PlayerController *player_controller = new PlayerController(player_model, input_model,
-                                                                   atlas_model, interface_model,
+                                                                   simulation_model, interface_model,
                                                                    default_interface_model);
         app->add_controller(player_controller);
     }

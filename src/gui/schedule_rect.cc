@@ -1,9 +1,10 @@
 #include <gui/schedule_rect.h>
 
 ScheduleRect::ScheduleRect(const Schedule *schedule, const InterfaceModel *interface_model,
-                           const PlayerModel *player_model, const AtlasModel *atlas_model):
+                           const PlayerModel *player_model,
+                           const SimulationModel *simulation_model):
     SDL_GUI::Rect("ScheduleRect"),
-    JobHighlight(schedule->_job, interface_model, atlas_model),
+    JobHighlight(schedule->_job, interface_model, simulation_model),
     _schedule(schedule),
     _interface_model(interface_model),
     _player_model(player_model) {
