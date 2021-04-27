@@ -4,13 +4,15 @@
 #include <string>
 #include <sstream>
 
-#include <models/cfs_visibility.h>
-#include <models/job.h>
-#include <models/message.h>
-#include <models/schedule.h>
-#include <models/schedule_change.h>
+#include <atlas/atlas_simulation_model.h>
+#include <atlas/cfs_visibility.h>
+#include <cbs/cbs_simulation_model.h>
+#include <job.h>
+#include <message.h>
+#include <schedule.h>
+#include <simulation/schedule_change.h>
 
-void Parser::parse_line(std::string line, AtlasModel *atlas_model) {
+void Parser::parse_line(std::string line, AtlasSimulationModel *atlas_model) {
     std::stringstream ss(line);
     char type = ' ';
     /* first char in each line specifies type of line to parse */
@@ -43,10 +45,10 @@ void Parser::parse_cfs_factor(std::stringstream *line) {
     this->_cfs_factor = factor;
 }
 
-void Parser::parse_job(std::stringstream *line, AtlasModel *atlas_model) {
+void Parser::parse_job(std::stringstream *line, AtlasSimulationModel *atlas_model) {
     int id, deadline, time_estimate, time, submission;
     *line >> id >> deadline >> time_estimate >> time >> submission;
-    Job *job = new Job(atlas_model, id, deadline, time_estimate, time, submission);
+    AtlasJob *job = new AtlasJob(atlas_model, id, deadline, time_estimate, time, submission);
     this->_jobs.emplace(id, job);
 }
 
@@ -95,7 +97,7 @@ void Parser::parse_dependency(std::stringstream *line) {
     this->_dependencies.emplace_back(type, job1, job2);
 }
 
-void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
+void Parser::parse(std::istream *input, AtlasSimulationModel *atlas_model) {
     /* parse input. Jobs get directly created */
     std::string line;
     while (std::getline(*input, line)) {
@@ -108,8 +110,8 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
     /* add dependencies to jobs */
     for (const ParsedDependency &d: this->_dependencies) {
         /* runtime check if referenced job exists with at() */
-        Job *dependent_job = this->_jobs.at(d._dependent_job_id);
-        Job *dependency_job = this->_jobs.at(d._dependency_id);
+        AtlasJob *dependent_job = this->_jobs.at(d._dependent_job_id);
+        AtlasJob *dependency_job = this->_jobs.at(d._dependency_id);
         if (d._type == 'k') {
             dependent_job->add_known_dependency(dependency_job);
         } else {
@@ -118,22 +120,27 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
     }
 
     /* calculate jobs dependency level and put them into model */
-    for (const std::pair<int, Job *> &p: this->_jobs) {
+    for (const std::pair<int, AtlasJob *> &p: this->_jobs) {
         p.second->calculate_dependency_level();
         atlas_model->_jobs.push_back(p.second);
     }
 
     /* sort jobs id wise */
     std::sort(atlas_model->_jobs.begin(), atlas_model->_jobs.end(),
-              [](const Job *a, const Job *b) -> bool {return a->_id < b->_id;});
+              [](const AtlasJob *a, const AtlasJob *b) -> bool {return a->_id < b->_id;});
 
     /* create Schedules, apply changes and put them into model */
     for (const ParsedSchedule &s: this->_parsed_schedules) {
+        const std::map<char, AtlasSchedulerType> scheduler_map = {
+            {'a', AtlasSchedulerType::ATLAS},
+            {'r', AtlasSchedulerType::recovery},
+            {'c', AtlasSchedulerType::CFS},
+        };
         /* runtime check if referenced job exists with at() */
-        Job *job = this->_jobs.at(s._job_id);
-        Schedule *schedule = new Schedule(s._id, job, s._core,
-                                          static_cast<SchedulerType>(s._scheduler),
-                                          s._submission_time, s._begin, s._execution_time);
+        AtlasJob *job = this->_jobs.at(s._job_id);
+        BaseAtlasSchedule *schedule = new BaseAtlasSchedule(s._id, job, s._submission_time, s._core,
+                                                            scheduler_map.at(s._scheduler),
+                                                            s._begin, s._execution_time);
         /* apply changes */
         for (const ParsedChange &c: this->_changes[s._id]) {
             schedule->add_change(c);
@@ -145,11 +152,16 @@ void Parser::parse(std::istream *input, AtlasModel *atlas_model) {
     /* create visibilities and put them into model */
     for (const ParsedVisibility &v: this->_visibilities) {
         /* runtime check if referenced schedule exists with at() */
-        Schedule *schedule = this->_schedules.at(v._schedule_id);
+        BaseAtlasSchedule *schedule = this->_schedules.at(v._schedule_id);
         (void) schedule;
         //CfsVisibility *visibility = new CfsVisibility(schedule, v._begin, v._end);
         //atlas_model->_cfs_visibilities.push_back(visibility);
     }
 
     atlas_model->_messages = this->_messages;
+}
+
+void Parser::parse(std::istream *input, CbsSimulationModel *atlas_model) {
+    (void) input;
+    (void) atlas_model;
 }

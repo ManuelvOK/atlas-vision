@@ -2,10 +2,10 @@
 
 #include <SDL_GUI/gui/primitives/line.h>
 
-#include <models/cfs_visibility.h>
-#include <models/interface_model.h>
-#include <models/player_model.h>
-#include <models/schedule.h>
+#include <atlas/cfs_visibility.h>
+#include <gui/interface_model.h>
+#include <player/player_model.h>
+#include <atlas/atlas_schedule.h>
 /**
  * line that visualises the visibility of a schedule for the CFS scheduler.
  *
@@ -17,7 +17,7 @@ class VisibilityLine : public SDL_GUI::Line {
     const PlayerModel *_player_model;       /**< The applications player model */
 
     const CfsVisibility _visibility;       /**< related visibility object */
-    const Schedule *_schedule;              /**< related schedule */
+    const BaseAtlasSchedule *_schedule;    /**< related schedule */
 
     virtual SDL_GUI::Drawable *clone() const override;
 public:
@@ -30,7 +30,7 @@ public:
      * @param schedule related schedule
      */
     VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model,
-                   const CfsVisibility visibility, const Schedule *schedule);
+                   const CfsVisibility visibility, const BaseAtlasSchedule *schedule);
 
     void update() override;
 };

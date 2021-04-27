@@ -1,8 +1,8 @@
 #include <gui/job_highlight.h>
 
 
-JobHighlight::JobHighlight(const Job *job, const InterfaceModel *interface_model,
-                           const SimulationModel *simulation_model) :
+JobHighlight::JobHighlight(const BaseJob *job, const InterfaceModel *interface_model,
+                           const BaseSimulationModel *simulation_model) :
     _job(job),
     _simulation_model(simulation_model) {
     this->_highlight_style._color = interface_model->get_color(this->_job->_id);

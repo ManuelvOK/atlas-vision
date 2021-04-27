@@ -2,18 +2,18 @@
 
 #include <SDL_GUI/gui/style.h>
 
-#include <models/simulation_model.h>
-#include <models/interface_model.h>
-#include <models/job.h>
+#include <gui/interface_model.h>
+#include <job.h>
+#include <simulation/simulation_model.h>
 
 class JobHighlight {
 private:
-    const Job *_job;
+    const BaseJob *_job;
     SDL_GUI::Style _highlight_style;
-    const SimulationModel *_simulation_model;
+    const BaseSimulationModel *_simulation_model;
 protected:
-    JobHighlight(const Job *job, const InterfaceModel *interface_model,
-                 const SimulationModel *simulation_model);
+    JobHighlight(const BaseJob *job, const InterfaceModel *interface_model,
+                 const BaseSimulationModel *simulation_model);
     SDL_GUI::Style highlight_style();
     bool is_highlighted();
 };

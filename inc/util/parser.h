@@ -6,12 +6,13 @@
 #include <utility>
 #include <vector>
 
-#include <models/atlas_model.h>
 
 class CfsVisibility;
-class Job;
+class AtlasJob;
 class Message;
-class Schedule;
+class BaseAtlasSchedule;
+class AtlasSimulationModel;
+class CbsSimulationModel;
 
 /** Type of schedule change encoded as ascii chars */
 enum class ChangeType {
@@ -61,15 +62,15 @@ class Parser {
     /**< schedule change descriptions mapped to their schedules */
     std::map<int, std::vector<ParsedChange>> _changes;
 
-    std::map<int, Job *> _jobs;             /**< generated jobs mapped to their id */
-    std::map<int, Schedule *> _schedules;   /**< generated schedules mapped to their id */
+    std::map<int, AtlasJob *> _jobs;             /**< generated jobs mapped to their id */
+    std::map<int, BaseAtlasSchedule *> _schedules;   /**< generated schedules mapped to their id */
     std::vector<Message *> _messages;       /**< generated messages */
 
     /**
      * parses a full line of job description input format
      * @param line line to parse
      **/
-    void parse_line(std::string line, AtlasModel *atlas_model);
+    void parse_line(std::string line, AtlasSimulationModel *atlas_model);
 
     /**
      * parse number of cores from input line
@@ -87,7 +88,7 @@ class Parser {
      * parse job from input line
      * @param line line to parse with index at first parameter
      */
-    void parse_job(std::stringstream *line, AtlasModel *atlas_model);
+    void parse_job(std::stringstream *line, AtlasSimulationModel *atlas_model);
 
     /**
      * parse schedule from input line
@@ -121,5 +122,6 @@ class Parser {
     void parse_dependency(std::stringstream *line);
 
 public:
-    void parse(std::istream *input, AtlasModel *atlas_model);
+    void parse(std::istream *input, AtlasSimulationModel *atlas_model);
+    void parse(std::istream *input, CbsSimulationModel *atlas_model);
 };

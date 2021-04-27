@@ -4,7 +4,7 @@
 
 #include <SDL_GUI/gui/primitives/text.h>
 
-#include <models/message.h>
+#include <message.h>
 
 /** A Text that has different looks for being active or inactive.  */
 class MessageText : public SDL_GUI::Drawable {

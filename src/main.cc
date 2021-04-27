@@ -3,7 +3,7 @@
 #include <SDL_GUI/application.h>
 #include <SDL_GUI/plugins/default_plugin.h>
 
-#include <plugins/simulation_plugin.h>
+#include <simulation_plugin.h>
 
 int main(int argc, char *argv[]) {
 

@@ -3,13 +3,13 @@
 #include <config/interface_config.h>
 
 VisibilityLine::VisibilityLine(InterfaceModel *interface_model, const PlayerModel *player_model,
-                               const CfsVisibility visibility, const Schedule *schedule)
+                               const CfsVisibility visibility, const BaseAtlasSchedule *schedule)
     : SDL_GUI::Line(), _interface_model(interface_model), _player_model(player_model),
     _visibility(visibility), _schedule(schedule) {
-    int begin_y = this->_interface_model->scheduler_offset(SchedulerType::CFS)
+    int begin_y = this->_interface_model->scheduler_offset(static_cast<int>(AtlasSchedulerType::CFS))
                   + 0.5 * this->_interface_model->px_height(1);
     this->set_begin({0, begin_y});
-    int end_y = this->_interface_model->scheduler_offset(SchedulerType::ATLAS)
+    int end_y = this->_interface_model->scheduler_offset(static_cast<int>(AtlasSchedulerType::ATLAS))
                 + 0.5 * this->_interface_model->px_height(1);
     this->set_end({0, end_y});
 }
