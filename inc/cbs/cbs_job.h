@@ -5,3 +5,9 @@
 
 class CbsJob: public Job<CbsSchedule> {
 };
+
+class HardRtJob: public CbsJob {
+};
+
+class SoftRtJob: public CbsJob {
+};

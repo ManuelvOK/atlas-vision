@@ -11,6 +11,6 @@ void AtlasSimulationController::bootstrap_simulation() {
     /* kickstart simulation by adding submission actions to queue */
     for (AtlasJob *job: this->_simulation_model->_jobs) {
         this->_simulation_model->_actions_to_do.push_back(
-            new SubmissionAction(this->_core_assigner, this->_atlas_model, job));
+            new AtlasSubmissionAction(this->_core_assigner, this->_atlas_model, job));
     }
 }
