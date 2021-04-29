@@ -23,8 +23,9 @@ private:
     std::vector<AtlasJob *> _unknown_dependees;
 public:
     const AtlasSimulationModel *_atlas_model;
-    int _execution_time_estimate;   /**< estimated execution time */
-    int _dependency_level = -1;     /**< level in dependency DAG. -1 before calculated */
+    unsigned _execution_time_estimate;   /**< estimated execution time */
+    unsigned _dependency_level = 0;     /**< level in dependency DAG. */
+    bool _dependency_level_calculated = false;
 
     AtlasJobState _state = AtlasJobState::queued;
 
@@ -39,8 +40,8 @@ public:
      * @param execution_time real execution time
      * @param submission_time timestamp of jobs submission
      */
-    AtlasJob(const AtlasSimulationModel *atlas_model, int id, int deadline,
-             int execution_time_estimate, int execution_time, int submission_time)
+    AtlasJob(const AtlasSimulationModel *atlas_model, unsigned id, unsigned deadline,
+             unsigned execution_time_estimate, unsigned execution_time, unsigned submission_time)
         : Job(id, deadline, execution_time, submission_time), _atlas_model(atlas_model),
         _execution_time_estimate(execution_time_estimate) {}
 
@@ -96,16 +97,16 @@ public:
      * calculate and set the level of this Job inside the dependency DAG
      * @returns dependency level
      */
-    int calculate_dependency_level();
+    unsigned calculate_dependency_level();
 
     /* amount of time estimated to still be executed */
-    int estimated_execution_time_left(int timestamp) const;
+    unsigned estimated_execution_time_left(unsigned timestamp) const;
 
-    bool all_dependencies_finished(int timestamp) const;
+    bool all_dependencies_finished(unsigned timestamp) const;
 
     bool depends_on(const AtlasJob *job) const;
 
     void set_atlas_schedule(AtlasSchedule *schedule);
 
-    int time_executed(int timestamp) const override;
+    unsigned time_executed(unsigned timestamp) const override;
 };

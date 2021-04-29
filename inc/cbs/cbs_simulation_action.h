@@ -37,11 +37,27 @@ class CbsDeadlineAction : public WithCbs,
     void execute() override;
 };
 
+class CbsFillBudgetAction : public WithModel<CbsSimulationModel>,
+                            public TimedAction {
+    ConstantBandwidthServer *_cbs;
+    unsigned _core;
+  public:
+    CbsFillBudgetAction(CbsSimulationModel *cbs_model, unsigned time, ConstantBandwidthServer *cbs,
+                        unsigned core = 0)
+        : WithModel(cbs_model),
+        /* TODO: add weight */
+          TimedAction(time),
+          _cbs(cbs),
+          _core(core) {}
+    void execute() override;
+};
+
 class CbsFillAction : public WithModel<CbsSimulationModel>,
                       public TimedAction {
     unsigned _core;
+
   public:
-    CbsFillAction(CbsSimulationModel *cbs_model, int time, unsigned core)
+    CbsFillAction(CbsSimulationModel *cbs_model, unsigned time, unsigned core = 0)
         : WithModel(cbs_model),
           TimedAction(time, 60),
           _core(core) {}
@@ -59,7 +75,7 @@ class CbsBeginScheduleAction :  public WithCbs,
           WithSchedule<T>(schedule),
           SimulationAction(50) {}
 
-    virtual int time() const override;
+    virtual unsigned time() const override;
     virtual void execute() override;
 };
 
@@ -74,6 +90,6 @@ class CbsEndScheduleAction :  public WithCbs,
           WithSchedule<T>(schedule),
           SimulationAction(40) {}
 
-    virtual int time() const override;
+    virtual unsigned time() const override;
     virtual void execute() override;
 };

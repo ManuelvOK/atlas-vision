@@ -39,7 +39,7 @@ void AtlasViewController::create_schedule_drawables() {
     SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
     core_rects.push_back(core_rect);
     SDL_GUI::Drawable *wrapper_rect = this->_default_interface_model->find_first_drawable("cores");
-    for (int i = 1; i < this->_atlas_model->_n_cores; ++i) {
+    for (int i = 1; i < static_cast<int>(this->_atlas_model->_n_cores); ++i) {
         SDL_GUI::Drawable *new_core = core_rect->deepcopy();
         new_core->move({0, i * (static_cast<int>(core_rect->height()) + interface_config.player.core_distance_px)});
         new_core->remove_attribute("core-0");

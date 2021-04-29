@@ -32,10 +32,10 @@ protected:
     virtual void init() {
         this->_interface_model->init_colors(this->_simulation_model->_jobs.size());
 
-        std::map<int, std::vector<int>> submissions;
-        int max_submissions = 0;
-        std::map<int, std::vector<int>> deadlines;
-        int max_deadlines = 0;
+        std::map<unsigned, std::vector<unsigned>> submissions;
+        unsigned max_submissions = 0;
+        std::map<unsigned, std::vector<unsigned>> deadlines;
+        unsigned max_deadlines = 0;
 
         std::tie(submissions, max_submissions) = submissions_from_jobs(this->_simulation_model->_jobs);
         std::tie(deadlines, max_deadlines) = deadlines_from_jobs(this->_simulation_model->_jobs);
@@ -55,7 +55,7 @@ protected:
     }
 
     virtual void reset() {
-        for (int i = 0; i < this->_simulation_model->_n_cores; ++i) {
+        for (unsigned i = 0; i < this->_simulation_model->_n_cores; ++i) {
             std::stringstream rect_name;
             rect_name << "core-" << i;
             SDL_GUI::Drawable *core_rect =
@@ -82,14 +82,14 @@ protected:
      * @param jobs list of jobs to get submissions for
      * @return job submissions grouped by submission time
      */
-    std::tuple<std::map<int, std::vector<int>>, int>
+    std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
     submissions_from_jobs(std::vector<J *> jobs) const {
-        std::map<int, std::vector<int>> submissions;
-        int max_submissions = 0;
+        std::map<unsigned, std::vector<unsigned>> submissions;
+        size_t max_submissions = 0;
         for (const J *job: jobs) {
             submissions[job->_submission_time].push_back(job->_id);
             max_submissions =
-                std::max(max_submissions, static_cast<int>(submissions[job->_submission_time].size()));
+                std::max(max_submissions, submissions[job->_submission_time].size());
         }
         return std::make_tuple(submissions, max_submissions);
     }
@@ -99,13 +99,13 @@ protected:
      * @param jobs list of jobs to get deadlines for
      * @return job deadlines grouped by deadline time
      */
-    std::tuple<std::map<int, std::vector<int>>, int>
+    std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
     deadlines_from_jobs(std::vector<J *> jobs) const {
-        std::map<int, std::vector<int>> deadlines;
-        int max_deadlines = 0;
+        std::map<unsigned, std::vector<unsigned>> deadlines;
+        size_t max_deadlines = 0;
         for (const J *job: jobs) {
             deadlines[job->_deadline].push_back(job->_id);
-            max_deadlines = std::max(max_deadlines, static_cast<int>(deadlines[job->_deadline].size()));
+            max_deadlines = std::max(max_deadlines, deadlines[job->_deadline].size());
         }
         return std::make_tuple(deadlines, max_deadlines);
     }
@@ -115,15 +115,15 @@ protected:
      * @param submissions job submissions ordered by submission time
      * @param deadline_rect parent drawable to add submissions as childs to
      */
-    void create_submission_drawables(std::map<int, std::vector<int>> submissions) {
+    void create_submission_drawables(std::map<unsigned, std::vector<unsigned>> submissions) {
         SDL_GUI::Drawable *deadline_rect =
             this->_default_interface_model->find_first_drawable("deadline");
-        const int arrow_height = Arrow::height(Arrow::Direction::UP);
+        const unsigned arrow_height = Arrow::height(Arrow::Direction::UP);
 
         for (const auto &[timestamp, subs]: submissions) {
             const int distance_height = (subs.size() - 1) * interface_config.player.arrow_distance_px;
             int offset = deadline_rect->height() - arrow_height - distance_height;
-            for (int job_id: subs) {
+            for (unsigned job_id: subs) {
                 const J *job = this->_simulation_model->_jobs[job_id];
                 /* TODO: get rid of magic number */
                 SDL_GUI::Position position(10 + this->_interface_model->px_width(timestamp), offset);
@@ -141,14 +141,14 @@ protected:
      * @param deadlines job deadlines ordered by deadlines time
      * @param deadline_rect parent drawable to add deadlines as childs to
      */
-    void create_deadline_drawables(std::map<int, std::vector<int>> deadlines) {
+    void create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
         SDL_GUI::Drawable *deadline_rect =
             this->_default_interface_model->find_first_drawable("deadline");
 
         for (const auto &[timestamp, dls]: deadlines) {
             const int distance_height = (dls.size() - 1) * interface_config.player.arrow_distance_px;
             int offset = distance_height;
-            for (int job_id: dls) {
+            for (unsigned job_id: dls) {
                 const J *job = this->_simulation_model->_jobs[job_id];
                 /* TODO: get rid of magic number */
                 SDL_GUI::Position position(10 + this->_interface_model->px_width(timestamp), offset);
@@ -166,9 +166,9 @@ protected:
      * @param submissions job submissions ordered by submission time
      * @param deadlines job deadlines ordered by deadlines time
      */
-    void init_deadline_rect(std::map<int, std::vector<int>> submissions,
-                            std::map<int, std::vector<int>> deadlines) {
-        std::map<int, int> heights;
+    void init_deadline_rect(std::map<unsigned, std::vector<unsigned>> submissions,
+                            std::map<unsigned, std::vector<unsigned>> deadlines) {
+        std::map<unsigned, int> heights;
 
         int sub_height = Arrow::height(Arrow::Direction::UP);
 
@@ -181,7 +181,7 @@ protected:
             heights.at(timestamp) += (subs.size() - 1) * interface_config.player.arrow_distance_px;
         }
 
-        int dl_height = Arrow::height(Arrow::Direction::DOWN);
+        unsigned dl_height = Arrow::height(Arrow::Direction::DOWN);
 
         /* deadlines (map is already filled) */
         for (auto const &[timestamp, dls]: deadlines) {
@@ -278,7 +278,7 @@ protected:
         SDL_GUI::Drawable *legend_rect = this->_default_interface_model->find_first_drawable("legend");
 
         SDL_GUI::Position position(15, 15);
-        for (int i = 0; i < static_cast<int>(jobs.size()); ++i) {
+        for (unsigned i = 0; i < jobs.size(); ++i) {
             const J *job = jobs[i];
             SDL_GUI::Drawable *info = create_job_information(job);
             info->set_position(position);
@@ -331,7 +331,7 @@ public:
             this->_default_interface_model->find_drawables_at_position(mouse_position);
 
         /* highlight jobs */
-        std::map<const SDL_GUI::Drawable *, std::set<int>> drawables_jobs =
+        std::map<const SDL_GUI::Drawable *, std::set<unsigned>> drawables_jobs =
             this->_simulation_model->_drawables_jobs;
         auto first_hovered = std::find_if(hovered.begin(), hovered.end(),
             [drawables_jobs, mouse_position](SDL_GUI::Drawable *d) {
@@ -342,7 +342,7 @@ public:
 
         this->_simulation_model->_highlighted_jobs.clear();
         if (first_hovered != hovered.end()) {
-            std::set<int> ids = this->_simulation_model->_drawables_jobs[*first_hovered];
+            std::set<unsigned> ids = this->_simulation_model->_drawables_jobs[*first_hovered];
             this->_simulation_model->_highlighted_jobs = ids;
         }
 

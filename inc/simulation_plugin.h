@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #include <SDL_GUI/application.h>
 #include <SDL_GUI/controllers/input_controller.h>
 #include <SDL_GUI/plugins/default_plugin.h>
@@ -25,27 +27,61 @@
 class SimulationPlugin: public SDL_GUI::PluginBase {
     SDL_GUI::CommandLine _command_line;
 
-    AtlasSimulationModel *build_atlas_model() const;
-    CbsSimulationModel *build_cbs_model() const;
+    template <typename T>
+    T *build_model() const {
+        std::string input = this->_command_line.get_positional("input");
+
+        if (input == "") {
+            std::cerr << "No input given." << std::endl;
+            exit(1);
+        }
+
+        if (input == "-") {
+            return this->model_from_stdin<T>();
+        }
+
+        if (this->_command_line.get_flag("no_simulation")) {
+            T *model = this->model_from_file<T>(input);
+            model->_simulated = true;
+            return model;
+        }
+
+        return this->model_from_file<T>(input);
+    }
+
     /**
      * Read simulation output from file
      * @param path file to read from
      * @return Model with all the parsed information
      */
-    AtlasSimulationModel *atlas_model_from_file(std::string path) const;
+    template <typename T>
+    T *model_from_file(std::string path) const {
+        std::ifstream input_file(path);
+        if (not input_file.is_open()) {
+            std::cerr << "Could not open file: " << path << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        T *model = parse_file<T>(&input_file);
+        input_file.close();
+        return model;
+    }
 
     /**
      * Read simulation output from stdin
      * @return Model with all the parsed information
      */
-    AtlasSimulationModel *atlas_model_from_stdin() const;
+    template <typename T>
+    T *model_from_stdin() const {
+        return parse_file<T>(&std::cin);
+    }
 
     /**
      * Generate Atlas Model from an input stream
      * @param input input stream
      * @return Model with all the parsed information
      */
-    AtlasSimulationModel *parse_file(std::istream *input) const;
+    template <typename T>
+    T *parse_file(std::istream *input) const;
 public:
     /** Constructor */
     SimulationPlugin();
@@ -84,7 +120,7 @@ public:
 
         BaseSimulationModel *simulation_model;
         if (this->_command_line.get_flag("simulate_cbs")) {
-            CbsSimulationModel *cbs_model = this->build_cbs_model();
+            CbsSimulationModel *cbs_model = this->build_model<CbsSimulationModel>();
             app->add_model(cbs_model);
             simulation_model = cbs_model;
 
@@ -98,7 +134,7 @@ public:
             app->add_controller(cbs_view_controller);
 
         } else {
-            AtlasSimulationModel *atlas_model = this->build_atlas_model();
+            AtlasSimulationModel *atlas_model = this->build_model<AtlasSimulationModel>();
             app->add_model(atlas_model);
             simulation_model = atlas_model;
 

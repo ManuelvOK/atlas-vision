@@ -73,7 +73,7 @@ public:
 
             /* update state timestamp */
             this->_simulation_model->_timestamp = std::max(action->time(),
-                                                        this->_simulation_model->_timestamp);
+                                                           this->_simulation_model->_timestamp);
 
             /* execute action */
             action->execute();

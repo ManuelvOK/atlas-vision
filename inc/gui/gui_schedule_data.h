@@ -1,8 +1,8 @@
 #pragma once
 
 struct GuiScheduleData {
-    int _begin;
-    int _length;
-    int _row;
+    unsigned _begin;
+    unsigned _length;
+    unsigned _row;
 };
 

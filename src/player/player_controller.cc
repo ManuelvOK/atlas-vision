@@ -102,7 +102,7 @@ void PlayerController::drag() {
 
 void PlayerController::init() {
     /* set max position */
-    int max_position = 0;
+    unsigned max_position = 0;
     for (BaseSchedule * schedule: this->_simulation_model->schedules()) {
         max_position = std::max(max_position, schedule->get_maximal_end());
     }
@@ -148,7 +148,7 @@ void PlayerController::init() {
     unsigned height = grid->height();
     unsigned grid_dark_distance =
         interface_config.player.grid_dark_distance * interface_config.player.grid_distance;
-    for (int i = 0; i < max_position; i += interface_config.player.grid_distance) {
+    for (unsigned i = 0; i < max_position; i += interface_config.player.grid_distance) {
         SDL_GUI::VerticalLine *l = new SDL_GUI::VerticalLine();
         /* every 5th line has a different color */
         if (i % grid_dark_distance == 0) {

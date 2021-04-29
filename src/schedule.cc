@@ -7,19 +7,19 @@
 #include <job.h>
 #include <util/parser.h>
 
-int ScheduleData::end() const {
+unsigned ScheduleData::end() const {
     return this->_begin + this->_execution_time;
 }
 
 
-int BaseSchedule::_next_id = 0;
+unsigned BaseSchedule::_next_id = 0;
 
-BaseSchedule::BaseSchedule(int id, BaseJob *job, int submission_time, unsigned core)
+BaseSchedule::BaseSchedule(unsigned id, BaseJob *job, unsigned submission_time, unsigned core)
     : _job(job), _id(id), _submission_time(submission_time), _core(core) {
     BaseSchedule::_next_id = std::max(BaseSchedule::_next_id, this->_id + 1);
 }
 
-int BaseSchedule::next_id() {
+unsigned BaseSchedule::next_id() {
     return BaseSchedule::_next_id++;
 }
 
@@ -31,8 +31,8 @@ BaseJob *BaseSchedule::job() const {
     return this->_job;
 }
 
-bool BaseSchedule::exists_at_time(int timestamp) const {
-    return (this->_end < 0 || this->_end > timestamp) && timestamp >= this->_submission_time;
+bool BaseSchedule::exists_at_time(unsigned timestamp) const {
+    return this->_end > timestamp && timestamp >= this->_submission_time;
 }
 
 

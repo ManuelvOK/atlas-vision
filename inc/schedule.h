@@ -11,13 +11,13 @@
 class ParsedChange;
 
 struct ScheduleData {
-    int _timestamp;
-    int _begin;                 /**< start time of schedule execution */
-    int _execution_time;        /**< time the scheduled job runs */
+    unsigned _timestamp;
+    unsigned _begin;                 /**< start time of schedule execution */
+    unsigned _execution_time;        /**< time the scheduled job runs */
     bool _does_execute = false; /**< flag determining whether the schedule does run */
     bool _end_known = true;     /**< flag determining whether the end of the schedule is known */
 
-    int end() const;
+    unsigned end() const;
 };
 
 static bool same_data(const ScheduleData &a, const ScheduleData &b) {
@@ -28,27 +28,27 @@ static bool same_data(const ScheduleData &a, const ScheduleData &b) {
 
 class BaseSchedule {
   protected:
-    static int _next_id;
+    static unsigned _next_id;
 
     BaseJob *_job;                      /**< the concerning job */
   public:
-    int _id;                            /**< id of this schedule */
-    int _submission_time;               /**< time this schedule gets submitted */
+    unsigned _id;                            /**< id of this schedule */
+    unsigned _submission_time;               /**< time this schedule gets submitted */
     unsigned _core;                     /**< core on wich the job gets executed */
 
-    int _end = -1;                      /**< possible end of this schedule */
-    std::set<int> _change_points;       /**< list of points at which changes happen */
+    unsigned _end = -1;                      /**< possible end of this schedule */
+    std::set<unsigned> _change_points;       /**< list of points at which changes happen */
     bool _simulation_ended = false;
 
-    BaseSchedule(int id, BaseJob *job, int submission_time, unsigned core);
+    BaseSchedule(unsigned id, BaseJob *job, unsigned submission_time, unsigned core);
 
-    BaseSchedule(BaseJob *job, int submission_time, unsigned core)
+    BaseSchedule(BaseJob *job, unsigned submission_time, unsigned core)
         : BaseSchedule(BaseSchedule::next_id(), job, submission_time, core) {}
 
     BaseSchedule(const BaseSchedule *s)
         : BaseSchedule(BaseSchedule::next_id(), s->_job, s->_submission_time, s->_core) {}
 
-    static int next_id();
+    static unsigned next_id();
     static void reset_next_id();
 
     BaseJob *job() const;
@@ -58,11 +58,11 @@ class BaseSchedule {
      * @param timestamp timestamp to check against
      * @returns True if schedule exists at timestamp. False otherwise.
      */
-    bool exists_at_time(int timestamp) const;
+    bool exists_at_time(unsigned timestamp) const;
 
-    virtual GuiScheduleData get_vision_data_at_time(int timestamp = 0) const = 0;
+    virtual GuiScheduleData get_vision_data_at_time(unsigned timestamp = 0) const = 0;
 
-    virtual int get_maximal_end() const = 0;
+    virtual unsigned get_maximal_end() const = 0;
 
 };
 
@@ -72,10 +72,10 @@ class Schedule : public BaseSchedule {
     static_assert(std::is_base_of<ScheduleData, T>::value);
 
 protected:
-    T &data_at_time(int timestamp) {
+    T &data_at_time(unsigned timestamp) {
         /* find dataset for given timestamp */
-        int data_index = this->_submission_time;
-        for (std::pair<int, T> d: this->_data) {
+        unsigned data_index = this->_submission_time;
+        for (std::pair<unsigned, T> d: this->_data) {
             if (timestamp < d.first) {
                 break;
             }
@@ -84,10 +84,10 @@ protected:
         return this->_data.at(data_index);
     }
 
-    const T &data_at_time(int timestamp) const {
+    const T &data_at_time(unsigned timestamp) const {
         /* find dataset for given timestamp */
-        int data_index = this->_submission_time;
-        for (std::pair<int, T> d: this->_data) {
+        unsigned data_index = this->_submission_time;
+        for (std::pair<unsigned, T> d: this->_data) {
             if (timestamp < d.first) {
                 break;
             }
@@ -97,7 +97,7 @@ protected:
     }
 
 public:
-    std::map<int, T> _data;             /**< data for a given time period */
+    std::map<unsigned, T> _data;             /**< data for a given time period */
 
     using BaseSchedule::BaseSchedule;
 
@@ -114,19 +114,26 @@ public:
      * @param timestamp timestamp to get data for
      * @returns schedules data at given timestamp
      */
-    T get_data_at_time(int timestamp = 0) const {
+    T get_data_at_time(unsigned timestamp = 0) const {
         return this->data_at_time(timestamp);
     }
 
-    virtual GuiScheduleData get_vision_data_at_time(int timestamp = 0) const override {
+    virtual GuiScheduleData get_vision_data_at_time(unsigned timestamp = 0) const override {
         ScheduleData data = this->data_at_time(timestamp);
 
         if (not data._end_known) {
-            data._execution_time = std::max(0,std::min(data._execution_time,
-                                                       timestamp - data._begin));
+            if (data._begin > timestamp) {
+                data._execution_time = 0;
+            } else {
+                data._execution_time = std::min(data._execution_time, timestamp - data._begin);
+            }
         }
         if (not data._does_execute and timestamp >= data._begin) {
-            data._execution_time = std::max(0, data.end() - timestamp);
+            if (data.end() < timestamp) {
+                data._execution_time = 0;
+            } else {
+                data._execution_time = data.end() - timestamp;
+            }
             data._begin = timestamp; // + 1;
         }
         GuiScheduleData gui_data{data._begin, data._execution_time, 0};
@@ -161,7 +168,7 @@ public:
      * Add a change to this schedule
      * @param change change object to add
      */
-    void add_change(const ParsedChange &change) {
+    void add_change(const ParsedScheduleChange &change) {
         /* get last data before change */
         ScheduleData &old_data = this->data_at_time(change._timestamp);
         ChangeType type = static_cast<ChangeType>(change._type);
@@ -189,7 +196,7 @@ public:
         }
     }
 
-    void add_change(int timestamp, int begin, int execution_time) {
+    void add_change(unsigned timestamp, unsigned begin, unsigned execution_time) {
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._execution_time = execution_time;
@@ -197,7 +204,7 @@ public:
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_begin(int timestamp, int begin, bool did_execute = true){
+    void add_change_begin(unsigned timestamp, unsigned begin, bool did_execute = true){
         T &old_data = this->last_data();
         T new_data = old_data;
         new_data._timestamp = timestamp;
@@ -208,42 +215,46 @@ public:
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_does_execute(int timestamp, bool does_execute){
+    void add_change_does_execute(unsigned timestamp, bool does_execute){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._does_execute = does_execute;
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_end_known(int timestamp, bool end_known){
+    void add_change_end_known(unsigned timestamp, bool end_known){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._end_known = end_known;
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_shift_relative(int timestamp, int shift){
+    void add_change_shift_relative(unsigned timestamp, unsigned shift){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._begin += shift;
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_execution_time_relative(int timestamp, int execution_time_difference){
+    void add_change_execution_time_relative(unsigned timestamp, int execution_time_difference){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._execution_time += execution_time_difference;
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_end(int timestamp, int end){
+    void add_change_end(unsigned timestamp, unsigned end){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
-        new_data._execution_time = end - new_data._begin;
+        if (end < new_data._execution_time) {
+            new_data._execution_time = 0;
+        } else {
+            new_data._execution_time = end - new_data._begin;
+        }
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_delete(int timestamp){
+    void add_change_delete(unsigned timestamp){
         T last_data = this->last_data();
 
         /* when CFS schedules get deleted there has been an end change before */
@@ -259,7 +270,7 @@ public:
         this->_data[timestamp] = new_data;
     }
 
-    void end_simulation(int timestamp){
+    void end_simulation(unsigned timestamp){
         this->_simulation_ended = true;
         T data = this->last_data();
         if (data._execution_time == 0 or not data._does_execute) {
@@ -272,7 +283,7 @@ public:
      * @param timestamp timestamp to check against
      * @returns True if the schedule gets executed at timestamp. False otherwise.
      */
-    bool is_active_at_time(int timestamp) const {
+    bool is_active_at_time(unsigned timestamp) const {
         T data = this->get_data_at_time(timestamp);
         return (data._begin <= timestamp && data._begin + data._execution_time > timestamp);
     }
@@ -281,9 +292,9 @@ public:
      * get the worst-case end timestamp for this schedule
      * @returns worst-case end timestamp
      */
-    int get_maximal_end() const {
+    unsigned get_maximal_end() const {
         auto max_data = std::max_element(this->_data.begin(), this->_data.end(),
-            [](const std::pair<int, T> &a, const std::pair<int, T> &b){
+            [](const std::pair<unsigned, T> &a, const std::pair<unsigned, T> &b){
                 return a.second._begin < b.second._begin;
             });
         ScheduleData data = max_data->second;

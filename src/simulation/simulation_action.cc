@@ -1,6 +1,6 @@
 #include <simulation/simulation_action.h>
 
-int TimedAction::time() const {
+unsigned TimedAction::time() const {
     return this->_time;
 }
 

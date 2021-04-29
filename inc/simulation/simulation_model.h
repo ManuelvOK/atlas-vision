@@ -16,8 +16,8 @@
 
 class BaseSimulationModel : public SDL_GUI::ModelBase {
 public:
-    int _timestamp = 0;
-    int _n_cores = -1;                      /**< number of cores the jobs get scheduled on */
+    unsigned _timestamp = 0;
+    unsigned _n_cores = -1;                      /**< number of cores the jobs get scheduled on */
 
     std::list<SimulationAction *> _actions_to_do;
     std::list<SimulationAction *> _actions_done;
@@ -34,14 +34,20 @@ public:
     Message *_hovered_message = nullptr;
     std::vector<std::string> _debug_messages;
 
-    std::set<int> _highlighted_jobs;
+    std::set<unsigned> _highlighted_jobs;
 
     virtual std::vector<BaseSchedule *> schedules() const = 0;
 
     virtual std::vector<BaseJob *> jobs() const = 0;
 
-    void add_message(int timestamp, std::string text, std::set<int> jobs = std::set<int>());
+    void add_message(unsigned timestamp, std::string text, std::set<unsigned> jobs = std::set<unsigned>());
 };
+
+template <typename T>
+bool compare_jobs_deadline(const T *a, const T *b) {
+    return a->_deadline < b->_deadline;
+}
+
 
 template <typename T>
 bool compare_schedules(const T *a, const T *b) {
@@ -63,7 +69,7 @@ public:
     /** list of schedules for the jobs */
     std::set<S *, decltype(&compare_schedules<S>)> _schedules;
 
-    std::map<const SDL_GUI::Drawable *, std::set<int>> _drawables_jobs;
+    std::map<const SDL_GUI::Drawable *, std::set<unsigned>> _drawables_jobs;
 
     SimulationModel() : _schedules(compare_schedules) {}
 
@@ -75,7 +81,7 @@ public:
         return std::vector<BaseJob *>(this->_jobs.begin(), this->_jobs.end());
     }
 
-    virtual const S *active_schedule(unsigned core, int timestamp) const {
+    virtual const S *active_schedule(unsigned core, unsigned timestamp) const {
         for (const S *s: this->_schedules) {
             if (s->is_active_at_time(timestamp) and s->_core == core) {
                 return s;

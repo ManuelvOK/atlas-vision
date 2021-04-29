@@ -4,11 +4,11 @@
 #include <sstream>
 
 /* amount of time to still be executed */
-int BaseJob::execution_time_left(int timestamp) const {
+unsigned BaseJob::execution_time_left(unsigned timestamp) const {
     return this->_execution_time - this->time_executed(timestamp);
 }
 
-bool BaseJob::finished(int timestamp) const {
+bool BaseJob::finished(unsigned timestamp) const {
     return this->execution_time_left(timestamp) <= 0;
 }
 

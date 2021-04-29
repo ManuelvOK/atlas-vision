@@ -11,9 +11,9 @@ public:
     const class { /* player related */
     public:
         const int grid_grey = 150;
-        const int grid_distance = 250;
+        const unsigned grid_distance = 250;
         const int grid_dark_grey = 100;
-        const int grid_dark_distance = 4;
+        const unsigned grid_dark_distance = 4;
 
         const int scheduler_distance_px = 5;
         const int core_distance_px = 5;

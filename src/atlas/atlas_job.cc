@@ -40,13 +40,15 @@ std::vector<AtlasJob *> AtlasJob::dependees() {
     return ret;
 }
 
-int AtlasJob::calculate_dependency_level() {
+unsigned AtlasJob::calculate_dependency_level() {
     /* only calculate if already set */
-    if (this->_dependency_level >= 0) {
+    if (this->_dependency_level_calculated) {
         return this->_dependency_level;
     }
+
     if (this->_known_dependencies.size() == 0 && this->_unknown_dependencies.size() == 0) {
         this->_dependency_level = 0;
+        this->_dependency_level_calculated = true;
         return 0;
     }
     this->_dependency_level = 1;
@@ -58,14 +60,15 @@ int AtlasJob::calculate_dependency_level() {
         this->_dependency_level = std::max(this->_dependency_level,
                                            1 + j->calculate_dependency_level());
     }
+    this->_dependency_level_calculated = true;
     return this->_dependency_level;
 }
 
-int AtlasJob::estimated_execution_time_left(int timestamp) const {
+unsigned AtlasJob::estimated_execution_time_left(unsigned timestamp) const {
     return this->_execution_time_estimate - this->time_executed(timestamp);
 }
 
-bool AtlasJob::all_dependencies_finished(int timestamp) const {
+bool AtlasJob::all_dependencies_finished(unsigned timestamp) const {
     for (const AtlasJob *j: this->_known_dependencies) {
         if (j->finished(timestamp)) {
             continue;
@@ -91,17 +94,20 @@ void AtlasJob::set_atlas_schedule(AtlasSchedule *schedule) {
     this->_schedules.push_back(schedule);
 }
 
-int AtlasJob::time_executed(int timestamp) const {
+unsigned AtlasJob::time_executed(unsigned timestamp) const {
     if (not this->all_dependencies_finished(timestamp)) {
         return 0;
     }
-    int time_executed = 0;
+    unsigned time_executed = 0;
     for (BaseAtlasSchedule *s: this->_schedules) {
         auto data = s->get_data_at_time(timestamp);
         if (not data._does_execute) {
             continue;
         }
-        int value = std::min(data._execution_time, std::max(0, timestamp - data._begin));
+        unsigned value = data._execution_time;
+        if (data._begin <= timestamp) {
+            value = std::min(value, timestamp - data._begin);
+        }
         if (data._scheduler == AtlasSchedulerType::CFS) {
             value /= this->_atlas_model->_cfs_factor;
         }
