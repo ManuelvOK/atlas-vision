@@ -20,6 +20,8 @@ class CbsSimulationModel : public SimulationModel<CbsSchedule, CbsJob> {
 
     CbsSchedule *_active_schedule = nullptr;
 
+    std::map<unsigned, unsigned> n_dls;
+
     CbsSimulationModel()
         : SimulationModel(), _hard_rt_queue(compare_jobs_deadline<HardRtJob>) {}
 

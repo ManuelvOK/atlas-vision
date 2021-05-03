@@ -22,6 +22,8 @@ public:
         : _id(id), _deadline(deadline), _execution_time(execution_time),
           _submission_time(submission_time) {}
 
+    virtual unsigned deadline(unsigned timestamp) const;
+
     virtual unsigned time_executed(unsigned timestamp) const = 0;
 
     virtual unsigned execution_time_left(unsigned timestamp) const;

@@ -55,7 +55,7 @@ CbsJob *CbsSimulationModel::next_job() const {
         return soft_rt_job;
     }
 
-    if (compare_jobs_deadline(hard_rt_job, soft_rt_job)) {
+    if (hard_rt_job->_deadline < soft_rt_job->_deadline) {
         return hard_rt_job;
     }
     return soft_rt_job;

@@ -22,3 +22,11 @@ HardRtSchedule::HardRtSchedule(HardRtJob *job, int submission_time, unsigned cor
 
 SoftRtSchedule::SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, unsigned begin, unsigned execution_time)
     : CbsSchedule(job, submission_time, core, begin, execution_time), _rt_job(job) {}
+
+
+GuiScheduleData SoftRtSchedule::get_vision_data_at_time(unsigned timestamp) const {
+    GuiScheduleData gui_data = Schedule<CbsScheduleData>::get_vision_data_at_time(timestamp);
+
+    gui_data._row = 1;
+    return gui_data;
+}

@@ -19,6 +19,8 @@ class CbsViewController : public SimulationViewController<CbsSchedule, CbsJob> {
 
     SDL_GUI::Drawable *create_job_information(const CbsJob *job) override;
 
+    virtual std::vector<JobArrow *> create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) override;
+
 public:
     CbsViewController(SDL_GUI::ApplicationBase *application,
                       CbsSimulationModel *cbs_model,
@@ -26,4 +28,5 @@ public:
                       SDL_GUI::InterfaceModel *default_interface_model,
                       InputModel *input_model,
                       const PlayerModel *player_model);
+
 };

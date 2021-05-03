@@ -3,6 +3,11 @@
 #include <iostream>
 #include <sstream>
 
+unsigned BaseJob::deadline(unsigned timestamp) const {
+    (void) timestamp;
+    return this->_deadline;
+}
+
 /* amount of time to still be executed */
 unsigned BaseJob::execution_time_left(unsigned timestamp) const {
     return this->_execution_time - this->time_executed(timestamp);

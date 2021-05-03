@@ -1,7 +1,7 @@
 #include <cbs/cbs_job.h>
 
 unsigned SoftRtJob::deadline(unsigned timestamp) const {
-    unsigned deadline = this->_deadline;
+    unsigned deadline = 0;
     for (const auto &[t, dl]: this->_deadlines) {
         if (t > timestamp) {
             break;
@@ -13,4 +13,5 @@ unsigned SoftRtJob::deadline(unsigned timestamp) const {
 
 void SoftRtJob::add_change_deadline(unsigned timestamp, unsigned deadline) {
     this->_deadlines[timestamp] = deadline;
+    this->_deadline = deadline;
 }

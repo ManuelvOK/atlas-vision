@@ -26,18 +26,22 @@ void ScheduleRect::update() {
         this->hide();
         return;
     }
-    this->show();
-
     GuiScheduleData data = this->_schedule->get_vision_data_at_time(timestamp);
+    if (data._length == 0) {
+        this->hide();
+        return;
+    }
+    this->show();
 
     this->set_x(this->_interface_model->px_width(data._begin));
     this->set_y(this->_interface_model->scheduler_offset(data._row));
     this->set_width(this->_interface_model->px_width(data._length));
 
-    this->_style = this->_default_style;
     if (this->is_hidden()) {
         return;
     }
+
+    this->_style = this->_default_style;
     if (this->is_highlighted()) {
         this->_style = this->highlight_style();
     }

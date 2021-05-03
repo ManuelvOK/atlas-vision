@@ -35,4 +35,6 @@ class SoftRtSchedule : public CbsSchedule {
 
     SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, unsigned execution_time,
                    unsigned begin);
+
+    GuiScheduleData get_vision_data_at_time(unsigned timestamp = 0) const override;
 };

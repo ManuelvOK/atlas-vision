@@ -28,13 +28,23 @@ class ConstantBandwidthServer {
     ConstantBandwidthServer(unsigned id, unsigned max_budget, unsigned period)
         :_id(id), _max_budget(max_budget), _period(period) {}
 
+    unsigned id() const;
+
     unsigned budget(unsigned timestamp) const;
 
     unsigned deadline(unsigned timestamp) const;
 
     SoftRtJob *job() const;
 
+    std::list<SoftRtJob *> job_queue() const;
+
+    float utilisation() const;
+
+    bool is_active() const;
+
     void add_schedule(SoftRtSchedule *schedule);
+
+    unsigned generate_new_deadline_and_refill(unsigned timestamp);
 
     void refill_budget(unsigned timestamp);
 

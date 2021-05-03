@@ -141,7 +141,8 @@ protected:
      * @param deadlines job deadlines ordered by deadlines time
      * @param deadline_rect parent drawable to add deadlines as childs to
      */
-    void create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+    virtual std::vector<JobArrow *> create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+        std::vector<JobArrow *> arrows;
         SDL_GUI::Drawable *deadline_rect =
             this->_default_interface_model->find_first_drawable("deadline");
 
@@ -155,10 +156,12 @@ protected:
                 JobArrow *a = new JobArrow(job, timestamp, this->_interface_model, this->_simulation_model,
                                         position, Arrow::Direction::DOWN);
                 this->_simulation_model->_drawables_jobs[a].insert(job->_id);
+                arrows.push_back(a);
                 deadline_rect->add_child(a);
                 offset -= interface_config.player.arrow_distance_px;
             }
         }
+        return arrows;
     }
 
     /**
