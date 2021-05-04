@@ -39,6 +39,14 @@ unsigned ConstantBandwidthServer::budget(unsigned timestamp) const {
     return budget;
 }
 
+unsigned ConstantBandwidthServer::max_budget() const {
+    return this->_max_budget;
+}
+
+std::set<unsigned> ConstantBandwidthServer::budget_fill_times() const {
+    return this->_budget_fill_times;
+}
+
 unsigned ConstantBandwidthServer::deadline(unsigned timestamp) const {
     unsigned deadline = 0;
     for (auto [t, dl]: this->_deadlines) {
@@ -61,6 +69,45 @@ std::list<SoftRtJob *> ConstantBandwidthServer::job_queue() const {
     return this->_job_queue;
 }
 
+std::map<unsigned, unsigned> ConstantBandwidthServer::budget_line() const {
+    std::vector<SoftRtSchedule *> schedules(this->_schedules.begin(), this->_schedules.end());
+    std::sort(schedules.begin(), schedules.end(),
+        [](SoftRtSchedule *a, SoftRtSchedule *b) {
+            return a->last_data()._begin < b->last_data()._begin;
+        });
+
+    std::map<unsigned, unsigned> budget_line;
+    budget_line[0] = this->_max_budget;
+    unsigned current_budget = this->_max_budget;
+    for (SoftRtSchedule *schedule: schedules) {
+        CbsScheduleData data = schedule->last_data();
+
+        /* add point at beginning of schedule */
+        unsigned current_time = data._begin;
+        budget_line[current_time] = current_budget;
+
+        unsigned execution_time_left = data._execution_time;
+
+        /* add points for filling up */
+        while (execution_time_left >= current_budget) {
+            current_time += current_budget;
+            budget_line[current_time] = 0;
+
+            execution_time_left -= current_budget;
+            current_budget = this->_max_budget;
+        }
+
+        current_budget -= execution_time_left;
+        budget_line[data.end()] = current_budget;
+    }
+
+    for (unsigned fill_time: this->_budget_fill_times) {
+        budget_line[fill_time] = 0;
+    }
+
+    return budget_line;
+}
+
 float ConstantBandwidthServer::utilisation() const {
     return static_cast<float>(this->_max_budget) / this->_period;
 }
@@ -74,7 +121,12 @@ void ConstantBandwidthServer::add_schedule(SoftRtSchedule *schedule) {
 }
 
 unsigned ConstantBandwidthServer::generate_new_deadline_and_refill(unsigned timestamp) {
-    unsigned deadline = timestamp + this->_period;
+    unsigned deadline;
+    if (this->is_active()) {
+        deadline = this->deadline(timestamp) + this->_period;
+    } else {
+        deadline = timestamp + this->_period;
+    }
     this->_deadlines.emplace(timestamp, deadline);
     this->refill_budget(timestamp);
     return deadline;

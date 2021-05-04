@@ -32,11 +32,17 @@ class ConstantBandwidthServer {
 
     unsigned budget(unsigned timestamp) const;
 
+    unsigned max_budget() const;
+
+    std::set<unsigned> budget_fill_times() const;
+
     unsigned deadline(unsigned timestamp) const;
 
     SoftRtJob *job() const;
 
     std::list<SoftRtJob *> job_queue() const;
+
+    std::map<unsigned, unsigned> budget_line() const;
 
     float utilisation() const;
 

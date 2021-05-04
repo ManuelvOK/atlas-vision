@@ -1,7 +1,8 @@
 #include <cbs/cbs_view_controller.h>
 
-#include <gui/schedule_rect.h>
+#include <gui/budget_line.h>
 #include <gui/job_rect.h>
+#include <gui/schedule_rect.h>
 
 CbsViewController::CbsViewController(SDL_GUI::ApplicationBase *application,
                                      CbsSimulationModel *cbs_model,
@@ -12,6 +13,11 @@ CbsViewController::CbsViewController(SDL_GUI::ApplicationBase *application,
     : SimulationViewController(application, cbs_model, interface_model, default_interface_model,
                                input_model, player_model),
       _cbs_model(cbs_model) {}
+
+void CbsViewController::init() {
+    SimulationViewController::init();
+    this->create_budget_lines(this->_cbs_model->_servers);
+}
 
 void CbsViewController::create_schedule_drawables() {
     SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
@@ -154,3 +160,140 @@ CbsViewController::create_deadline_drawables(std::map<unsigned, std::vector<unsi
     }
     return arrows;
 }
+
+void
+CbsViewController::create_budget_lines(const std::map<unsigned, ConstantBandwidthServer> &servers) {
+    for (const auto [_, cbs]: servers) {
+        this->create_budget_line(cbs);
+    }
+}
+
+void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
+    std::vector<SoftRtSchedule *> schedules(cbs._schedules.begin(), cbs._schedules.end());
+
+    std::sort(schedules.begin(), schedules.end(),
+        [](SoftRtSchedule *a, SoftRtSchedule *b) {
+            return a->last_data()._begin < b->last_data()._begin;
+        });
+
+    SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
+
+    int y_offset = 10 + (interface_config.unit.height_px + interface_config.player.scheduler_distance_px) * 2;
+    int height = interface_config.unit.height_px;
+
+    unsigned budget_before = cbs.max_budget();
+    unsigned time_before = 0;
+    int value_before = y_offset;
+
+    for (SoftRtSchedule *schedule: schedules) {
+        CbsScheduleData data = schedule->last_data();
+
+        /* add point at beginning of schedule */
+        unsigned current_time = data._begin;
+
+        /* add horizontal line */
+        if (current_time != time_before) {
+            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, value_before);
+            core_rect->add_child(l);
+        }
+
+        /* check for filling at begin of schedule */
+        if (cbs.budget_fill_times().contains(current_time) && budget_before != cbs.max_budget()) {
+            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, value_before);
+            core_rect->add_child(l);
+
+            value_before = y_offset;
+            budget_before = cbs.max_budget();
+
+        }
+
+        time_before = current_time;
+        unsigned execution_time_left = data._execution_time;
+
+        /* add points for filling up */
+        while (execution_time_left >= budget_before) {
+            current_time += budget_before;
+
+            /* add Line for budget decrease */
+            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, y_offset + height);
+            core_rect->add_child(l);
+
+            /* add line for budget fill */
+            l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, y_offset + height);
+            core_rect->add_child(l);
+
+            value_before = y_offset;
+
+            execution_time_left -= budget_before;
+            budget_before = cbs.max_budget();
+            time_before = current_time;
+        }
+
+        if (execution_time_left == 0) {
+            continue;
+        }
+
+        current_time += execution_time_left;
+        /* add line for final budget decrease */
+        float factor = 1 - execution_time_left * 1.0 / cbs.max_budget();
+        unsigned current_value = value_before + height * factor;
+        BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
+        core_rect->add_child(l);
+
+        value_before = current_value;
+        budget_before -= execution_time_left;
+        time_before = current_time;
+    }
+
+    BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, time_before + 2000, value_before, value_before);
+    core_rect->add_child(l);
+}
+
+//void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
+//    std::map<unsigned, unsigned> budget_line = cbs.budget_line();
+//
+//    SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
+//
+//    /* for now we draw after the first CBS. TODO: change the 2 to something reasonable */
+//    int y_offset = 10 + (interface_config.unit.height_px + interface_config.player.scheduler_distance_px) * 2;
+//
+//    int height = interface_config.unit.height_px;
+//    unsigned value_before = y_offset;
+//    unsigned budget_before = cbs.max_budget();
+//    unsigned time_before = 0;
+//    for (const auto [timestamp, budget]: budget_line) {
+//        if (time_before == timestamp) {
+//            continue;
+//        }
+//
+//        if (budget_before == budget) {
+//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, timestamp, value_before, value_before);
+//            core_rect->add_child(l);
+//
+//            time_before = timestamp;
+//            continue;
+//        }
+//
+//        float factor = 1 - static_cast<float>(budget_before - budget) / cbs.max_budget();
+//        unsigned value = value_before + height * factor;
+//        BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, timestamp, value_before, value);
+//        core_rect->add_child(l);
+//
+//        value_before = value;
+//        budget_before = budget;
+//        time_before = timestamp;
+//
+//        /* do vertical line if 0 (fill) */
+//        if (budget == 0) {
+//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, timestamp, timestamp, y_offset, y_offset + height);
+//            core_rect->add_child(l);
+//
+//            budget_before = cbs.max_budget();
+//            value_before = y_offset;
+//            continue;
+//        }
+//
+//        /* do line from last point to new point */
+//    }
+//}
+

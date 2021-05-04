@@ -20,14 +20,14 @@ void CbsSubmissionAction<SoftRtJob>::execute() {
     ConstantBandwidthServer *cbs = this->_job->_cbs;
 
 
-    // TODO: change deadline
+    /* change deadline */
     unsigned deadline = cbs->deadline(timestamp);
     if (not cbs->is_active()) {
         std::cout << timestamp << ": cbs " << cbs->id() << " is inactive" << std::endl;
         unsigned current_budget = cbs->budget(timestamp);
         std::cout << timestamp << ":\tc_s: " << current_budget << "\td_s_k: " << deadline
                   << "\tr_i_j: " << timestamp << "\tU_s: " << cbs->utilisation() << std::endl;
-        std::cout << timestamp << ":\t(d_s_k - r_i_j) * U_k: "
+        std::cout << timestamp << ":\t(d_s_k - r_i_j) * U_s: "
                   << (static_cast<int>(deadline) - static_cast<int>(timestamp)) * cbs->utilisation() << std::endl;
         if (current_budget >= (static_cast<int>(deadline) - static_cast<int>(timestamp)) * cbs->utilisation()) {
             deadline = cbs->generate_new_deadline_and_refill(timestamp);
@@ -55,10 +55,12 @@ void CbsFillBudgetAction::execute() {
         std::cout << timestamp << ": try to refill budget but its not 0." << std::endl;
         return;
     }
-    std::cout << timestamp << ": ReFill Budget" << std::endl;
     unsigned deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
+    std::cout << timestamp << ": ReFill Budget. New deadline: " << deadline << std::endl;
     for (SoftRtJob *job: this->_cbs->job_queue()) {
-        job->add_change_deadline(timestamp, deadline);
+        if (not job->finished(timestamp)) {
+            job->add_change_deadline(timestamp, deadline);
+        }
     }
 }
 
