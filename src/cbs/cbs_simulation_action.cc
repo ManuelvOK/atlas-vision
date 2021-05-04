@@ -56,11 +56,16 @@ void CbsFillBudgetAction::execute() {
         return;
     }
     unsigned deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
-    std::cout << timestamp << ": ReFill Budget. New deadline: " << deadline << std::endl;
+    std::cout << timestamp << ": ReFill Budget for cbs " << this->_cbs->id() << ". New deadline: " << deadline << std::endl;
     for (SoftRtJob *job: this->_cbs->job_queue()) {
-        if (not job->finished(timestamp)) {
-            job->add_change_deadline(timestamp, deadline);
+        if (job->finished(timestamp)) {
+            continue;
         }
+        job->add_change_deadline(timestamp, deadline);
+    }
+    SoftRtSchedule *active_schedule = this->_cbs->_active_schedule;
+    if (active_schedule) {
+        active_schedule->add_change_end(timestamp, timestamp);
     }
 }
 

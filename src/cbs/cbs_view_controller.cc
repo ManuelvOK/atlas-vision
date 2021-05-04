@@ -44,10 +44,32 @@ void CbsViewController::init_cores_rect() {
     }
 
     SDL_GUI::Drawable *d = core_rect->find_first("atlas");
+    d->remove_attribute("atlas");
+    d->add_attribute("hard-rt");
     d->set_y(this->_interface_model->scheduler_offset(0));
 
     d = core_rect->find_first("recovery");
-    d->set_y(this->_interface_model->scheduler_offset(1));
+    d->remove_attribute("recovery");
+    d->add_attribute("soft-rt");
+    d->add_attribute("soft-rt-0");
+    unsigned offset = this->_interface_model->scheduler_offset(1);
+    d->set_y(offset);
+    d->set_height(35);
+
+    for (unsigned i = 1; i < this->_cbs_model->_servers.size(); ++i) {
+        d = d->deepcopy();
+        d->remove_attribute("soft-rt-0");
+        std::stringstream ss;
+        ss << "soft-rt-" << i;
+        d->add_attribute(ss.str());
+        core_rect->add_child(d);
+        d->set_height(35);
+        offset += 40;
+        d->set_y(offset);
+    }
+
+    core_rect->set_height(offset + 40);
+
 
     d = core_rect->find_first("cfs");
     core_rect->remove_children([d](SDL_GUI::Drawable *drawable){return drawable == d;});
@@ -178,7 +200,7 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
 
     SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
 
-    int y_offset = 10 + (interface_config.unit.height_px + interface_config.player.scheduler_distance_px) * 2;
+    int y_offset = this->_interface_model->scheduler_offset(cbs.id() * 2 + 2) - 2;
     int height = interface_config.unit.height_px;
 
     unsigned budget_before = cbs.max_budget();

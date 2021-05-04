@@ -1,6 +1,7 @@
 #include <cbs/cbs_schedule.h>
 
 #include <cbs/cbs_job.h>
+#include <cbs/constant_bandwidth_server.h>
 
 CbsSchedule::CbsSchedule(unsigned id, CbsJob *job, unsigned submission_time, unsigned core, unsigned begin, unsigned execution_time)
     : Schedule<CbsScheduleData>(job, submission_time, core),
@@ -27,6 +28,6 @@ SoftRtSchedule::SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned cor
 GuiScheduleData SoftRtSchedule::get_vision_data_at_time(unsigned timestamp) const {
     GuiScheduleData gui_data = Schedule<CbsScheduleData>::get_vision_data_at_time(timestamp);
 
-    gui_data._row = 1;
+    gui_data._row = this->_rt_job->_cbs->id() * 2 + 1;
     return gui_data;
 }
