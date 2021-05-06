@@ -39,7 +39,7 @@ void CbsSubmissionAction<SoftRtJob>::execute() {
     }
     std::stringstream message;
     message << "Schedule for job" << this->_job->_id << " gets new dealine: " << deadline << std::endl;
-    this->_model->add_message(timestamp, message.str());
+    this->_model->add_message(timestamp, message.str(), {this->_job->_id});
     this->_job->add_change_deadline(timestamp, deadline);
 
     cbs->enqueue_job(this->_job);
@@ -71,7 +71,7 @@ void CbsFillBudgetAction::execute() {
         }
         std::stringstream message;
         message << "Job " << job->_id << " gets new deadline: " << deadline;
-        this->_model->add_message(timestamp, message.str());
+        this->_model->add_message(timestamp, message.str(), {job->_id});
 
         job->add_change_deadline(timestamp, deadline);
     }
@@ -118,7 +118,7 @@ void CbsFillAction::execute() {
         message << "Next EDF: Job " << next_hard_rt_job->_id << " (hard rt)"
                 << " Execution time left: " << next_hard_rt_job->execution_time_left(timestamp)
                 << " Deadline: " << next_hard_rt_job->_deadline;
-        this->_model->add_message(timestamp, message.str());
+        this->_model->add_message(timestamp, message.str(), {next_hard_rt_job->_id});
         /* generate schedule */
         HardRtSchedule *schedule =
             new HardRtSchedule(next_hard_rt_job, next_hard_rt_job->_submission_time, this->_core,
@@ -135,7 +135,7 @@ void CbsFillAction::execute() {
                 << next_soft_rt_job->_cbs->id() << ")" << " Execution time left: "
                 << next_soft_rt_job->execution_time_left(timestamp) << " Deadline: "
                 << next_soft_rt_job->deadline(timestamp);
-        this->_model->add_message(timestamp, message.str());
+        this->_model->add_message(timestamp, message.str(), {next_soft_rt_job->_id});
         SoftRtSchedule *schedule =
             new SoftRtSchedule(next_soft_rt_job, next_soft_rt_job->_submission_time, this->_core,
                                timestamp, next_soft_rt_job->execution_time_left(timestamp));
