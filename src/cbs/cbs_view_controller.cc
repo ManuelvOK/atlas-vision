@@ -78,6 +78,73 @@ void CbsViewController::init_cores_rect() {
     core_rect->remove_children([d](SDL_GUI::Drawable *drawable){return drawable == d;});
 }
 
+void CbsViewController::create_legend(std::vector<CbsJob *> jobs) {
+    (void) jobs;
+    SDL_GUI::Drawable *legend_rect = this->_default_interface_model->find_first_drawable("legend");
+
+    SDL_GUI::Rect *hard_rt_job_rect = new SDL_GUI::Rect({5, 5}, legend_rect->width() - 10, 0);
+    hard_rt_job_rect->_style._has_border = true;
+    hard_rt_job_rect->_style._border_color = SDL_GUI::RGB("black");
+    SDL_GUI::Position position(10, 10);
+    SDL_GUI::Drawable *last_added = nullptr;
+    for (const HardRtJob *job: this->_cbs_model->_hard_rt_jobs) {
+        SDL_GUI::Drawable *info = this->create_job_information(job);
+        info->set_position(position);
+        hard_rt_job_rect->add_child(info);
+        last_added = info;
+
+        position._x += info->width() + 10;
+
+        if (position._x + info->width() > hard_rt_job_rect->width() - 20) {
+            position._x = 10;
+            position._y += info->height() + 10;
+        }
+    }
+
+    if (last_added) {
+        unsigned height = last_added->position()._y + last_added->height() + 10;
+        hard_rt_job_rect->set_height(height);
+    }
+
+    legend_rect->add_child(hard_rt_job_rect);
+
+    std::map<const ConstantBandwidthServer *, std::vector<const SoftRtJob *>> cbs_jobs;
+
+    for (const SoftRtJob *job: this->_cbs_model->_soft_rt_jobs) {
+        cbs_jobs[job->_cbs].push_back(job);
+    }
+
+    int offset = hard_rt_job_rect->height() + 10;
+    for (const auto [cbs, jobs]: cbs_jobs) {
+        SDL_GUI::Rect *cbs_rect = new SDL_GUI::Rect({5, offset}, legend_rect->width() - 10, 0);
+        cbs_rect->_style._has_border = true;
+        cbs_rect->_style._border_color = SDL_GUI::RGB("black");
+        position = SDL_GUI::Position(10, 10);
+        SDL_GUI::Drawable *last_added = nullptr;
+        for (const SoftRtJob *job: jobs) {
+            SDL_GUI::Drawable *info = this->create_job_information(job);
+            info->set_position(position);
+            cbs_rect->add_child(info);
+            last_added = info;
+
+            position._x += info->width() + 10;
+
+            if (position._x + info->width() > cbs_rect->width() - 20) {
+                position._x = 10;
+                position._y += info->height() + 10;
+            }
+        }
+
+        if (last_added) {
+            unsigned height = last_added->position()._y + last_added->height() + 10;
+            cbs_rect->set_height(height);
+        }
+
+        offset += cbs_rect->height() + 5;
+        legend_rect->add_child(cbs_rect);
+    }
+}
+
 SDL_GUI::Drawable *CbsViewController::create_job_information(const CbsJob *job) {
     /* create info text */
     std::stringstream ss;

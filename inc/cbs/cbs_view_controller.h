@@ -19,6 +19,8 @@ class CbsViewController : public SimulationViewController<CbsSchedule, CbsJob> {
 
     void init_cores_rect() override;
 
+    virtual void create_legend(std::vector<CbsJob *> jobs) override;
+
     SDL_GUI::Drawable *create_job_information(const CbsJob *job) override;
 
     virtual std::vector<JobArrow *> create_submission_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) override;

@@ -237,7 +237,7 @@ SimulationViewController<S, J>::create_legend(std::vector<J *> jobs) {
     SDL_GUI::Position position(15, 15);
     for (unsigned i = 0; i < jobs.size(); ++i) {
         const J *job = jobs[i];
-        SDL_GUI::Drawable *info = create_job_information(job);
+        SDL_GUI::Drawable *info = this->create_job_information(job);
         info->set_position(position);
         legend_rect->add_child(info);
 
