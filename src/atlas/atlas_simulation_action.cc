@@ -124,11 +124,11 @@ void AtlasFillAction::execute() {
         BaseAtlasSchedule *next_atlas_schedule =
             this->_model->next_atlas_schedule(this->_core);
         unsigned time_to_next_atlas = time_left;
-        if (timestamp > next_atlas_schedule->last_data()._begin) {
-            std::cout << "Error: next atlas is in past. PANIC!" << std::endl;
-            exit(1);
-        }
         if (next_atlas_schedule) {
+            if (timestamp > next_atlas_schedule->last_data()._begin) {
+                std::cout << "Error: next atlas is in past. PANIC!" << std::endl;
+                exit(1);
+            }
             time_to_next_atlas = next_atlas_schedule->last_data()._begin - timestamp;
         }
         unsigned recovery_time = std::min(time_left, time_to_next_atlas);
