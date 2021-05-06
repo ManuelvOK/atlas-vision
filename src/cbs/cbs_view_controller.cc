@@ -207,6 +207,9 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
     unsigned time_before = 0;
     int value_before = y_offset;
 
+    std::cout << std::endl << "=== Budget line for CBS " << cbs.id() << " ===" << std::endl;
+    std::cout << "starting with " << budget_before << std::endl;
+
     for (SoftRtSchedule *schedule: schedules) {
         CbsScheduleData data = schedule->last_data();
 
@@ -217,12 +220,15 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
         if (current_time != time_before) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, value_before);
             core_rect->add_child(l);
+            std::cout << current_time << ": still " << budget_before << std::endl;
         }
 
         /* check for filling at begin of schedule */
         if (cbs.budget_fill_times().contains(current_time) && budget_before != cbs.max_budget()) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, value_before);
             core_rect->add_child(l);
+
+            std::cout << current_time << ": fill from " << budget_before << " to " <<  cbs.max_budget() << std::endl;
 
             value_before = y_offset;
             budget_before = cbs.max_budget();
@@ -244,6 +250,8 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
             l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, y_offset + height);
             core_rect->add_child(l);
 
+            std::cout << current_time << ": budget hits 0 and gets filled to " << cbs.max_budget() << std::endl;
+
             value_before = y_offset;
 
             execution_time_left -= budget_before;
@@ -257,10 +265,12 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
 
         current_time += execution_time_left;
         /* add line for final budget decrease */
-        float factor = 1 - execution_time_left * 1.0 / cbs.max_budget();
+        float factor = execution_time_left * 1.0 / cbs.max_budget();
         unsigned current_value = value_before + height * factor;
         BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
         core_rect->add_child(l);
+
+        std::cout << current_time << ": schedule finishes. Budget after: " << budget_before - execution_time_left << std::endl;
 
         value_before = current_value;
         budget_before -= execution_time_left;
