@@ -31,11 +31,15 @@ void CbsSubmissionAction<SoftRtJob>::execute() {
                   << (static_cast<int>(deadline) - static_cast<int>(timestamp)) * cbs->utilisation() << std::endl;
         if (current_budget >= (static_cast<int>(deadline) - static_cast<int>(timestamp)) * cbs->utilisation()) {
             deadline = cbs->generate_new_deadline_and_refill(timestamp);
-            std::cout << timestamp << ":\tGenerated new deadline" << std::endl;
+
+            std::stringstream message;
+            message << "Generated new deadline for cbs " << cbs->id() << ": " << deadline;
+            this->_model->add_message(timestamp, message.str());
         }
     }
-    std::cout << timestamp << ": schedule for job " << this->_job->_id << " gets new dealine: "
-              << deadline << std::endl;
+    std::stringstream message;
+    message << "Schedule for job" << this->_job->_id << " gets new dealine: " << deadline << std::endl;
+    this->_model->add_message(timestamp, message.str());
     this->_job->add_change_deadline(timestamp, deadline);
 
     cbs->enqueue_job(this->_job);
@@ -56,12 +60,19 @@ void CbsFillBudgetAction::execute() {
         return;
     }
     unsigned deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
-    std::cout << timestamp << ": ReFill Budget for cbs " << this->_cbs->id() << ". New deadline: " << deadline << std::endl;
+
+    std::stringstream message;
+    message << "Refill Budget for cbs " << this->_cbs->id() << ". New deadline: " << deadline;
+    this->_model->add_message(timestamp, message.str());
+
     for (SoftRtJob *job: this->_cbs->job_queue()) {
         if (job->finished(timestamp)) {
             continue;
         }
-        std::cout << timestamp << ":\t job " << job->_id << " gets new deadline." << std::endl;
+        std::stringstream message;
+        message << "Job " << job->_id << " gets new deadline: " << deadline;
+        this->_model->add_message(timestamp, message.str());
+
         job->add_change_deadline(timestamp, deadline);
     }
     SoftRtSchedule *active_schedule = this->_cbs->_active_schedule;
@@ -103,9 +114,11 @@ void CbsFillAction::execute() {
     std::cout << timestamp << ": Start next job" << std::endl;
 
     if (next_job == next_hard_rt_job) {
-        std::cout << timestamp << ":\tJob " << next_hard_rt_job->_id << " is hard rt."
-                  << " Execution time left: " << next_hard_rt_job->execution_time_left(timestamp)
-                  << " Deadline: " << next_hard_rt_job->_deadline << std::endl;
+        std::stringstream message;
+        message << "Next EDF: Job " << next_hard_rt_job->_id << " (hard rt)"
+                << " Execution time left: " << next_hard_rt_job->execution_time_left(timestamp)
+                << " Deadline: " << next_hard_rt_job->_deadline;
+        this->_model->add_message(timestamp, message.str());
         /* generate schedule */
         HardRtSchedule *schedule =
             new HardRtSchedule(next_hard_rt_job, next_hard_rt_job->_submission_time, this->_core,
@@ -117,9 +130,12 @@ void CbsFillAction::execute() {
         this->_model->_actions_to_do.push_back(
             new CbsBeginScheduleAction{this->_model, next_hard_rt_job, schedule});
     } else if (next_job == next_soft_rt_job) {
-        std::cout << timestamp << ":\tJob " << next_soft_rt_job->_id << " is soft rt."
-                  << " Execution time left: " << next_soft_rt_job->execution_time_left(timestamp)
-                  << " Deadline: " << next_soft_rt_job->deadline(timestamp) << std::endl;
+        std::stringstream message;
+        message << "Next EDF: Job " << next_soft_rt_job->_id << " (soft rt, cbs "
+                << next_soft_rt_job->_cbs->id() << ")" << " Execution time left: "
+                << next_soft_rt_job->execution_time_left(timestamp) << " Deadline: "
+                << next_soft_rt_job->deadline(timestamp);
+        this->_model->add_message(timestamp, message.str());
         SoftRtSchedule *schedule =
             new SoftRtSchedule(next_soft_rt_job, next_soft_rt_job->_submission_time, this->_core,
                                timestamp, next_soft_rt_job->execution_time_left(timestamp));

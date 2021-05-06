@@ -17,6 +17,9 @@ CbsViewController::CbsViewController(SDL_GUI::ApplicationBase *application,
 void CbsViewController::init() {
     SimulationViewController::init();
     this->create_budget_lines(this->_cbs_model->_servers);
+    SDL_GUI::Drawable *sidebar = this->_default_interface_model->find_first_drawable("sidebar");
+    sidebar->hide();
+    this->_default_interface_model->find_first_drawable("messages")->set_x(sidebar->position()._x);
 }
 
 void CbsViewController::create_schedule_drawables() {
