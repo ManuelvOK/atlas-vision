@@ -52,7 +52,7 @@ void CbsDeadlineAction::execute() {
 void CbsFillBudgetAction::execute() {
     unsigned timestamp = this->_model->_timestamp;
     if (this->_cbs->budget(timestamp) != 0) {
-        std::cout << timestamp << ": try to refill budget but its not 0." << std::endl;
+        std::cout << timestamp << ": try to refill budget for cbs " << this->_cbs->id() << " but its not 0." << std::endl;
         return;
     }
     unsigned deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
@@ -61,12 +61,18 @@ void CbsFillBudgetAction::execute() {
         if (job->finished(timestamp)) {
             continue;
         }
+        std::cout << timestamp << ":\t job " << job->_id << " gets new deadline." << std::endl;
         job->add_change_deadline(timestamp, deadline);
     }
     SoftRtSchedule *active_schedule = this->_cbs->_active_schedule;
     if (active_schedule) {
         active_schedule->add_change_end(timestamp, timestamp);
+        active_schedule->end_simulation(timestamp);
     }
+
+    /* add Fill Action */
+    this->_model->_actions_to_do.push_back(
+        new CbsFillAction(this->_model, this->_time));
 }
 
 void CbsFillAction::execute() {
@@ -78,6 +84,13 @@ void CbsFillAction::execute() {
     if (active_schedule && active_schedule->last_data()._begin == timestamp) {
         return;
     }
+
+    /* end active schedule */
+    if (active_schedule) {
+        active_schedule->add_change_end(timestamp, timestamp);
+        active_schedule->end_simulation(timestamp);
+    }
+
 
     /* check if the next job is hard rt or soft rt */
     CbsJob *next_job = this->_model->next_job();
@@ -128,13 +141,6 @@ template<>
 void CbsBeginScheduleAction<HardRtSchedule>::execute() {
     unsigned timestamp = this->_model->_timestamp;
 
-    /* end active schedule */
-    CbsSchedule *active_schedule = this->_model->active_schedule();
-    if (active_schedule) {
-        active_schedule->add_change_end(timestamp, timestamp);
-        active_schedule->end_simulation(timestamp);
-    }
-
     this->_schedule->add_change_begin(timestamp, timestamp);
     this->_schedule->add_change_does_execute(timestamp, true);
 
@@ -149,13 +155,6 @@ void CbsBeginScheduleAction<HardRtSchedule>::execute() {
 template<>
 void CbsBeginScheduleAction<SoftRtSchedule>::execute() {
     unsigned timestamp = this->_model->_timestamp;
-
-    /* end active schedule */
-    CbsSchedule *active_schedule = this->_model->active_schedule();
-    if (active_schedule) {
-        active_schedule->add_change_end(timestamp, timestamp);
-        active_schedule->end_simulation(timestamp);
-    }
 
     this->_schedule->add_change_begin(timestamp, timestamp);
     this->_schedule->add_change_does_execute(timestamp, true);
