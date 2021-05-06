@@ -14,6 +14,7 @@ class PlayerModel : public SDL_GUI::ModelBase {
 public:
     bool _running = false;       /**< determines if the simulation gets played */
     unsigned _speed = 50;        /**< this value gets added to the position every tick */
+    unsigned _position_before = 0;
     unsigned _position = 0;      /**< current position of player */
     unsigned _max_position = 0;  /**< length of full simulation */
     bool _dirty = true;

@@ -21,6 +21,8 @@ class CbsViewController : public SimulationViewController<CbsSchedule, CbsJob> {
 
     SDL_GUI::Drawable *create_job_information(const CbsJob *job) override;
 
+    virtual std::vector<JobArrow *> create_submission_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) override;
+
     virtual std::vector<JobArrow *> create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) override;
 
     void create_budget_lines(const std::map<unsigned, ConstantBandwidthServer> &servers);
@@ -35,4 +37,5 @@ public:
                       InputModel *input_model,
                       const PlayerModel *player_model);
 
+    virtual void update() override;
 };

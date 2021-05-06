@@ -25,6 +25,7 @@ void PlayerModel::skip_backwards(unsigned value) {
 }
 
 void PlayerModel::set_position(unsigned position) {
+    this->_position_before = this->_position;
     this->_position = std::min(position, this->_max_position);
     unsigned half_width_unit = this->_half_width / this->_zoom;
     int window_begin = this->_scroll - half_width_unit;

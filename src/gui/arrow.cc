@@ -108,3 +108,7 @@ unsigned Arrow::width(Direction direction) {
 unsigned Arrow::width() const {
     return Arrow::width(this->_direction);
 }
+
+Arrow::Direction Arrow::direction() const {
+    return this->_direction;
+}

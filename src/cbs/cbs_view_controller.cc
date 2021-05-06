@@ -126,61 +126,32 @@ SDL_GUI::Drawable *CbsViewController::create_job_information(const CbsJob *job) 
 }
 
 std::vector<JobArrow *>
-CbsViewController::create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+CbsViewController::create_submission_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
     std::vector<JobArrow *> arrows =
-        SimulationViewController<CbsSchedule, CbsJob>::create_deadline_drawables(deadlines);
-
-    std::map<const BaseJob *, SoftRtJob *> job_mapping;
-    for (SoftRtJob *job: this->_cbs_model->_soft_rt_jobs) {
-        job_mapping.emplace(job, job);
-    }
-
-    /* add recalculation callback for position */
+        SimulationViewController<CbsSchedule, CbsJob>::create_submission_drawables(deadlines);
     for (JobArrow *arrow: arrows) {
-        const BaseJob *base_job = arrow->job();
-        unsigned deadline = base_job->deadline(0);
-        if (not this->_cbs_model->n_dls.contains(deadline)) {
-            this->_cbs_model->n_dls[deadline] = 0;
-        }
-        this->_cbs_model->n_dls[deadline]++;
-        if (not job_mapping.contains(base_job)) {
-            continue;
-        }
-        arrow->hide();
-        SoftRtJob *job = job_mapping.at(base_job);
-        arrow->add_recalculation_callback(
-            [this, job, arrow](SDL_GUI::Drawable *d){
-                static std::map<SoftRtJob *, unsigned> deadlines;
-
-                unsigned timestamp = this->_player_model->_position;
-                unsigned deadline = job->deadline(timestamp);
-                if (deadlines[job] == deadline) {
-                    return;
-                }
-
-                this->_cbs_model->n_dls[deadlines[job]]--;
-                if (not this->_cbs_model->n_dls.contains(deadline)) {
-                    this->_cbs_model->n_dls[deadline] = 0;
-                }
-                unsigned offset = this->_cbs_model->n_dls[deadline]++;
-
-                deadlines[job] = deadline;
-                if (deadline == 0) {
-                    d->hide();
-                } else {
-                    d->show();
-                }
-
-                arrow->set_pos_x(deadline);
-                arrow->set_y(interface_config.player.arrow_distance_px * offset);
-
-                d->parent()->sort_children(
-                    [](SDL_GUI::Drawable *a, SDL_GUI::Drawable *b){
-                        return a->position()._y > b->position()._y;
-                    });
-            });
+        this->_cbs_model->_arrows.emplace(arrow, arrow);
     }
     return arrows;
+}
+
+std::vector<JobArrow *>
+CbsViewController::create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+    this->_cbs_model->_dl_arrows =
+        SimulationViewController<CbsSchedule, CbsJob>::create_deadline_drawables(deadlines);
+
+    for (SoftRtJob *job: this->_cbs_model->_soft_rt_jobs) {
+        this->_cbs_model->_soft_rt_job_mapping.emplace(job, job);
+    }
+
+    for (JobArrow *arrow: this->_cbs_model->_dl_arrows) {
+        this->_cbs_model->_arrows.emplace(arrow, arrow);
+        if (this->_cbs_model->_soft_rt_job_mapping.contains(arrow->job())) {
+            arrow->hide();
+        }
+    }
+
+    return this->_cbs_model->_dl_arrows;
 }
 
 void
@@ -207,9 +178,6 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
     unsigned time_before = 0;
     int value_before = y_offset;
 
-    std::cout << std::endl << "=== Budget line for CBS " << cbs.id() << " ===" << std::endl;
-    std::cout << "starting with " << budget_before << std::endl;
-
     for (SoftRtSchedule *schedule: schedules) {
         CbsScheduleData data = schedule->last_data();
 
@@ -220,15 +188,12 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
         if (current_time != time_before) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, value_before);
             core_rect->add_child(l);
-            std::cout << current_time << ": still " << budget_before << std::endl;
         }
 
         /* check for filling at begin of schedule */
         if (cbs.budget_fill_times().contains(current_time) && budget_before != cbs.max_budget()) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, value_before);
             core_rect->add_child(l);
-
-            std::cout << current_time << ": fill from " << budget_before << " to " <<  cbs.max_budget() << std::endl;
 
             value_before = y_offset;
             budget_before = cbs.max_budget();
@@ -250,8 +215,6 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
             l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, y_offset + height);
             core_rect->add_child(l);
 
-            std::cout << current_time << ": budget hits 0 and gets filled to " << cbs.max_budget() << std::endl;
-
             value_before = y_offset;
 
             execution_time_left -= budget_before;
@@ -270,8 +233,6 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
         BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
         core_rect->add_child(l);
 
-        std::cout << current_time << ": schedule finishes. Budget after: " << budget_before - execution_time_left << std::endl;
-
         value_before = current_value;
         budget_before -= execution_time_left;
         time_before = current_time;
@@ -281,51 +242,89 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
     core_rect->add_child(l);
 }
 
-//void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
-//    std::map<unsigned, unsigned> budget_line = cbs.budget_line();
-//
-//    SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
-//
-//    /* for now we draw after the first CBS. TODO: change the 2 to something reasonable */
-//    int y_offset = 10 + (interface_config.unit.height_px + interface_config.player.scheduler_distance_px) * 2;
-//
-//    int height = interface_config.unit.height_px;
-//    unsigned value_before = y_offset;
-//    unsigned budget_before = cbs.max_budget();
-//    unsigned time_before = 0;
-//    for (const auto [timestamp, budget]: budget_line) {
-//        if (time_before == timestamp) {
-//            continue;
-//        }
-//
-//        if (budget_before == budget) {
-//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, timestamp, value_before, value_before);
-//            core_rect->add_child(l);
-//
-//            time_before = timestamp;
-//            continue;
-//        }
-//
-//        float factor = 1 - static_cast<float>(budget_before - budget) / cbs.max_budget();
-//        unsigned value = value_before + height * factor;
-//        BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, timestamp, value_before, value);
-//        core_rect->add_child(l);
-//
-//        value_before = value;
-//        budget_before = budget;
-//        time_before = timestamp;
-//
-//        /* do vertical line if 0 (fill) */
-//        if (budget == 0) {
-//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, timestamp, timestamp, y_offset, y_offset + height);
-//            core_rect->add_child(l);
-//
-//            budget_before = cbs.max_budget();
-//            value_before = y_offset;
-//            continue;
-//        }
-//
-//        /* do line from last point to new point */
-//    }
-//}
+void CbsViewController::update() {
+    SimulationViewController::update();
+    static std::map<SoftRtJob *, unsigned> deadlines;
+    bool deadline_changed = false;
+
+    /* add recalculation callback for position */
+    for (JobArrow *arrow: this->_cbs_model->_dl_arrows) {
+        const BaseJob *base_job = arrow->job();
+
+        if (not this->_cbs_model->_soft_rt_job_mapping.contains(base_job)) {
+            continue;
+        }
+
+        SoftRtJob *job = this->_cbs_model->_soft_rt_job_mapping.at(base_job);
+        unsigned timestamp = this->_player_model->_position;
+        unsigned deadline = job->deadline(timestamp);
+        if (deadlines[job] == deadline) {
+            continue;
+        }
+
+        /* hide if deadline does not exist yet */
+        deadlines[job] = deadline;
+        if (deadline == 0) {
+            arrow->hide();
+        } else {
+            arrow->show();
+        }
+
+        arrow->set_pos_x(deadline);
+        deadline_changed = true;
+    }
+
+    if (not deadline_changed) {
+        return;
+    }
+
+    /* set y position */
+    std::map<unsigned, unsigned> n_deadlines;
+    for (JobArrow *arrow: this->_cbs_model->_dl_arrows) {
+        unsigned deadline = arrow->job()->deadline(this->_player_model->_position);
+        if (not n_deadlines.contains(deadline)) {
+            n_deadlines[deadline] = 0;
+        }
+
+        unsigned offset = n_deadlines[deadline] * interface_config.player.arrow_distance_px;
+        arrow->set_y(offset);
+
+        n_deadlines[deadline]++;
+    }
+
+    /* sort deadline drawables */
+    this->_cbs_model->_dl_arrows.front()->parent()->sort_children(
+        [this](SDL_GUI::Drawable *a, SDL_GUI::Drawable *b) {
+            /* non arrows are "smaller" */
+            if (not this->_cbs_model->_arrows.contains(a)) {
+                return true;
+            }
+            if (not this->_cbs_model->_arrows.contains(b)) {
+                return false;
+            }
+
+            JobArrow *arrow_a = this->_cbs_model->_arrows[a];
+            JobArrow *arrow_b = this->_cbs_model->_arrows[b];
+
+            Arrow::Direction direction_a = arrow_a->direction();
+            Arrow::Direction direction_b = arrow_b->direction();
+
+            /* deadlines are "smaller" than submissions */
+            if (direction_a != direction_b) {
+                if (direction_a == Arrow::Direction::DOWN) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            /* deadlines stack up */
+            if (direction_a == Arrow::Direction::DOWN) {
+                return arrow_a->position()._y > arrow_b->position()._y;
+            }
+
+            /* submissions stack down */
+            return arrow_a->position()._y < arrow_b->position()._y;
+        });
+}
 

@@ -50,4 +50,6 @@ public:
     static unsigned width(Direction direction);
 
     virtual unsigned width() const override;
+
+    Direction direction() const;
 };

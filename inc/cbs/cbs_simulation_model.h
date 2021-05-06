@@ -3,6 +3,7 @@
 #include <cbs/cbs_job.h>
 #include <cbs/cbs_schedule.h>
 #include <cbs/constant_bandwidth_server.h>
+#include <gui/job_arrow.h>
 #include <simulation/simulation_model.h>
 
 
@@ -20,7 +21,11 @@ class CbsSimulationModel : public SimulationModel<CbsSchedule, CbsJob> {
 
     CbsSchedule *_active_schedule = nullptr;
 
-    std::map<unsigned, unsigned> n_dls;
+    std::map<SDL_GUI::Drawable *, JobArrow *> _arrows;
+    std::vector<JobArrow *> _dl_arrows;
+
+    std::map<const BaseJob *, SoftRtJob *> _soft_rt_job_mapping;
+
 
     CbsSimulationModel()
         : SimulationModel(), _hard_rt_queue(compare_jobs_deadline<HardRtJob>) {}
