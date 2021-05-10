@@ -1,5 +1,7 @@
 <rect width="1500" height="1000" bg="170" border="true" attributes="window">
-    <rect width="580" height="530" x="20" y="20" border="true" attributes="player">
+    <rect width="580" height="20" x="20" y="20" attributes="current_time">
+    </rect>
+    <rect width="580" height="510" x="20" y="40" border="true" attributes="player">
         <rect width="580" height="530" x="10" y="0" attributes="player-grid">
         </rect>
         <rect width="580" height="400" x="10" y="100" attributes="cores">

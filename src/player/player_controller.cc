@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <SDL_GUI/gui/primitives/vertical_line.h>
+#include <SDL_GUI/gui/primitives/text.h>
 
 #include <config/interface_config.h>
 
@@ -119,6 +120,24 @@ void PlayerController::init() {
     player_position_line->add_recalculation_callback([player_model,
                                                      interface_model](SDL_GUI::Drawable *d){
             d->set_x(interface_model->px_width(player_model->_position));
+        });
+
+    /* show current time */
+    SDL_GUI::Drawable *current_time_rect =
+        this->_default_interface_model->find_first_drawable("current_time");
+
+    SDL_GUI::Text *current_time = new SDL_GUI::Text(this->_default_interface_model->font(), "0");
+    current_time_rect->add_child(current_time);
+
+    current_time->add_recalculation_callback(
+        [current_time, player_position_line, player_model](SDL_GUI::Drawable *d){
+            std::stringstream ss;
+            ss << player_model->_position;
+            current_time->set_text(ss.str());
+            SDL_GUI::Position line_pos = player_position_line->absolute_position();
+            int new_x = line_pos._x - d->parent()->position()._x - (d->width() / 2);
+            int max_x = d->parent()->width() - d->width();
+            d->set_x(std::min(std::max(0, new_x), max_x));
         });
 
     SDL_GUI::Drawable *player = this->_default_interface_model->find_first_drawable("player");
