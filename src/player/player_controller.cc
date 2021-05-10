@@ -104,7 +104,9 @@ void PlayerController::init() {
     /* set max position */
     unsigned max_position = 0;
     for (BaseSchedule * schedule: this->_simulation_model->schedules()) {
-        max_position = std::max(max_position, schedule->get_maximal_end());
+        unsigned max_end = schedule->get_maximal_end();
+        unsigned deadline = schedule->job()->deadline(max_end);
+        max_position = std::max(max_position, std::max(max_end, deadline));
     }
     max_position = (max_position / 20 + 10) * 20;
     this->_player_model->_max_position = max_position;
