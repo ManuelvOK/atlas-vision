@@ -67,11 +67,11 @@ void PlayerController::evaluate_input() {
             }
         } else {
             if (this->_input_model->mouse_wheel()._y > 0) {
-                this->_player_model->zoom_in(1.25);
+                this->_player_model->zoom_in_pos(this->_input_model->_mouse_in_player._x, 1.25);
             }
 
             if (this->_input_model->mouse_wheel()._y < 0) {
-                this->_player_model->zoom_out(1.25);
+                this->_player_model->zoom_out_pos(this->_input_model->_mouse_in_player._x, 1.25);
             }
         }
     }

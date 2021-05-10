@@ -37,12 +37,7 @@ void PlayerModel::set_position(unsigned position) {
 }
 
 void PlayerModel::set_position_with_click(unsigned position) {
-    /* left margin */
-    position = std::max<unsigned>(position, 10);
-    position -= 10;
-
-    int new_position = (static_cast<int>(position) - static_cast<int>(this->_half_width))
-                       / this->_zoom + this->_scroll;
+    int new_position = this->position_from_coord(position);
 
     if (new_position < 0) {
         this->set_position(0);
@@ -67,13 +62,38 @@ void PlayerModel::zoom_in(float value) {
     this->set_zoom(this->_zoom * value);
 }
 
+void PlayerModel::zoom_in_pos(unsigned position, float value) {
+    this->zoom_pos(position, value);
+}
+
 void PlayerModel::zoom_out(float value) {
     this->set_zoom(this->_zoom / value);
+}
+
+void PlayerModel::zoom_out_pos(unsigned position, float value) {
+    this->zoom_pos(position, 1 / value);
 }
 
 void PlayerModel::set_zoom(float value) {
     this->_zoom = std::max(value, this->_zoom_min);
     this->reposition_scroll();
+}
+
+void PlayerModel::zoom_pos(unsigned position, float value) {
+    position = this->position_from_coord(position);
+    int pos_diff = static_cast<int>(position) - this->_scroll;
+
+    float new_zoom = this->_zoom * value;
+
+    if (new_zoom < this->_zoom_min) {
+        value = this->_zoom_min / this->_zoom;
+        this->_zoom = this->_zoom_min;
+    } else {
+        this->_zoom = new_zoom;
+    }
+
+    int scroll_offset = pos_diff * (value - 1);
+    this->set_scroll(this->_scroll + scroll_offset);
 }
 
 float PlayerModel::zoom() const {
@@ -111,6 +131,15 @@ int PlayerModel::scroll() const {
 
 int PlayerModel::scroll_offset() const {
     return (this->_scroll * this->_zoom) - this->_half_width;
+}
+
+unsigned PlayerModel::position_from_coord(unsigned x) const {
+    /* left margin */
+    x = std::max<unsigned>(x, 10);
+    x -= 10;
+
+    return (static_cast<int>(x) - static_cast<int>(this->_half_width))
+           / this->_zoom + this->_scroll;
 }
 
 void PlayerModel::reposition_scroll() {

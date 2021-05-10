@@ -59,16 +59,37 @@ public:
     void zoom_in(float value = 1.05);
 
     /**
+     * multiply zoom value by a certain value while focussing a position
+     * @param position player position to focus
+     * @param value value to multiply zoom value with
+     */
+    void zoom_in_pos(unsigned position, float value = 1.05);
+
+    /**
      * divide zoom value by a certain value
      * @param value value to devide zoom value by
      */
     void zoom_out(float value = 1.05);
 
     /**
+     * divide zoom value by a certain value while focussing a position
+     * @param position player position to focus
+     * @param value value to divide zoom value with
+     */
+    void zoom_out_pos(unsigned position, float value = 1.05);
+
+    /**
      * setter for the zoom value. This does bounds checking.
      * @param value value to set zoom to
      */
     void set_zoom(float value);
+
+    /*
+     * multiply zoom value with focussing a position. This does bounds checking.
+     * @param position player position to focus
+     * @param value value to multiply zoom with
+     */
+    void zoom_pos(unsigned position, float value);
 
     /**
      * Getter for the curent zoom value
@@ -116,6 +137,8 @@ public:
      * @return scroll offset
      */
     int scroll_offset() const;
+
+    unsigned position_from_coord(unsigned x) const;
 
     /** redo bounds checking */
     void reposition_scroll();
