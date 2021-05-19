@@ -108,13 +108,13 @@ public:
      * move player to the left by a certain value. This does bounds checking
      * @param value value to move the player
      */
-    void scroll_left(unsigned value = 15);
+    void scroll_left(int value = 15);
 
     /**
      * move player to the right by a certain value. This does bounds checking
      * @param value value to move the player
      */
-    void scroll_right(unsigned value = 15);
+    void scroll_right(int value = 15);
 
 
     /**

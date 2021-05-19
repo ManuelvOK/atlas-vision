@@ -111,11 +111,11 @@ void PlayerModel::set_width(unsigned width) {
 }
 
 
-void PlayerModel::scroll_left(unsigned value) {
+void PlayerModel::scroll_left(int value) {
     this->set_scroll(this->_scroll + (value / this->_zoom));
 }
 
-void PlayerModel::scroll_right(unsigned value) {
+void PlayerModel::scroll_right(int value) {
     this->set_scroll(this->_scroll - (value / this->_zoom));
 }
 
