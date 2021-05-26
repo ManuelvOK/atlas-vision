@@ -57,14 +57,34 @@ void AtlasSubmissionAction::execute() {
             continue;
         }
 
-        /* create a new schedule */
-        if (job->_execution_time_estimate > max_end) {
-            std::cout << "Error: not enough time to schedule job on Atlas. PANIC!" << std::endl;
-            exit(1);
-        }
         unsigned begin = max_end - job->_execution_time_estimate;
-        AtlasSchedule *s = new AtlasSchedule (job, timestamp, core, begin,
-                                              job->_execution_time_estimate);
+        unsigned atlas_time = job->_execution_time_estimate;
+
+        if (begin < timestamp) {
+            std::stringstream message;
+            message << "Begin of job " << job->_id << " should be in past: " << begin;
+            this->_model->add_message(timestamp, message.str(), {job->_id});
+            begin = timestamp;
+            if (this->_model->active_schedule_on_scheduler(core, AtlasSchedulerType::ATLAS, begin)) {
+                message.str("");
+                message << "Experimental: no time at all to schedule job " << job->_id
+                        << " on core " << core << " on Atlas. -> Recovery_queue!";
+                this->_model->add_message(timestamp, message.str(), {job->_id});
+                this->_model->_recovery_queue[core].push_back(job);
+                continue;
+            }
+            message.str("");
+            message << "Experimental: no enough time to schedule entire job " << job->_id
+                    << " on core " << core
+                    << " on Atlas. -> updating atlas_time and Recovery_queue!";
+            this->_model->add_message(timestamp, message.str(), {job->_id});
+            AtlasSchedule *next_atlas_schedule = this->_model->next_atlas_schedule(core);
+            atlas_time = next_atlas_schedule->last_data()._begin - timestamp;
+            this->_model->_recovery_queue[core].push_back(job);
+        }
+
+        /* create a new schedule */
+        AtlasSchedule *s = new AtlasSchedule (job, timestamp, core, begin, atlas_time);
         job->set_atlas_schedule(s);
         this->_model->add_atlas_schedule(s);
 
@@ -78,7 +98,7 @@ void AtlasSubmissionAction::execute() {
 
         std::stringstream message;
         message << "Job " << job->_id << " submitted and scheduled on core " << core
-                << " ATLAS from " << begin << " for " << job->_execution_time_estimate << ".";
+                << " ATLAS from " << begin << " for " << atlas_time << ".";
         this->_model->add_message(timestamp, message.str(), {job->_id});
         max_end = std::min(max_end, begin);
 
