@@ -13,6 +13,9 @@ void AtlasSubmissionAction::execute() {
     unsigned timestamp = this->_model->_timestamp;
     unsigned core = this->_core_assigner->get_core_for_job(this->_job);
 
+    /* stop cfs if running */
+    end_schedule(this->_model->_cfs_schedule[core], this->_model);
+
     /* add scheduled jobs to the list of jobs to schedule */
     std::vector<AtlasJob *> jobs = this->_model->next_atlas_scheduled_jobs(core);
     jobs.push_back(this->_job);
@@ -539,6 +542,10 @@ void AtlasEndScheduleAction<RecoverySchedule>::execute() {
                 << " but job was underestimated. Job gets queued for CFS (late)";
         this->_model->add_message(timestamp, message.str(), {job->_id});
 
+        /* schedule no longer executes */
+        this->_model->_recovery_schedule[this->_schedule->_core] = nullptr;
+
+        this->_model->_recovery_queue[this->_schedule->_core].pop_front();
         this->_model->_cfs_queue[this->_schedule->_core].push_back(job);
     } else {
         std::stringstream message;

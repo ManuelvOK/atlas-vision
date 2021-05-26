@@ -65,7 +65,11 @@ unsigned AtlasJob::calculate_dependency_level() {
 }
 
 unsigned AtlasJob::estimated_execution_time_left(unsigned timestamp) const {
-    return this->_execution_time_estimate - this->time_executed(timestamp);
+    unsigned time_executed = this->time_executed(timestamp);
+    if (time_executed > this->_execution_time_estimate) {
+        return 0;
+    }
+    return this->_execution_time_estimate - time_executed;
 }
 
 bool AtlasJob::all_dependencies_finished(unsigned timestamp) const {
