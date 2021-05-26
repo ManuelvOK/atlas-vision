@@ -74,16 +74,22 @@ def gen_atlas_workload(config: AtlasConfig):
     max_dl = max_period * config.num_jobs
 
     for task in tasks:
+        # fill jobs to maximal deadline
         num_jobs = int(max_dl / task["period"])
         print(f"Task: p={task['period']} t={task['execution_time']} n={num_jobs}", file=sys.stderr)
+        submission = 0
         for n in range(1, num_jobs + 1):
-            error = 1 + random.randrange(-config.estimation_error, config.estimation_error) / 100
-            submission = (n-1) * task["period"] * error
+            submission_error = random.randrange(-config.estimation_error,
+                                                config.estimation_error) / 100
+            # submission has to be after previous one
+            submission = max(submission, int((n-1) * task["period"]
+                                             - (task["period"] * submission_error)))
             deadline = n * task["period"]
             execution_time_estimate = task["execution_time"]
-            error = 1 + random.randrange(-config.estimation_error, config.estimation_error) / 100
-            print(f"error: {error}", file=sys.stderr)
-            execution_time = int(execution_time_estimate * error)
+            estimation_error = 1 + random.randrange(-config.estimation_error,
+                                                    config.estimation_error) / 100
+            print(f"error: {estimation_error}", file=sys.stderr)
+            execution_time = int(execution_time_estimate * estimation_error)
             print(f"j {job_id} {deadline} {execution_time_estimate} {execution_time} {submission}")
             if first_in_task:
                 first_in_task = False
