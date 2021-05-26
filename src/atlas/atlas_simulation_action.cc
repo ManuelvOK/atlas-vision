@@ -7,9 +7,12 @@
 
 #include <atlas/atlas_simulation_model.h>
 
+static void end_schedule(BaseAtlasSchedule *schedule, AtlasSimulationModel *atlas_model);
+
 void AtlasSubmissionAction::execute() {
     unsigned timestamp = this->_model->_timestamp;
     unsigned core = this->_core_assigner->get_core_for_job(this->_job);
+
     /* add scheduled jobs to the list of jobs to schedule */
     std::vector<AtlasJob *> jobs = this->_model->next_atlas_scheduled_jobs(core);
     jobs.push_back(this->_job);
@@ -172,24 +175,23 @@ void AtlasFillAction::execute() {
 
 }
 
-template<typename T>
-void AtlasBeginScheduleAction<T>::end_schedule(BaseAtlasSchedule *schedule) {
+void end_schedule(BaseAtlasSchedule *schedule, AtlasSimulationModel *atlas_model) {
     if (not schedule) {
         return;
     }
-    unsigned timestamp = this->_model->_timestamp;
-    std::cerr << timestamp << ": End '" << (char)schedule->last_data()._scheduler
+    unsigned timestamp = atlas_model->_timestamp;
+    std::cerr << timestamp << ": End '" << int(schedule->last_data()._scheduler)
               << "' schedule on core " << schedule->_core
               << " for job " << schedule->job()->_id << std::endl;
     schedule->add_change_end(timestamp, timestamp);
     schedule->end_simulation(timestamp);
 
     /* schedule no longer executes */
-    if (this->_model->_cfs_schedule[schedule->_core] == schedule) {
-        this->_model->_cfs_schedule[schedule->_core] = nullptr;
+    if (atlas_model->_cfs_schedule[schedule->_core] == schedule) {
+        atlas_model->_cfs_schedule[schedule->_core] = nullptr;
     }
-    if (this->_model->_recovery_schedule[schedule->_core] == schedule) {
-        this->_model->_recovery_schedule[schedule->_core] = nullptr;
+    if (atlas_model->_recovery_schedule[schedule->_core] == schedule) {
+        atlas_model->_recovery_schedule[schedule->_core] = nullptr;
     }
 }
 
@@ -304,7 +306,7 @@ void AtlasBeginScheduleAction<RecoverySchedule>::execute() {
     }
 
     /* stop cfs if running */
-    this->end_schedule(this->_model->_cfs_schedule[this->_schedule->_core]);
+    end_schedule(this->_model->_cfs_schedule[this->_schedule->_core], this->_model);
 
     this->_schedule->add_change_does_execute(timestamp, true);
     std::stringstream message;
@@ -345,8 +347,8 @@ void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
     }
 
     /* stop everything thats running */
-    this->end_schedule(this->_model->_cfs_schedule[this->_schedule->_core]);
-    this->end_schedule(this->_model->_recovery_schedule[this->_schedule->_core]);
+    end_schedule(this->_model->_cfs_schedule[this->_schedule->_core], this->_model);
+    end_schedule(this->_model->_recovery_schedule[this->_schedule->_core], this->_model);
 
     /* check dependencies */
     /* TODO: check for all dependencies, not only the first one. this was quick and dirty */
@@ -485,6 +487,7 @@ void AtlasEndScheduleAction<EarlyCfsSchedule>::execute() {
     }
 
     if (this->_schedule->last_data().end() > timestamp) {
+        std::cerr << timestamp << ":\tset end to now." << std::endl;
         this->_schedule->add_change_end(timestamp, timestamp);
     }
     /* schedule no longer executes */

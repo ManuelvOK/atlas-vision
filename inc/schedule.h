@@ -246,7 +246,7 @@ public:
     void add_change_end(unsigned timestamp, unsigned end){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
-        if (end < new_data._execution_time) {
+        if (end < new_data._begin) {
             new_data._execution_time = 0;
         } else {
             new_data._execution_time = end - new_data._begin;

@@ -57,7 +57,6 @@ template <typename T>
 class AtlasBeginScheduleAction : public WithAtlas,
                                  public WithSchedule<T>,
                                  public SimulationAction {
-    void end_schedule(BaseAtlasSchedule *schedule);
     void add_end_action() const;
   public:
     AtlasBeginScheduleAction(AtlasSimulationModel *atlas_model, AtlasJob *job, T *schedule)
