@@ -2,6 +2,10 @@
 import argparse
 import random
 import sys
+import time
+
+from pathlib import Path
+from typing import IO
 
 
 class AtlasConfig:
@@ -10,6 +14,7 @@ class AtlasConfig:
     num_tasks: int
     num_jobs: int
     estimation_error: int
+    output_file: IO
 
     def __init__(self, args: argparse.Namespace):
         self.num_cores = args.num_cores
@@ -17,6 +22,42 @@ class AtlasConfig:
         self.num_tasks = args.num_tasks
         self.num_jobs = args.num_jobs
         self.estimation_error = args.estimation_error
+        if not args.output:
+            self.output_file = sys.stdout
+        elif args.both:
+            path = Path(args.output)
+            self.output_file = open(f"{path.parent}/{path.stem}_atlas{path.suffix}", 'w')
+        else:
+            self.output_file = open(args.output, 'w')
+
+    def __del__(self):
+        if self.output_file != sys.stdout:
+            self.output_file.close()
+
+
+class CbsConfig:
+    num_cores: int
+    num_tasks: int
+    num_jobs: int
+    estimation_error: int
+    output_file: IO
+
+    def __init__(self, args: argparse.Namespace):
+        self.num_cores = args.num_cores
+        self.num_tasks = args.num_tasks
+        self.num_jobs = args.num_jobs
+        self.estimation_error = args.estimation_error
+        if not args.output:
+            self.output_file = sys.stdout
+        elif args.both:
+            path = Path(args.output)
+            self.output_file = open(f"{path.parent}/{path.stem}_cbs{path.suffix}", 'w')
+        else:
+            self.output_file = open(args.output, 'w')
+
+    def __del__(self):
+        if self.output_file != sys.stdout:
+            self.output_file.close()
 
 
 def is_greater_zero(value):
@@ -41,6 +82,11 @@ def process_cmd_args():
                          help='generate workload for the CBS scheduler')
     aparser.add_argument('-n', '--num-cores', type=is_greater_zero, default=1,
                          help='number of cores')
+    aparser.add_argument('-s', '--seed', help='Seed for the RNG')
+
+    aparser.add_argument('-b', '--both', action='store_true',
+                         help='generate ATLAS and CBS workload with same seed into files')
+    aparser.add_argument('-o', '--output', help='output file')
 
     aparser.add_argument('-f', '--cfs-factor', type=is_greater_zero, default=1,
                          help='cfs factor for ATLAS')
@@ -54,29 +100,33 @@ def process_cmd_args():
     return aparser.parse_args()
 
 
-def gen_atlas_workload(config: AtlasConfig):
-    print(f"c {config.num_cores}")
-    print(f"f {config.cfs_factor}")
-
-    utilisation_left: float = config.num_cores
-    job_id = 0
-    first_in_task = True
+def gen_tasks(num_tasks: int, num_cores: int):
+    utilisation_left: float = num_cores
     tasks = []
-    for _ in range(config.num_tasks):
+    for _ in range(num_tasks):
         period = random.randrange(50, 10000)
         max_execution_time = int(min(period, utilisation_left * period) * 0.8)
         execution_time = random.randrange(25, max_execution_time)
         utilisation_left -= execution_time / period
         task = {"period": period, "execution_time": execution_time}
         tasks.append(task)
+    return tasks
+
+
+def gen_atlas_workload(config: AtlasConfig):
+    print(f"c {config.num_cores}", file=config.output_file)
+    print(f"f {config.cfs_factor}", file=config.output_file)
+
+    tasks = gen_tasks(config.num_tasks, config.num_cores)
 
     max_period = max([task["period"] for task in tasks])
     max_dl = max_period * config.num_jobs
 
+    job_id = 0
+    first_in_task = True
     for task in tasks:
         # fill jobs to maximal deadline
         num_jobs = int(max_dl / task["period"])
-        print(f"Task: p={task['period']} t={task['execution_time']} n={num_jobs}", file=sys.stderr)
         submission = 0
         for n in range(1, num_jobs + 1):
             submission_error = random.randrange(-config.estimation_error,
@@ -88,27 +138,62 @@ def gen_atlas_workload(config: AtlasConfig):
             execution_time_estimate = task["execution_time"]
             estimation_error = 1 + random.randrange(-config.estimation_error,
                                                     config.estimation_error) / 100
-            print(f"error: {estimation_error}", file=sys.stderr)
             execution_time = int(execution_time_estimate * estimation_error)
-            print(f"j {job_id} {deadline} {execution_time_estimate} {execution_time} {submission}")
+            print(f"j {job_id} {deadline} {execution_time_estimate} {execution_time} {submission}",
+                  file=config.output_file)
             if first_in_task:
                 first_in_task = False
             else:
-                print(f"d k {job_id} {job_id - 1}")
+                print(f"d k {job_id} {job_id - 1}", file=config.output_file)
             job_id += 1
         first_in_task = True
 
 
-def gen_cbs_workload():
-    raise NotImplementedError()
+def gen_cbs_workload(config: CbsConfig):
+    print(f"c {config.num_cores}", file=config.output_file)
+    tasks = gen_tasks(config.num_tasks, config.num_cores)
+
+    max_period = max([task["period"] for task in tasks])
+    max_dl = max_period * config.num_jobs
+
+    job_id = 0
+    for task_id, task in enumerate(tasks):
+        # print server spec
+        print(f"S {task_id} {task['execution_time']} {task['period']}", file=config.output_file)
+        # fill jobs to maximal deadline
+        num_jobs = int(max_dl / task["period"])
+        submission = 0
+        for n in range(1, num_jobs + 1):
+            submission_error = random.randrange(-config.estimation_error,
+                                                config.estimation_error) / 100
+            # submission has to be after previous one
+            submission = max(submission, int((n-1) * task["period"]
+                                             - (task["period"] * submission_error)))
+            deadline = n * task["period"]
+            execution_time_estimate = task["execution_time"]
+            estimation_error = 1 + random.randrange(-config.estimation_error,
+                                                    config.estimation_error) / 100
+            execution_time = int(execution_time_estimate * estimation_error)
+            print(f"j {job_id} {execution_time} {submission} {task_id}", file=config.output_file)
+            job_id += 1
 
 
 def main():
     args = process_cmd_args()
-    if args.cbs:
+    seed = args.seed if args.seed else time.time()
+    random.seed(seed)
+
+    if args.both:
         gen_cbs_workload(CbsConfig(args))
 
-    gen_atlas_workload(AtlasConfig(args))
+        random.seed(seed)
+        gen_atlas_workload(AtlasConfig(args))
+
+    elif args.cbs:
+        gen_cbs_workload(CbsConfig(args))
+
+    else:
+        gen_atlas_workload(AtlasConfig(args))
 
 
 if __name__ == "__main__":
