@@ -71,6 +71,40 @@ std::vector<AtlasJob *> AtlasSimulationModel::next_atlas_scheduled_jobs(unsigned
     return next_jobs;
 }
 
+unsigned AtlasSimulationModel::space_on_atlas(unsigned begin, unsigned end) const {
+    if (end <= begin) {
+        return 0;
+    }
+    unsigned space = end - begin;
+    for (AtlasSchedule *schedule: this->_atlas_schedules) {
+        AtlasScheduleData data = schedule->last_data();
+        /* schedule not in given interval */
+        if (data.end() < begin or data._begin > end) {
+            continue;
+        }
+        /* given interval completely in schedule */
+        if (data._begin < begin and data.end() > end) {
+            return 0;
+        }
+
+        unsigned time_in_interval = data._execution_time;
+        /* schedule begins earlier */
+        if (data._begin < begin) {
+            time_in_interval = data.end() - begin;
+        /* schedule ends later */
+        } else if(data.end() > end) {
+            time_in_interval = end - data._begin;
+        }
+
+        if (time_in_interval >= space) {
+            return 0;
+        }
+
+        space -= time_in_interval;
+    }
+    return space;
+}
+
 void AtlasSimulationModel::tidy_up_queues() {
     for (auto &[key, value]: this->_cfs_queue) {
         this->tidy_up_queue(&value);

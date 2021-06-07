@@ -72,11 +72,18 @@ unsigned AtlasJob::estimated_execution_time_left(unsigned timestamp) const {
     return this->_execution_time_estimate - time_executed;
 }
 
-bool AtlasJob::all_dependencies_finished(unsigned timestamp) const {
+bool AtlasJob::all_known_dependencies_finished(unsigned timestamp) const {
     for (const AtlasJob *j: this->_known_dependencies) {
         if (j->finished(timestamp)) {
             continue;
         }
+        return false;
+    }
+    return true;
+}
+
+bool AtlasJob::all_dependencies_finished(unsigned timestamp) const {
+    if (not this->all_known_dependencies_finished(timestamp)) {
         return false;
     }
     for (const AtlasJob *j: this->_unknown_dependencies) {

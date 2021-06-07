@@ -1,11 +1,38 @@
 #! /usr/bin/env python
 import argparse
+import numpy
 import random
 import sys
 import time
 
 from pathlib import Path
 from typing import IO
+
+
+class Job:
+    job_id: int
+    submission_time: int
+    execution_time: int
+    deadline: int
+
+    def __init__(self, job_id: int, submission_time: int, execution_time: int, deadline: int):
+        self.job_id = job_id
+        self.submission_time = submission_time
+        self.execution_time = execution_time
+        self.deadline = deadline
+
+
+class Task:
+    task_id: int
+    period: int
+    execution_time: int
+    jobs: list[Job]
+
+    def __init__(self, task_id: int, period: int, execution_time: int):
+        self.task_id = task_id
+        self.period = period
+        self.execution_time = execution_time
+        self.jobs = []
 
 
 class AtlasConfig:
@@ -100,100 +127,104 @@ def process_cmd_args():
     return aparser.parse_args()
 
 
-def gen_tasks(num_tasks: int, num_cores: int):
+def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
+              normal_gen: numpy.random.Generator):
     utilisation_left: float = num_cores
     tasks = []
-    for _ in range(num_tasks):
-        period = random.randrange(50, 10000)
+    for task_id in range(num_tasks):
+        period = random.randrange(2000, 10000)
         max_execution_time = int(min(period, utilisation_left * period) * 0.8)
         execution_time = random.randrange(25, max_execution_time)
         utilisation_left -= execution_time / period
-        task = {"period": period, "execution_time": execution_time}
-        tasks.append(task)
+        tasks.append(Task(task_id, period, execution_time))
+
+    max_period = max([t.period for t in tasks])
+    max_dl = max_period * num_jobs
+
+    job_id = 0
+
+    for task in tasks:
+        # fill jobs to maximal deadline
+        num_jobs = int(max_dl / task.period)
+        current_submission = 0
+        for n in range(1, num_jobs + 1):
+            prev_submission = current_submission
+
+            current_submission = int(normal_gen.normal((n-1) * task.period,
+                                                       estimation_error / 100 * task.period))
+
+            # submission has to be after previous one
+            current_submission = max(current_submission, prev_submission)
+
+            # there has to be enough time before dl
+            deadline = n * task.period
+            current_submission = min(current_submission, deadline - task.execution_time)
+
+            execution_time_estimate = task.execution_time
+            execution_time = int(normal_gen.normal(execution_time_estimate,
+                                                   estimation_error / 100
+                                                   * execution_time_estimate))
+
+            # execution time has to be more than 20
+            execution_time = max(execution_time, 20)
+
+            task.jobs.append(Job(job_id, current_submission, execution_time, deadline))
+            job_id += 1
+
     return tasks
 
 
-def gen_atlas_workload(config: AtlasConfig):
+def gen_atlas_workload(tasks: list[Task], config: AtlasConfig):
     print(f"c {config.num_cores}", file=config.output_file)
     print(f"f {config.cfs_factor}", file=config.output_file)
 
-    tasks = gen_tasks(config.num_tasks, config.num_cores)
-
-    max_period = max([task["period"] for task in tasks])
-    max_dl = max_period * config.num_jobs
-
-    job_id = 0
     first_in_task = True
     for task in tasks:
-        # fill jobs to maximal deadline
-        num_jobs = int(max_dl / task["period"])
-        submission = 0
-        for n in range(1, num_jobs + 1):
-            submission_error = random.randrange(-config.estimation_error,
-                                                config.estimation_error) / 100
-            # submission has to be after previous one
-            submission = max(submission, int((n-1) * task["period"]
-                                             - (task["period"] * submission_error)))
-            deadline = n * task["period"]
-            execution_time_estimate = task["execution_time"]
-            estimation_error = 1 + random.randrange(-config.estimation_error,
-                                                    config.estimation_error) / 100
-            execution_time = int(execution_time_estimate * estimation_error)
-            print(f"j {job_id} {deadline} {execution_time_estimate} {execution_time} {submission}",
+        for job in task.jobs:
+            print(f"j {job.job_id} {job.deadline} {task.execution_time} {job.execution_time}"
+                  f" {job.submission_time}",
                   file=config.output_file)
             if first_in_task:
                 first_in_task = False
             else:
-                print(f"d k {job_id} {job_id - 1}", file=config.output_file)
-            job_id += 1
+                print(f"d k {job.job_id} {job.job_id - 1}", file=config.output_file)
         first_in_task = True
 
 
-def gen_cbs_workload(config: CbsConfig):
+def gen_cbs_workload(tasks: list[Task], config: CbsConfig):
     print(f"c {config.num_cores}", file=config.output_file)
-    tasks = gen_tasks(config.num_tasks, config.num_cores)
 
-    max_period = max([task["period"] for task in tasks])
-    max_dl = max_period * config.num_jobs
-
-    job_id = 0
-    for task_id, task in enumerate(tasks):
+    for task in tasks:
         # print server spec
-        print(f"S {task_id} {task['execution_time']} {task['period']}", file=config.output_file)
+        print(f"S {task.task_id} {task.execution_time} {task.period}", file=config.output_file)
+
         # fill jobs to maximal deadline
-        num_jobs = int(max_dl / task["period"])
-        submission = 0
-        for n in range(1, num_jobs + 1):
-            submission_error = random.randrange(-config.estimation_error,
-                                                config.estimation_error) / 100
-            # submission has to be after previous one
-            submission = max(submission, int((n-1) * task["period"]
-                                             - (task["period"] * submission_error)))
-            deadline = n * task["period"]
-            execution_time_estimate = task["execution_time"]
-            estimation_error = 1 + random.randrange(-config.estimation_error,
-                                                    config.estimation_error) / 100
-            execution_time = int(execution_time_estimate * estimation_error)
-            print(f"j {job_id} {execution_time} {submission} {task_id}", file=config.output_file)
-            job_id += 1
+        for job in task.jobs:
+            print(f"j {job.job_id} {job.execution_time} {job.submission_time} {task.task_id}",
+                  file=config.output_file)
 
 
 def main():
     args = process_cmd_args()
+    cbs_config = CbsConfig(args)
+    atlas_config = AtlasConfig(args)
+
     seed = args.seed if args.seed else time.time()
     random.seed(seed)
+    normal_gen = numpy.random.default_rng(int(seed))
+
+    tasks = gen_tasks(atlas_config.num_tasks, atlas_config.num_cores, atlas_config.num_jobs,
+                      atlas_config.estimation_error, normal_gen)
 
     if args.both:
-        gen_cbs_workload(CbsConfig(args))
-
-        random.seed(seed)
-        gen_atlas_workload(AtlasConfig(args))
+        gen_cbs_workload(tasks, cbs_config)
+        gen_atlas_workload(tasks, atlas_config)
 
     elif args.cbs:
-        gen_cbs_workload(CbsConfig(args))
+        gen_cbs_workload(tasks, cbs_config)
 
     else:
-        gen_atlas_workload(AtlasConfig(args))
+        gen_atlas_workload(tasks, atlas_config)
 
 
 if __name__ == "__main__":

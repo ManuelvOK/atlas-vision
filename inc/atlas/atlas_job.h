@@ -102,6 +102,8 @@ public:
     /* amount of time estimated to still be executed */
     unsigned estimated_execution_time_left(unsigned timestamp) const;
 
+    bool all_known_dependencies_finished(unsigned timestamp) const;
+
     bool all_dependencies_finished(unsigned timestamp) const;
 
     bool depends_on(const AtlasJob *job) const;

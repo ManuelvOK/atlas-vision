@@ -229,7 +229,7 @@ public:
         this->_data[timestamp] = new_data;
     }
 
-    void add_change_shift_relative(unsigned timestamp, unsigned shift){
+    void add_change_shift_relative(unsigned timestamp, int shift){
         T new_data = this->last_data();
         new_data._timestamp = timestamp;
         new_data._begin += shift;
