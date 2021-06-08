@@ -112,6 +112,8 @@ def process_cmd_args():
                          help='generate workload for the CBS scheduler')
     aparser.add_argument('-b', '--both', action='store_true',
                          help='generate ATLAS and CBS workload with same seed into files')
+    aparser.add_argument('-d', '--task-definition', default='',
+                         help='print task definition to given file')
     aparser.add_argument('-o', '--output', help='output file')
 
     aparser.add_argument('-f', '--cfs-factor', type=is_greater_zero, default=1,
@@ -201,6 +203,14 @@ def gen_cbs_workload(tasks: list[Task], config: CbsConfig):
                   file=config.output_file)
 
 
+def write_tasks(tasks: list[Task], file: IO):
+    for task in tasks:
+        print(f"t {task.task_id} {task.period} {task.execution_time}", file=file)
+        for job in task.jobs:
+            print(f"j {job.job_id} {task.task_id} {job.submission_time} {job.execution_time}"
+                  f" {job.deadline}", file=file)
+
+
 def main():
     args = process_cmd_args()
     cbs_config = CbsConfig(args)
@@ -212,6 +222,10 @@ def main():
 
     tasks = gen_tasks(args.num_tasks, args.num_cores, args.num_jobs, args.estimation_error,
                       args.utilisation, args.length, normal_gen)
+
+    if args.task_definition != '':
+        with open(args.task_definition, 'w') as f:
+            write_tasks(tasks, f)
 
     if args.both:
         gen_cbs_workload(tasks, cbs_config)
