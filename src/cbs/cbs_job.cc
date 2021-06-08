@@ -4,8 +4,10 @@
 
 std::string HardRtJob::to_string() const {
     std::stringstream ss;
-    ss << "r " << this->_id << " " << this->_deadline << " " << this->_execution_time
-       << " " << this->_submission_time << std::endl;
+
+    ss << "j " << this->_id << " " << this->_deadline << " " << this->_execution_time
+       << " " << this->_execution_time << " " << this->_submission_time
+       << " -" << std::endl;
 
     for (CbsSchedule *schedule: this->_schedules) {
         ss << schedule->to_string() << std::endl;
@@ -31,7 +33,15 @@ void SoftRtJob::add_change_deadline(unsigned timestamp, unsigned deadline) {
 
 std::string SoftRtJob::to_string() const {
     std::stringstream ss;
-    ss << "j " << this->_id << " " << this->_execution_time << " " << this->_submission_time
+    int deadline = 0;
+    for (const auto &[_,job]: this->_cbs->jobs()) {
+        deadline += this->_cbs->period();
+        if (job == this) {
+            break;
+        }
+    }
+    ss << "j " << this->_id << " " << deadline << " " << this->_cbs->max_budget()
+       << " " << this->_execution_time << " " << this->_submission_time
        << " " << this->_cbs->id() << std::endl;
 
     for (CbsSchedule *schedule: this->_schedules) {

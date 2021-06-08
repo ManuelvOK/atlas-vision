@@ -21,8 +21,8 @@ CbsJob *CbsSchedule::cbs_job() const {
 std::string CbsSchedule::to_string() const {
     CbsScheduleData data = this->last_data();
     std::stringstream ss;
-    // > s schedule_id job_id core submission_time begin execution_time
-    ss << "s " << this->_id << " " << this->_job->_id << " " << this->_core
+    // > s schedule_id job_id core scheduler submission_time begin execution_time
+    ss << "s " << this->_id << " " << this->_job->_id << " " << this->_core << " cbs"
        << " " << this->_submission_time << " " << data._begin << " " << data._execution_time
        << std::endl;
     return ss.str();

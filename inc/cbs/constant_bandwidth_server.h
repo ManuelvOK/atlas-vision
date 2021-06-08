@@ -19,6 +19,8 @@ class ConstantBandwidthServer : public Printable {
 
     std::list<SoftRtJob *> _job_queue;
 
+    std::map<unsigned, SoftRtJob *> _jobs;
+
     std::map<unsigned, unsigned> _deadlines;
 
 
@@ -36,11 +38,15 @@ class ConstantBandwidthServer : public Printable {
 
     unsigned max_budget() const;
 
+    unsigned period() const;
+
     std::set<unsigned> budget_fill_times() const;
 
     unsigned deadline(unsigned timestamp) const;
 
     SoftRtJob *job() const;
+
+    std::map<unsigned, SoftRtJob *> jobs() const;
 
     std::list<SoftRtJob *> job_queue() const;
 

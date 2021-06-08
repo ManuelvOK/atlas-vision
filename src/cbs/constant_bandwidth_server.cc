@@ -1,6 +1,7 @@
 #include <cbs/constant_bandwidth_server.h>
 
 #include <cbs/cbs_schedule.h>
+#include <cbs/cbs_job.h>
 
 unsigned ConstantBandwidthServer::id() const {
     return this->_id;
@@ -43,6 +44,10 @@ unsigned ConstantBandwidthServer::max_budget() const {
     return this->_max_budget;
 }
 
+unsigned ConstantBandwidthServer::period() const {
+    return this->_period;
+}
+
 std::set<unsigned> ConstantBandwidthServer::budget_fill_times() const {
     return this->_budget_fill_times;
 }
@@ -63,6 +68,10 @@ SoftRtJob *ConstantBandwidthServer::job() const {
         return nullptr;
     }
     return this->_job_queue.front();
+}
+
+std::map<unsigned, SoftRtJob *> ConstantBandwidthServer::jobs() const {
+    return this->_jobs;
 }
 
 std::list<SoftRtJob *> ConstantBandwidthServer::job_queue() const {
@@ -118,6 +127,8 @@ bool ConstantBandwidthServer::is_active() const {
 
 void ConstantBandwidthServer::add_schedule(SoftRtSchedule *schedule) {
     this->_schedules.push_back(schedule);
+    SoftRtJob *job = schedule->_rt_job;
+    this->_jobs[job->_submission_time] = job;
 }
 
 unsigned ConstantBandwidthServer::generate_new_deadline_and_refill(unsigned timestamp) {
