@@ -413,7 +413,7 @@ void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
         std::stringstream message;
         message << "job " << job->_id << " depends on job " << dependent_job->_id
                 << ". Inserting ATLAS dependency schedule";
-        this->_model->add_message(timestamp, message.str(), {job->_id});
+        this->_model->add_message(timestamp, message.str(), {job->_id, dependent_job->_id});
         unsigned length = std::min(this->_schedule->last_data()._execution_time, dependency_time_left);
 
         DependencySchedule *schedule =

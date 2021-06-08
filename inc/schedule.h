@@ -258,7 +258,7 @@ public:
         T last_data = this->last_data();
 
         /* when CFS schedules get deleted there has been an end change before */
-        if (last_data._timestamp == timestamp) {
+        if (last_data._timestamp == timestamp && this->_data.size() > 1) {
             this->_data.erase(last_data._timestamp);
         }
         T &old_data = this->last_data();

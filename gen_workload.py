@@ -38,17 +38,11 @@ class Task:
 class AtlasConfig:
     num_cores: int
     cfs_factor: int
-    num_tasks: int
-    num_jobs: int
-    estimation_error: int
     output_file: IO
 
     def __init__(self, args: argparse.Namespace):
         self.num_cores = args.num_cores
         self.cfs_factor = args.cfs_factor
-        self.num_tasks = args.num_tasks
-        self.num_jobs = args.num_jobs
-        self.estimation_error = args.estimation_error
         if not args.output:
             self.output_file = sys.stdout
         elif args.both:
@@ -64,16 +58,11 @@ class AtlasConfig:
 
 class CbsConfig:
     num_cores: int
-    num_tasks: int
-    num_jobs: int
-    estimation_error: int
     output_file: IO
 
     def __init__(self, args: argparse.Namespace):
         self.num_cores = args.num_cores
-        self.num_tasks = args.num_tasks
-        self.num_jobs = args.num_jobs
-        self.estimation_error = args.estimation_error
+        self.utilisation = args.utilisation
         if not args.output:
             self.output_file = sys.stdout
         elif args.both:
@@ -105,37 +94,45 @@ def is_positive(value):
 
 def process_cmd_args():
     aparser = argparse.ArgumentParser()
-    aparser.add_argument('-c', '--cbs', action='store_true',
-                         help='generate workload for the CBS scheduler')
     aparser.add_argument('-n', '--num-cores', type=is_greater_zero, default=1,
                          help='number of cores')
+    aparser.add_argument('-t', '--num_tasks', type=is_positive, default=5,
+                         help='number of tasks to generate')
+    aparser.add_argument('-j', '--num_jobs', type=is_positive, default=5,
+                         help='minimum number of jobs per task')
+    aparser.add_argument('-u', '--utilisation', type=is_positive, default=80,
+                         help='desired overall utilisation in percent (before applying error)')
+    aparser.add_argument('-l', '--length', type=is_positive, default=10000,
+                         help='length of simulation. Latest deadline.')
+    aparser.add_argument('-e', '--estimation-error', type=is_positive, default=5,
+                         help='estimation error in percent')
     aparser.add_argument('-s', '--seed', help='Seed for the RNG')
 
+    aparser.add_argument('-c', '--cbs', action='store_true',
+                         help='generate workload for the CBS scheduler')
     aparser.add_argument('-b', '--both', action='store_true',
                          help='generate ATLAS and CBS workload with same seed into files')
     aparser.add_argument('-o', '--output', help='output file')
 
     aparser.add_argument('-f', '--cfs-factor', type=is_greater_zero, default=1,
                          help='cfs factor for ATLAS')
-    aparser.add_argument('-t', '--num_tasks', type=is_positive, default=5,
-                         help='number of tasks for ATLAS')
-    aparser.add_argument('-j', '--num_jobs', type=is_positive, default=5,
-                         help='number of jobs for ATLAS')
-    aparser.add_argument('-e', '--estimation-error', type=is_positive,
-                         default=5,
-                         help='estimation error in percent for ATLAS')
     return aparser.parse_args()
 
 
 def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
-              normal_gen: numpy.random.Generator):
-    utilisation_left: float = num_cores
+              utilisation: int, simulation_length: int, normal_gen: numpy.random.Generator):
+    task_periods = [random.randrange(500, 2000) for _ in range(num_tasks)]
+    total_length = sum(task_periods)
+    task_periods_norm = [period / total_length for period in task_periods]
+
+    task_lengths = [random.randrange(500, 2000) for _ in range(num_tasks)]
+    total_length = sum(task_lengths)
+    task_lengths_norm = [length / total_length for length in task_lengths]
+
     tasks = []
-    for task_id in range(num_tasks):
-        period = random.randrange(2000, 10000)
-        max_execution_time = int(min(period, utilisation_left * period) * 0.8)
-        execution_time = random.randrange(25, max_execution_time)
-        utilisation_left -= execution_time / period
+    for task_id, (period_n, length_n) in enumerate(zip(task_periods_norm, task_lengths_norm)):
+        period = int(period_n * simulation_length)
+        execution_time = int(length_n * period * utilisation / 100)
         tasks.append(Task(task_id, period, execution_time))
 
     max_period = max([t.period for t in tasks])
@@ -213,8 +210,8 @@ def main():
     random.seed(seed)
     normal_gen = numpy.random.default_rng(int(seed))
 
-    tasks = gen_tasks(atlas_config.num_tasks, atlas_config.num_cores, atlas_config.num_jobs,
-                      atlas_config.estimation_error, normal_gen)
+    tasks = gen_tasks(args.num_tasks, args.num_cores, args.num_jobs, args.estimation_error,
+                      args.utilisation, args.length, normal_gen)
 
     if args.both:
         gen_cbs_workload(tasks, cbs_config)
