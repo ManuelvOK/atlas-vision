@@ -126,3 +126,13 @@ unsigned AtlasJob::time_executed(unsigned timestamp) const {
     }
     return time_executed;
 }
+
+std::string AtlasJob::to_string() const {
+    std::stringstream ss;
+    ss << "j " << this->_id << " " << this->_deadline << " " << this->_execution_time_estimate
+       << " " << this->_execution_time << " " << this->_submission_time << std::endl;
+    for (BaseAtlasSchedule *schedule: this->_schedules) {
+        ss << schedule->to_string();
+    }
+    return ss.str();
+}

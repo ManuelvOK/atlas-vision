@@ -30,6 +30,9 @@ public:
 
     bool _dirty = true;
     bool _simulated = false;
+    bool _only_simulation = false;
+
+    std::string _output_file = "";
 
     Message *_hovered_message = nullptr;
     std::vector<std::string> _debug_messages;
@@ -79,6 +82,10 @@ public:
 
     virtual std::vector<BaseJob *> jobs() const override {
         return std::vector<BaseJob *>(this->_jobs.begin(), this->_jobs.end());
+    }
+
+    std::vector<J *> specific_jobs() const {
+        return this->_jobs;
     }
 
     virtual const S *active_schedule(unsigned core, unsigned timestamp) const {

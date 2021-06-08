@@ -32,6 +32,8 @@ class BaseAtlasSchedule : public Schedule<AtlasScheduleData> {
 
     AtlasJob *atlas_job() const;
     GuiScheduleData get_vision_data_at_time(unsigned timestamp = 0) const override;
+
+    std::string to_string() const override;
 };
 
 class AtlasSchedule : public BaseAtlasSchedule {

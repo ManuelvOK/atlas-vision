@@ -99,7 +99,7 @@ void AtlasParser::parse(std::istream *input, AtlasSimulationModel *atlas_model) 
     }
 
     /* calculate jobs dependency level and put them into model */
-    for (const std::pair<unsigned, AtlasJob *> &p: this->_jobs) {
+    for (const std::pair<unsigned, AtlasJob *> p: this->_jobs) {
         p.second->calculate_dependency_level();
         atlas_model->_jobs.push_back(p.second);
     }

@@ -5,9 +5,11 @@
 #include <set>
 #include <vector>
 
+#include <printable.h>
+
 class SoftRtJob;
 class SoftRtSchedule;
-class ConstantBandwidthServer {
+class ConstantBandwidthServer : public Printable {
     const unsigned _id;
     const unsigned _max_budget;
     const unsigned _period;
@@ -57,4 +59,6 @@ class ConstantBandwidthServer {
     void dequeue_job(SoftRtJob *job = nullptr);
 
     void enqueue_job(SoftRtJob *job);
+
+    virtual std::string to_string() const override;
 };

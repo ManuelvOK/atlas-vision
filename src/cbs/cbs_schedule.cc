@@ -18,6 +18,16 @@ CbsJob *CbsSchedule::cbs_job() const {
     return this->_cbs_job;
 }
 
+std::string CbsSchedule::to_string() const {
+    CbsScheduleData data = this->last_data();
+    std::stringstream ss;
+    // > s schedule_id job_id core submission_time begin execution_time
+    ss << "s " << this->_id << " " << this->_job->_id << " " << this->_core
+       << " " << this->_submission_time << " " << data._begin << " " << data._execution_time
+       << std::endl;
+    return ss.str();
+}
+
 HardRtSchedule::HardRtSchedule(HardRtJob *job, int submission_time, unsigned core, unsigned begin, unsigned execution_time)
     : CbsSchedule(job, submission_time, core, begin, execution_time), _rt_job(job) {}
 

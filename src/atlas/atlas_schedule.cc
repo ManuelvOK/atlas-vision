@@ -38,6 +38,21 @@ GuiScheduleData BaseAtlasSchedule::get_vision_data_at_time(unsigned timestamp) c
     return gui_data;
 }
 
+std::string BaseAtlasSchedule::to_string() const {
+    AtlasScheduleData data = this->last_data();
+    static std::map<AtlasSchedulerType, char> scheduler_char = {
+        {AtlasSchedulerType::ATLAS, 'a'},
+        {AtlasSchedulerType::recovery, 'r'},
+        {AtlasSchedulerType::CFS, 'c'},
+    };
+    std::stringstream ss;
+    // > s schedule_id job_id core scheduler submission_time begin execution_time
+    ss << "s " << this->_id << " " << this->_job->_id << " " << this->_core
+       << " " << scheduler_char[data._scheduler] << " " << this->_submission_time
+       << " " << data._begin << " " << data._execution_time << std::endl;
+    return ss.str();
+}
+
 CfsSchedule::CfsSchedule(AtlasSchedule *s, unsigned submission_time, unsigned begin,
                          unsigned execution_time)
     : BaseAtlasSchedule(s) {

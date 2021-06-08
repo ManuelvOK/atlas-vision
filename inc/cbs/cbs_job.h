@@ -11,6 +11,8 @@ class HardRtJob: public CbsJob {
   public:
     typedef HardRtSchedule ScheduleType;
     using CbsJob::CbsJob;
+
+    std::string to_string() const override;
 };
 
 class ConstantBandwidthServer;
@@ -27,4 +29,6 @@ class SoftRtJob: public CbsJob {
     unsigned deadline(unsigned timestamp) const;
 
     void add_change_deadline(unsigned timestamp, unsigned deadline);
+
+    std::string to_string() const override;
 };

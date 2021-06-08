@@ -1,11 +1,15 @@
 #include <cbs/cbs_simulation_controller.h>
 
+#include <fstream>
+
 #include <cbs/cbs_simulation_action.h>
 
-CbsSimulationController::CbsSimulationController(CbsSimulationModel *cbs_model,
+CbsSimulationController::CbsSimulationController(SDL_GUI::ApplicationBase *application,
+                                                 CbsSimulationModel *cbs_model,
                                                  PlayerModel *player_model,
                                                  SDL_GUI::InterfaceModel *interface_model)
-    : SimulationController(cbs_model, player_model, interface_model), _cbs_model(cbs_model) {}
+    : SimulationController(application, cbs_model, player_model, interface_model),
+      _cbs_model(cbs_model) {}
 
 void CbsSimulationController::bootstrap_simulation() {
     /* submission for hard realtime jobs */
@@ -19,5 +23,25 @@ void CbsSimulationController::bootstrap_simulation() {
         this->_simulation_model->_actions_to_do.push_back(
             new CbsSubmissionAction(this->_core_assigner, this->_cbs_model, job));
     }
+}
+
+void CbsSimulationController::write_back(std::string output_file) {
+    std::ofstream f_out(output_file);
+    if (not f_out.is_open()) {
+        std::cerr << "Error while opening output file." << std::endl;
+        return;
+    }
+
+    std::stringstream ss;
+    for (CbsJob *job: this->_simulation_model->specific_jobs()) {
+        ss << job->to_string();
+    }
+
+    for (const auto &[_,cbs]: this->_cbs_model->_servers) {
+        ss << cbs.to_string();
+    }
+
+    f_out << ss.str();
+    f_out.close();
 }
 

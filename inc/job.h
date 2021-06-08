@@ -2,8 +2,10 @@
 
 #include <vector>
 
+#include <printable.h>
+
 /** Object representing a job */
-class BaseJob {
+class BaseJob : public Printable {
 public:
     unsigned _id;                        /**< job id */
     unsigned _deadline;                  /**< timestamp for the deadline of the job */

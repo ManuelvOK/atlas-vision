@@ -123,10 +123,16 @@ public:
             CbsSimulationModel *cbs_model = this->build_model<CbsSimulationModel>();
             app->add_model(cbs_model);
             simulation_model = cbs_model;
+            simulation_model->_only_simulation = this->_command_line.get_flag("only_simulation");
+            simulation_model->_output_file = this->_command_line.get_option("output");
 
             CbsSimulationController *simulation_controller =
-                new CbsSimulationController(cbs_model, player_model, default_interface_model);
+                new CbsSimulationController(app, cbs_model, player_model, default_interface_model);
             app->add_controller(simulation_controller);
+
+            if (simulation_model->_only_simulation) {
+                return;
+            }
 
             CbsViewController *cbs_view_controller =
                 new CbsViewController(app, cbs_model, interface_model, default_interface_model,
@@ -137,10 +143,17 @@ public:
             AtlasSimulationModel *atlas_model = this->build_model<AtlasSimulationModel>();
             app->add_model(atlas_model);
             simulation_model = atlas_model;
+            simulation_model->_only_simulation = this->_command_line.get_flag("only_simulation");
+            simulation_model->_output_file = this->_command_line.get_option("output");
 
             AtlasSimulationController *simulation_controller =
-                new AtlasSimulationController(atlas_model, player_model, default_interface_model);
+                new AtlasSimulationController(app, atlas_model, player_model,
+                                              default_interface_model);
             app->add_controller(simulation_controller);
+
+            if (simulation_model->_only_simulation) {
+                return;
+            }
 
             AtlasViewController *atlas_view_controller =
                 new AtlasViewController(app, atlas_model, interface_model, default_interface_model,

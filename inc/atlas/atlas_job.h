@@ -111,4 +111,6 @@ public:
     void set_atlas_schedule(AtlasSchedule *schedule);
 
     unsigned time_executed(unsigned timestamp) const override;
+
+    std::string to_string() const override;
 };

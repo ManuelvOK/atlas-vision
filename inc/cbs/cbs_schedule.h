@@ -17,6 +17,8 @@ class CbsSchedule : public Schedule<CbsScheduleData> {
                 unsigned begin);
 
     CbsJob *cbs_job() const;
+
+    std::string to_string() const override;
 };
 
 class HardRtJob;

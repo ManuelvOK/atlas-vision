@@ -6,6 +6,7 @@
 
 #include <gui/gui_schedule_data.h>
 #include <job.h>
+#include <printable.h>
 #include <util/parser.h>
 
 class ParsedChange;
@@ -26,7 +27,7 @@ static bool same_data(const ScheduleData &a, const ScheduleData &b) {
 }
 
 
-class BaseSchedule {
+class BaseSchedule : public Printable {
   protected:
     static unsigned _next_id;
 

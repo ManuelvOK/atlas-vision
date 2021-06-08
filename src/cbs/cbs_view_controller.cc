@@ -115,7 +115,7 @@ void CbsViewController::create_legend(std::vector<CbsJob *> jobs) {
     }
 
     int offset = hard_rt_job_rect->height() + 10;
-    for (const auto [cbs, jobs]: cbs_jobs) {
+    for (const auto &[cbs, jobs]: cbs_jobs) {
         SDL_GUI::Rect *cbs_rect = new SDL_GUI::Rect({5, offset}, legend_rect->width() - 10, 0);
         cbs_rect->_style._has_border = true;
         cbs_rect->_style._border_color = SDL_GUI::RGB("black");
@@ -226,7 +226,7 @@ CbsViewController::create_deadline_drawables(std::map<unsigned, std::vector<unsi
 
 void
 CbsViewController::create_budget_lines(const std::map<unsigned, ConstantBandwidthServer> &servers) {
-    for (const auto [_, cbs]: servers) {
+    for (const auto &[_, cbs]: servers) {
         this->create_budget_line(cbs);
     }
 }

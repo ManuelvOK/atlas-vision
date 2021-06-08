@@ -146,3 +146,9 @@ void ConstantBandwidthServer::dequeue_job(SoftRtJob *job) {
 void ConstantBandwidthServer::enqueue_job(SoftRtJob *job) {
     this->_job_queue.push_back(job);
 }
+
+std::string ConstantBandwidthServer::to_string() const {
+    std::stringstream ss;
+    ss << "S " << this->_id << " " << this->_max_budget << " " << this->_period << std::endl;
+    return ss.str();
+}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL_GUI/application.h>
 #include <SDL_GUI/controllers/controller_base.h>
 #include <SDL_GUI/models/interface_model.h>
 
@@ -12,16 +13,22 @@
 template <typename S, typename J>
 class SimulationController: public SDL_GUI::ControllerBase {
 protected:
+    SDL_GUI::ApplicationBase *_application;             /**< The application */
     SimulationModel<S, J> *_simulation_model;
     PlayerModel *_player_model;
     SDL_GUI::InterfaceModel *_interface_model;
     CoreAssigner *_core_assigner;
 
     virtual void bootstrap_simulation() = 0;
+
+    virtual void write_back(std::string output_file) = 0;
 public:
-    SimulationController(SimulationModel<S, J> *simulation_model, PlayerModel *player_model,
+    SimulationController(SDL_GUI::ApplicationBase *application,
+                         SimulationModel<S, J> *simulation_model,
+                         PlayerModel *player_model,
                          SDL_GUI::InterfaceModel *interface_model)
-        : _simulation_model(simulation_model),
+        : _application(application),
+          _simulation_model(simulation_model),
           _player_model(player_model),
           _interface_model(interface_model),
           _core_assigner(new RoundRobinCoreAssigner()) {}
@@ -90,5 +97,13 @@ public:
         this->_simulation_model->_simulated = true;
         this->_simulation_model->_dirty = true;
         this->_player_model->_dirty = true;
+        if (this->_simulation_model->_only_simulation) {
+            this->_application->_is_running = false;
+        }
+
+        if (this->_simulation_model->_output_file != "") {
+            this->write_back(this->_simulation_model->_output_file);
+        }
+
     }
 };

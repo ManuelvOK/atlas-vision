@@ -9,8 +9,10 @@
 
 SimulationPlugin::SimulationPlugin(): SDL_GUI::PluginBase("Atlas Plugin") {
     this->_command_line.register_flag("nosim", "n", "no_simulation");
+    this->_command_line.register_flag("onlysim", "s", "only_simulation");
     this->_command_line.register_flag("cbs", "c", "simulate_cbs");
     this->_command_line.register_positional("input");
+    this->_command_line.register_option("output", "o", "output");
 }
 
 template<>
