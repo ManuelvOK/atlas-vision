@@ -25,7 +25,7 @@ void CbsSimulationController::bootstrap_simulation() {
     }
 }
 
-void CbsSimulationController::write_back(std::string output_file) {
+void CbsSimulationController::write_back(std::string output_file) const {
     std::ofstream f_out(output_file);
     if (not f_out.is_open()) {
         std::cerr << "Error while opening output file." << std::endl;
@@ -43,5 +43,11 @@ void CbsSimulationController::write_back(std::string output_file) {
 
     f_out << ss.str();
     f_out.close();
+}
+
+std::vector<std::string> CbsSimulationController::check_simulation() const {
+    std::vector<std::string> errors;
+
+    return errors;
 }
 

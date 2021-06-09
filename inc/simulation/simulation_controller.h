@@ -21,7 +21,9 @@ protected:
 
     virtual void bootstrap_simulation() = 0;
 
-    virtual void write_back(std::string output_file) = 0;
+    virtual void write_back(std::string output_file) const = 0;
+
+    virtual std::vector<std::string> check_simulation() const = 0;
 public:
     SimulationController(SDL_GUI::ApplicationBase *application,
                          SimulationModel<S, J> *simulation_model,
@@ -101,9 +103,15 @@ public:
             this->_application->_is_running = false;
         }
 
+        /* check simulation for sanity */
+        std::vector<std::string> errors = this->check_simulation();
+        for (std::string error: errors) {
+            std::cerr << error << std::endl;
+        }
+
+        /* write back simulated data */
         if (this->_simulation_model->_output_file != "") {
             this->write_back(this->_simulation_model->_output_file);
         }
-
     }
 };
