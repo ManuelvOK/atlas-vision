@@ -28,28 +28,46 @@ def parse_eval(input_file: str):
 
 def compare(atlas_tard: list[int], cbs_tard: list[int], out_file: IO):
     atlas_counter = 0
+    atlas_tard_sum = 0
     atlas_sum = 0
+
     cbs_counter = 0
+    cbs_tard_sum = 0
     cbs_sum = 0
-    total = 0
+
+    total_counter = 0
+    total_sum = 0
     for id, (a, c) in enumerate(zip(atlas_tard, cbs_tard)):
         atlas_sum += a
         if (a > 0):
+            atlas_tard_sum += a
             atlas_counter += 1
+            total_counter += 1
 
-        cbs_sum += a
+        cbs_sum += c
         if (c > 0):
+            cbs_tard_sum += c
             cbs_counter += 1
+            total_counter -= 1
 
-        total += a + c
+        total_sum += a - c
 
-        print(f"d {id} {a + c}", file=out_file)
+        print(f"d {id} {a - c}", file=out_file)
 
-    print(f"a_c {atlas_counter}", file=out_file)
-    print(f"a_s {atlas_sum}", file=out_file)
-    print(f"c_c {cbs_counter}", file=out_file)
-    print(f"c_s {cbs_sum}", file=out_file)
-    print(f"total {total}", file=out_file)
+    n_jobs = len(atlas_tard)
+
+    print(f"jobs: {n_jobs}", file=out_file)
+    print("", file=out_file)
+    print(f"atlas misses:           \t{atlas_counter}\t{atlas_counter / n_jobs}", file=out_file)
+    print(f"atlas tardiness sum:    \t{atlas_tard_sum}\t{atlas_tard_sum / n_jobs}", file=out_file)
+    print(f"atlas tardiness balance:\t{atlas_sum}\t{atlas_sum / n_jobs}", file=out_file)
+    print("", file=out_file)
+    print(f"cbs misses:             \t{cbs_counter}\t{cbs_counter / n_jobs}", file=out_file)
+    print(f"cbs tardiness sum:      \t{cbs_tard_sum}\t{cbs_tard_sum / n_jobs}", file=out_file)
+    print(f"cbs tardiness balance:  \t{cbs_sum}\t{cbs_sum / n_jobs}", file=out_file)
+    print("", file=out_file)
+    print(f"total miss balance:     \t{total_counter}\t{total_counter / n_jobs}", file=out_file)
+    print(f"total tardiness sum:    \t{total_sum}\t{total_sum / n_jobs}", file=out_file)
 
 
 def main():
