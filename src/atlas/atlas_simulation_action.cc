@@ -387,18 +387,15 @@ void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
     end_schedule(this->_model->_recovery_schedule[this->_schedule->_core], this->_model);
 
     /* check dependencies */
-    /* TODO: check for all dependencies, not only the first one. this was quick and dirty */
     AtlasJob *dependent_job = job;
-    std::vector<AtlasJob *> dependencies = dependent_job->known_dependencies();
+    std::vector<AtlasJob *> dependencies =
+        dependent_job->not_finished_known_dependencies(timestamp);
     unsigned dependency_time_left = 0;
     /* aggregate time that all the dependent jobs in the dependency chain have left to run */
     while (dependencies.size() > 0) {
-        unsigned time_left = dependencies[0]->execution_time_left(timestamp);
-        if (time_left <= 0) {
-            break;
-        }
         dependent_job = dependencies[0];
-        dependencies = dependent_job->known_dependencies();
+        unsigned time_left = dependent_job->execution_time_left(timestamp);
+        dependencies = dependent_job->not_finished_known_dependencies(timestamp);
         dependency_time_left = time_left;
     }
     if (dependent_job != job) {
@@ -436,7 +433,11 @@ void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
             this->_model->_actions_to_do.push_back(
                 new AtlasBeginScheduleAction{this->_model, this->_job, this->_schedule});
         } else {
-            this->_schedule->add_change_delete(timestamp);
+            this->_schedule->add_change_does_execute(timestamp, false);
+            this->_schedule->add_change_delete(this->_schedule->last_data().end());
+            this->_model->_recovery_queue[this->_schedule->_core].push_back(this->_schedule->atlas_job());
+            std::cerr << timestamp << ": there's no time for job " << job->_id
+                      << " after added schedule finished. -> Recovery" << std::endl;
         }
         return;
     }

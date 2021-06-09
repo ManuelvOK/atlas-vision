@@ -16,6 +16,16 @@ std::vector<AtlasJob *> AtlasJob::known_dependencies() {
     return this->_known_dependencies;
 }
 
+std::vector<AtlasJob *> AtlasJob::not_finished_known_dependencies(int timestamp) {
+    std::vector<AtlasJob *> ret;
+    std::copy_if(this->_known_dependencies.begin(), this->_known_dependencies.end(),
+                 std::back_inserter(ret),
+                 [timestamp] (AtlasJob *job) {
+                     return job->execution_time_left(timestamp) > 0;
+                 });
+    return ret;
+}
+
 std::vector<AtlasJob *> AtlasJob::unknown_dependencies() {
     return this->_unknown_dependencies;
 }

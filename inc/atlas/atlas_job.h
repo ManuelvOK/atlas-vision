@@ -63,6 +63,8 @@ public:
      */
     std::vector<AtlasJob *> known_dependencies();
 
+    std::vector<AtlasJob *> not_finished_known_dependencies(int timestamp);
+
     /**
      * getter for this->_unknown_dependencies
      * @return unknown_dependencies
