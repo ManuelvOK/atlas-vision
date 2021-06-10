@@ -16,6 +16,7 @@
 
 class BaseSimulationModel : public SDL_GUI::ModelBase {
 public:
+    virtual ~BaseSimulationModel();
     unsigned _timestamp = 0;
     unsigned _n_cores = -1;                      /**< number of cores the jobs get scheduled on */
 
@@ -75,6 +76,14 @@ public:
     std::map<const SDL_GUI::Drawable *, std::set<unsigned>> _drawables_jobs;
 
     SimulationModel() : _schedules(compare_schedules) {}
+    ~SimulationModel() {
+        for (S *schedule: this->_schedules) {
+            delete schedule;
+        }
+        for (J *job: this->_jobs) {
+            delete job;
+        }
+    }
 
     virtual std::vector<BaseSchedule *> schedules() const override {
         return std::vector<BaseSchedule *>(this->_schedules.begin(), this->_schedules.end());

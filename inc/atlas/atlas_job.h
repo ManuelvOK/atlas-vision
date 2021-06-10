@@ -22,6 +22,7 @@ private:
     /** list of Jobs, whose execution depends on this job unknowingly */
     std::vector<AtlasJob *> _unknown_dependees;
 public:
+    virtual ~AtlasJob() = default;
     const AtlasSimulationModel *_atlas_model;
     unsigned _execution_time_estimate;   /**< estimated execution time */
     unsigned _dependency_level = 0;     /**< level in dependency DAG. */

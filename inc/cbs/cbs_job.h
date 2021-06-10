@@ -5,6 +5,8 @@
 
 class CbsJob: public Job<CbsSchedule> {
     using Job<CbsSchedule>::Job;
+  public:
+    virtual ~CbsJob() = default;
 };
 
 class HardRtJob: public CbsJob {
