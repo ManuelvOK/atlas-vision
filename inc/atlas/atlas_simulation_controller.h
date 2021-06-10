@@ -14,7 +14,6 @@ class AtlasSimulationController : public SimulationController<BaseAtlasSchedule,
 public:
     AtlasSimulationController(SDL_GUI::ApplicationBase *application,
                               AtlasSimulationModel *atlas_model,
-                              PlayerModel *player_model,
-                              SDL_GUI::InterfaceModel *interface_model);
+                              PlayerModel *player_model);
 
 };

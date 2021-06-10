@@ -38,8 +38,8 @@ DYN_LIBS    := `sdl2-config --libs` -lSDL2_ttf -lSDL2_image -lfontconfig
 $(foreach dirname,$(dir $(OBJS)) $(dir $(DEPS)),$(shell $(MKDIR) $(dirname)))
 
 .PHONY: all
-#all: CXXFLAGS += -fsanitize=address
-#all: LIBS += -fsanitize=address
+# all: CXXFLAGS += -fsanitize=address
+# all: DYN_LIBS += -fsanitize=address
 all: $(TARGET)
 
 .PHONY: libheaders

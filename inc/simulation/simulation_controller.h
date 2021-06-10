@@ -2,10 +2,8 @@
 
 #include <SDL_GUI/application.h>
 #include <SDL_GUI/controllers/controller_base.h>
-#include <SDL_GUI/models/interface_model.h>
 
 #include <atlas/atlas_simulation_model.h>
-#include <player/player_model.h>
 #include <simulation/rr_core_assigner.h>
 
 
@@ -16,7 +14,6 @@ protected:
     SDL_GUI::ApplicationBase *_application;             /**< The application */
     SimulationModel<S, J> *_simulation_model;
     PlayerModel *_player_model;
-    SDL_GUI::InterfaceModel *_interface_model;
     CoreAssigner *_core_assigner;
 
     virtual void bootstrap_simulation() = 0;
@@ -27,12 +24,10 @@ protected:
 public:
     SimulationController(SDL_GUI::ApplicationBase *application,
                          SimulationModel<S, J> *simulation_model,
-                         PlayerModel *player_model,
-                         SDL_GUI::InterfaceModel *interface_model)
+                         PlayerModel *player_model)
         : _application(application),
           _simulation_model(simulation_model),
           _player_model(player_model),
-          _interface_model(interface_model),
           _core_assigner(new RoundRobinCoreAssigner()) {}
 
     ~SimulationController() {

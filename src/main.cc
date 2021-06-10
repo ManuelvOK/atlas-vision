@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
 
-    SDL_GUI::Application<SimulationPlugin, SDL_GUI::DefaultPlugin> app("Application", argc, argv,
+    SDL_GUI::Application<SDL_GUI::DefaultPlugin, SimulationPlugin> app("Application", argc, argv,
                                                                        1500, 1000);
     app.run();
 

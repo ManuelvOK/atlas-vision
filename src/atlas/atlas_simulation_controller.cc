@@ -6,9 +6,8 @@
 
 AtlasSimulationController::AtlasSimulationController(SDL_GUI::ApplicationBase *application,
                                                      AtlasSimulationModel *atlas_model,
-                                                     PlayerModel *player_model,
-                                                     SDL_GUI::InterfaceModel *interface_model)
-    : SimulationController(application, atlas_model, player_model, interface_model),
+                                                     PlayerModel *player_model)
+    : SimulationController(application, atlas_model, player_model),
       _atlas_model(atlas_model) {}
 
 void AtlasSimulationController::bootstrap_simulation() {
@@ -38,12 +37,13 @@ void AtlasSimulationController::write_back(std::string output_file) const {
 
 std::vector<std::string> AtlasSimulationController::check_simulation() const {
     std::vector<std::string> errors;
+    return errors;
 
-    std::vector<BaseAtlasSchedule *> schedules;
+    std::vector<const BaseAtlasSchedule *> schedules;
 
-    for (AtlasJob *job: this->_simulation_model->specific_jobs()) {
+    for (const AtlasJob *job: this->_simulation_model->specific_jobs()) {
         unsigned total_execution_time = 0;
-        for (BaseAtlasSchedule *schedule: job->_schedules) {
+        for (const BaseAtlasSchedule *schedule: job->_schedules) {
             AtlasScheduleData data = schedule->last_data();
 
             if (data._scheduler == AtlasSchedulerType::CFS) {
@@ -65,8 +65,8 @@ std::vector<std::string> AtlasSimulationController::check_simulation() const {
     }
 
     /* check if schedules do overlap */
-    for (BaseAtlasSchedule *schedule: schedules) {
-        for (BaseAtlasSchedule *schedule_against: schedules) {
+    for (const BaseAtlasSchedule *schedule: schedules) {
+        for (const BaseAtlasSchedule *schedule_against: schedules) {
             /* same schedule */
             if (schedule == schedule_against) {
                 continue;

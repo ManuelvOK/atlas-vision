@@ -14,6 +14,5 @@ class CbsSimulationController : public SimulationController<CbsSchedule, CbsJob>
 public:
     CbsSimulationController(SDL_GUI::ApplicationBase *application,
                             CbsSimulationModel *cbs_model,
-                            PlayerModel *player_model,
-                            SDL_GUI::InterfaceModel *interface_model);
+                            PlayerModel *player_model);
 };

@@ -6,9 +6,8 @@
 
 CbsSimulationController::CbsSimulationController(SDL_GUI::ApplicationBase *application,
                                                  CbsSimulationModel *cbs_model,
-                                                 PlayerModel *player_model,
-                                                 SDL_GUI::InterfaceModel *interface_model)
-    : SimulationController(application, cbs_model, player_model, interface_model),
+                                                 PlayerModel *player_model)
+    : SimulationController(application, cbs_model, player_model),
       _cbs_model(cbs_model) {}
 
 void CbsSimulationController::bootstrap_simulation() {
