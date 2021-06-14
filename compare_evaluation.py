@@ -11,6 +11,8 @@ def process_cmd_args():
                          help='atlas evaluation file')
     aparser.add_argument('cbs_input', metavar='CBS_EVAL', type=str,
                          help='cbs evaluation file')
+    aparser.add_argument('-u', '--utilisation', type=int,
+                         help='scenarios utilisation')
     aparser.add_argument('-o', '--output', help='output file')
     return aparser.parse_args()
 
@@ -26,7 +28,7 @@ def parse_eval(input_file: str):
     return tard
 
 
-def compare(atlas_tard: list[int], cbs_tard: list[int], out_file: IO):
+def compare(atlas_tard: list[int], cbs_tard: list[int], utilisation: int, out_file: IO):
     atlas_counter = 0
     atlas_tard_sum = 0
     atlas_sum = 0
@@ -52,22 +54,16 @@ def compare(atlas_tard: list[int], cbs_tard: list[int], out_file: IO):
 
         total_sum += a - c
 
-        print(f"d {id} {a - c}", file=out_file)
+        # print(f"d {id} {a - c}", file=out_file)
 
     n_jobs = len(atlas_tard)
+    total_tard_sum = atlas_tard_sum - cbs_tard_sum
 
-    print(f"jobs: {n_jobs}", file=out_file)
-    print("", file=out_file)
-    print(f"atlas misses:           \t{atlas_counter}\t{atlas_counter / n_jobs}", file=out_file)
-    print(f"atlas tardiness sum:    \t{atlas_tard_sum}\t{atlas_tard_sum / n_jobs}", file=out_file)
-    print(f"atlas tardiness balance:\t{atlas_sum}\t{atlas_sum / n_jobs}", file=out_file)
-    print("", file=out_file)
-    print(f"cbs misses:             \t{cbs_counter}\t{cbs_counter / n_jobs}", file=out_file)
-    print(f"cbs tardiness sum:      \t{cbs_tard_sum}\t{cbs_tard_sum / n_jobs}", file=out_file)
-    print(f"cbs tardiness balance:  \t{cbs_sum}\t{cbs_sum / n_jobs}", file=out_file)
-    print("", file=out_file)
-    print(f"total miss balance:     \t{total_counter}\t{total_counter / n_jobs}", file=out_file)
-    print(f"total tardiness sum:    \t{total_sum}\t{total_sum / n_jobs}", file=out_file)
+    print(f"{utilisation},{n_jobs},{atlas_counter},{atlas_counter / n_jobs},{atlas_tard_sum},"
+          f"{atlas_tard_sum / n_jobs},{atlas_sum},{atlas_sum / n_jobs},{cbs_counter},"
+          f"{cbs_counter / n_jobs},{cbs_tard_sum},{cbs_tard_sum / n_jobs},{cbs_sum},"
+          f"{cbs_sum / n_jobs},{total_counter},{total_counter / n_jobs},{total_sum},"
+          f"{total_sum / n_jobs},{total_tard_sum},{total_tard_sum / n_jobs}", file=out_file)
 
 
 def main():
@@ -77,9 +73,9 @@ def main():
 
     out_file = sys.stdout
     if (args.output != ''):
-        out_file = open(args.output, 'w')
+        out_file = open(args.output, 'a')
 
-    compare(atlas_tard, cbs_tard, out_file)
+    compare(atlas_tard, cbs_tard, args.utilisation, out_file)
 
     if (args.output != ''):
         out_file.close()
