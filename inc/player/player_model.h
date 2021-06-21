@@ -14,9 +14,10 @@ class PlayerModel : public SDL_GUI::ModelBase {
 public:
     bool _running = false;       /**< determines if the simulation gets played */
     unsigned _speed = 50;        /**< this value gets added to the position every tick */
-    unsigned _position_before = 0;
-    unsigned _position = 0;      /**< current position of player */
-    unsigned _max_position = 0;  /**< length of full simulation */
+    int _position_before = 0;
+    int _position = 0;          /**< current position of player */
+    int _min_position = 0;      /**< first possible position in player */
+    int _max_position = 0;      /**< length of full simulation */
     bool _dirty = true;
 
     /** toggle play status */
@@ -41,13 +42,13 @@ public:
      * set players position to a specific timestamp
      * @param position timestamp to sset players position to
      */
-    void set_position(unsigned position);
+    void set_position(int position);
 
     /**
      * set players position based on a mouse click that happened
      * @param position x value of relative position of mouse click inside player
      */
-    void set_position_with_click(unsigned position);
+    void set_position_with_click(int position);
 
     /** trigger a player tick. That is incrementing the players position by its speed value */
     void tick();
@@ -63,7 +64,7 @@ public:
      * @param position player position to focus
      * @param value value to multiply zoom value with
      */
-    void zoom_in_pos(unsigned position, float value = 1.05);
+    void zoom_in_pos(int position, float value = 1.05);
 
     /**
      * divide zoom value by a certain value
@@ -76,7 +77,7 @@ public:
      * @param position player position to focus
      * @param value value to divide zoom value with
      */
-    void zoom_out_pos(unsigned position, float value = 1.05);
+    void zoom_out_pos(int position, float value = 1.05);
 
     /**
      * setter for the zoom value. This does bounds checking.
@@ -89,7 +90,7 @@ public:
      * @param position player position to focus
      * @param value value to multiply zoom with
      */
-    void zoom_pos(unsigned position, float value);
+    void zoom_pos(int position, float value);
 
     /**
      * Getter for the curent zoom value
@@ -138,7 +139,7 @@ public:
      */
     int scroll_offset() const;
 
-    unsigned position_from_coord(unsigned x) const;
+    int position_from_coord(unsigned x) const;
 
     /** redo bounds checking */
     void reposition_scroll();

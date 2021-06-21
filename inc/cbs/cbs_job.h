@@ -19,18 +19,18 @@ class HardRtJob: public CbsJob {
 
 class ConstantBandwidthServer;
 class SoftRtJob: public CbsJob {
-    std::map<unsigned, unsigned> _deadlines;
+    std::map<int, int> _deadlines;
   public:
     typedef SoftRtSchedule ScheduleType;
 
     ConstantBandwidthServer *_cbs = nullptr;
 
-    SoftRtJob(unsigned id, unsigned execution_time, unsigned submission_time)
+    SoftRtJob(unsigned id, unsigned execution_time, int submission_time)
         : CbsJob(id, 0, execution_time, submission_time) {}
 
-    unsigned deadline(unsigned timestamp) const;
+    int deadline(int timestamp) const;
 
-    void add_change_deadline(unsigned timestamp, unsigned deadline);
+    void add_change_deadline(int timestamp, int deadline);
 
     std::string to_string() const override;
 };

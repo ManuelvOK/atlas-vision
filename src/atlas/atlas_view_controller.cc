@@ -104,11 +104,11 @@ void AtlasViewController::create_dependency_graph(std::vector<AtlasJob *> jobs) 
     SDL_GUI::Drawable *dep_rect =
         this->_default_interface_model->find_first_drawable("dependencies");
     std::map<unsigned, JobRect *> rects;
-    for (int i = 0; jobs_in_graph[i].size(); ++i) {
+    for (unsigned i = 0; jobs_in_graph[i].size(); ++i) {
         int j = 0;
         for (AtlasJob *job: jobs_in_graph[i]) {
             JobRect *r = new JobRect(job, this->_interface_model, this->_atlas_model,
-                                     {10 + 30 * j, 10 + 30 * i}, 20, 20);
+                                     {10 + 30 * j, 10 + 30 * static_cast<int>(i)}, 20, 20);
             this->_atlas_model->_drawables_jobs[r].insert(job->_id);
             dep_rect->add_child(r);
             rects[job->_id] = r;

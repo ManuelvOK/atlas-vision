@@ -14,15 +14,15 @@ struct ParsedSchedule {
     unsigned _id;
     unsigned _job_id;
     unsigned _core;
-    unsigned _submission_time;
-    unsigned _begin;
+    int _submission_time;
+    int _begin;
     unsigned _execution_time;
 };
 
 /** Change of a schedule in the simulation */
 struct ParsedScheduleChange {
     unsigned _schedule_id;   /**< ID of schedule */
-    unsigned _timestamp;     /**< timestamp of schedules change */
+    int _timestamp;     /**< timestamp of schedules change */
     char _type;         /**< typ of change */
     int _value;         /**< value after change */
 };

@@ -35,7 +35,8 @@ void AtlasParser::parse_cfs_factor(std::stringstream *line) {
 }
 
 void AtlasParser::parse_job(std::stringstream *line, AtlasSimulationModel *atlas_model) {
-    unsigned id, deadline, time_estimate, time, submission;
+    unsigned id, time_estimate, time;
+    int deadline, submission;
     *line >> id >> deadline >> time_estimate >> time >> submission;
     AtlasJob *job = new AtlasJob(atlas_model, id, deadline, time_estimate, time, submission);
     this->_jobs.emplace(id, job);
@@ -43,7 +44,7 @@ void AtlasParser::parse_job(std::stringstream *line, AtlasSimulationModel *atlas
 
 void AtlasParser::parse_schedule(std::stringstream *line) {
     unsigned id, job_id, core;
-    unsigned submission_time, begin, time;
+    int submission_time, begin, time;
     char scheduler;
     *line >> id >> job_id >> core >> scheduler >> submission_time >> begin >> time;
     this->_parsed_schedules.emplace_back(id, job_id, core, scheduler, submission_time, begin, time);
@@ -51,7 +52,7 @@ void AtlasParser::parse_schedule(std::stringstream *line) {
 
 void AtlasParser::parse_change(std::stringstream *line) {
     unsigned schedule_id;
-    unsigned timestamp;
+    int timestamp;
     int value = -1;
     char type;
     *line >> type >> timestamp >> schedule_id;
@@ -63,7 +64,7 @@ void AtlasParser::parse_change(std::stringstream *line) {
 
 void AtlasParser::parse_cfs_visibility(std::stringstream *line) {
     unsigned schedule_id;
-    unsigned begin, end;
+    int begin, end;
     *line >> schedule_id >> begin >> end;
     this->_visibilities.emplace_back(schedule_id, begin, end);
 }

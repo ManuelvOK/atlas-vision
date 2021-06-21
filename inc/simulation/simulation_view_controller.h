@@ -40,7 +40,7 @@ protected:
      * @param jobs list of jobs to get submissions for
      * @return job submissions grouped by submission time
      */
-    std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
+    std::tuple<std::map<int, std::vector<unsigned>>, unsigned>
     submissions_from_jobs(std::vector<J *> jobs) const;
 
     /**
@@ -48,7 +48,7 @@ protected:
      * @param jobs list of jobs to get deadlines for
      * @return job deadlines grouped by deadline time
      */
-    std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
+    std::tuple<std::map<int, std::vector<unsigned>>, unsigned>
     deadlines_from_jobs(std::vector<J *> jobs) const;
 
     /**
@@ -57,7 +57,7 @@ protected:
      * @param deadline_rect parent drawable to add submissions as childs to
      */
     virtual std::vector<JobArrow *>
-    create_submission_drawables(std::map<unsigned, std::vector<unsigned>> submissions);
+    create_submission_drawables(std::map<int, std::vector<unsigned>> submissions);
 
     /**
      * Create Drawables for all the deadlines (Deadline Arrows that is)
@@ -65,15 +65,15 @@ protected:
      * @param deadline_rect parent drawable to add deadlines as childs to
      */
     virtual std::vector<JobArrow *>
-    create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines);
+    create_deadline_drawables(std::map<int, std::vector<unsigned>> deadlines);
 
     /**
      * calculate and set the height of the deadline rect
      * @param submissions job submissions ordered by submission time
      * @param deadlines job deadlines ordered by deadlines time
      */
-    void init_deadline_rect(std::map<unsigned, std::vector<unsigned>> submissions,
-                            std::map<unsigned, std::vector<unsigned>> deadlines);
+    void init_deadline_rect(std::map<int, std::vector<unsigned>> submissions,
+                            std::map<int, std::vector<unsigned>> deadlines);
 
     /**
      * Create drawables for all schedules and register callbacks to reposition/hide them on occasion.

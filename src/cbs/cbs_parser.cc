@@ -28,13 +28,15 @@ void CbsParser::parse_line(std::string line, CbsSimulationModel *cbs_model) {
 }
 
 void CbsParser::parse_hard_rt_job(std::stringstream *line, CbsSimulationModel *cbs_model) {
-    unsigned id, deadline, execution_time, submission_time;
+    unsigned id, execution_time;
+    int deadline, submission_time;
     *line >> id >> deadline >> execution_time >> submission_time;
     cbs_model->add_job(new HardRtJob(id, deadline, execution_time, submission_time));
 }
 
 void CbsParser::parse_soft_rt_job(std::stringstream *line, CbsSimulationModel *cbs_model) {
-    unsigned id, execution_time, submission_time, cbs_id;
+    unsigned id, execution_time, cbs_id;
+    int submission_time;
     *line >> id >> execution_time >> submission_time >> cbs_id;
     cbs_model->add_job(new SoftRtJob(id, execution_time, submission_time));
     this->_cbs_memberships[id] = cbs_id;

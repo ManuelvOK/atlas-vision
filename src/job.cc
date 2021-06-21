@@ -3,13 +3,13 @@
 #include <iostream>
 #include <sstream>
 
-unsigned BaseJob::deadline(unsigned timestamp) const {
+int BaseJob::deadline(int timestamp) const {
     (void) timestamp;
     return this->_deadline;
 }
 
 /* amount of time to still be executed */
-unsigned BaseJob::execution_time_left(unsigned timestamp) const {
+unsigned BaseJob::execution_time_left(int timestamp) const {
     unsigned time_executed = this->time_executed(timestamp);
     if (time_executed > this->_execution_time) {
         return 0;
@@ -17,7 +17,7 @@ unsigned BaseJob::execution_time_left(unsigned timestamp) const {
     return this->_execution_time - time_executed;
 }
 
-bool BaseJob::finished(unsigned timestamp) const {
+bool BaseJob::finished(int timestamp) const {
     return this->execution_time_left(timestamp) <= 0;
 }
 

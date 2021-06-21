@@ -3,7 +3,8 @@
 #include <cbs/cbs_job.h>
 #include <cbs/constant_bandwidth_server.h>
 
-CbsSchedule::CbsSchedule(unsigned id, CbsJob *job, unsigned submission_time, unsigned core, unsigned begin, unsigned execution_time)
+CbsSchedule::CbsSchedule(unsigned id, CbsJob *job, int submission_time, unsigned core, int begin,
+                         unsigned execution_time)
     : Schedule<CbsScheduleData>(job, submission_time, core),
       _cbs_job(job) {
     BaseSchedule::_next_id = std::max(BaseSchedule::_next_id, id + 1);
@@ -11,7 +12,8 @@ CbsSchedule::CbsSchedule(unsigned id, CbsJob *job, unsigned submission_time, uns
                                                          false, false});
 }
 
-CbsSchedule::CbsSchedule(CbsJob *job, unsigned submission_time, unsigned core, unsigned begin, unsigned execution_time)
+CbsSchedule::CbsSchedule(CbsJob *job, int submission_time, unsigned core, int begin,
+                         unsigned execution_time)
     : CbsSchedule(Schedule::next_id(), job, submission_time, core, begin, execution_time) {}
 
 CbsJob *CbsSchedule::cbs_job() const {
@@ -28,14 +30,16 @@ std::string CbsSchedule::to_string() const {
     return ss.str();
 }
 
-HardRtSchedule::HardRtSchedule(HardRtJob *job, int submission_time, unsigned core, unsigned begin, unsigned execution_time)
+HardRtSchedule::HardRtSchedule(HardRtJob *job, int submission_time, unsigned core, int begin,
+                               unsigned execution_time)
     : CbsSchedule(job, submission_time, core, begin, execution_time), _rt_job(job) {}
 
-SoftRtSchedule::SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, unsigned begin, unsigned execution_time)
+SoftRtSchedule::SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, int begin,
+                               unsigned execution_time)
     : CbsSchedule(job, submission_time, core, begin, execution_time), _rt_job(job) {}
 
 
-GuiScheduleData SoftRtSchedule::get_vision_data_at_time(unsigned timestamp) const {
+GuiScheduleData SoftRtSchedule::get_vision_data_at_time(int timestamp) const {
     GuiScheduleData gui_data = Schedule<CbsScheduleData>::get_vision_data_at_time(timestamp);
 
     gui_data._row = this->_rt_job->_cbs->id() * 2 + 1;

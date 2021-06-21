@@ -71,7 +71,7 @@ std::vector<AtlasJob *> AtlasSimulationModel::next_atlas_scheduled_jobs(unsigned
     return next_jobs;
 }
 
-unsigned AtlasSimulationModel::space_on_atlas(unsigned begin, unsigned end) const {
+unsigned AtlasSimulationModel::space_on_atlas(int begin, int end) const {
     if (end <= begin) {
         return 0;
     }

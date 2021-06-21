@@ -15,8 +15,8 @@ std::string HardRtJob::to_string() const {
     return ss.str();
 }
 
-unsigned SoftRtJob::deadline(unsigned timestamp) const {
-    unsigned deadline = 0;
+int SoftRtJob::deadline(int timestamp) const {
+    int deadline = 0;
     for (const auto &[t, dl]: this->_deadlines) {
         if (t > timestamp) {
             break;
@@ -26,7 +26,7 @@ unsigned SoftRtJob::deadline(unsigned timestamp) const {
     return deadline;
 }
 
-void SoftRtJob::add_change_deadline(unsigned timestamp, unsigned deadline) {
+void SoftRtJob::add_change_deadline(int timestamp, int deadline) {
     this->_deadlines[timestamp] = deadline;
     this->_deadline = deadline;
 }

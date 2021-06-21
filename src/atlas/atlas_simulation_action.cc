@@ -10,7 +10,7 @@
 static void end_schedule(BaseAtlasSchedule *schedule, AtlasSimulationModel *atlas_model);
 
 void AtlasSubmissionAction::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     unsigned core = this->_core_assigner->get_core_for_job(this->_job);
 
     /* stop cfs if running */
@@ -66,7 +66,7 @@ void AtlasSubmissionAction::execute() {
 
     /* iterate through the EDF sorted jobs in reversed order to add schedules while minimizing
      * slack. */
-    unsigned max_end = std::numeric_limits<unsigned>::max();
+    int max_end = std::numeric_limits<int>::max();
     for (auto job_it = jobs.rbegin(); job_it != jobs.rend(); ++job_it) {
         AtlasJob *job = *job_it;
         max_end = std::min(max_end, job->_deadline);
@@ -74,7 +74,7 @@ void AtlasSubmissionAction::execute() {
         /* if there already is a schedule, we might have to adjust it */
         if (job->_atlas_schedule != nullptr) {
             AtlasScheduleData data = job->_atlas_schedule->last_data();
-            unsigned end = data.end();
+            int end = data.end();
             if (end > max_end) {
                 int shift_value = end - max_end;
                 job->_atlas_schedule->add_change_shift_relative(timestamp, -shift_value);
@@ -86,7 +86,7 @@ void AtlasSubmissionAction::execute() {
             continue;
         }
 
-        unsigned begin = max_end - atlas_time;
+        int begin = max_end - atlas_time;
 
         /* create a new schedule */
         AtlasSchedule *s = new AtlasSchedule (job, timestamp, core, begin, atlas_time);
@@ -133,7 +133,7 @@ void AtlasDeadlineAction::execute() {
 }
 
 void AtlasFillAction::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     /* check whether there is an active schedule anywhere. If so, do nothing */
     auto s = this->_model->active_schedule(this->_core, timestamp);
     if (s) {
@@ -201,7 +201,10 @@ void AtlasFillAction::execute() {
 
         /* create schedule on CFS based on next atlas schedule and adjust it */
         unsigned execution_time = job->execution_time_left(timestamp) * this->_model->_cfs_factor;
-        execution_time = std::min(execution_time, next_atlas_schedule->last_data()._begin);
+        int next_begin = next_atlas_schedule->last_data()._begin;
+        if (timestamp <= next_begin) {
+            execution_time = std::min<unsigned>(execution_time, next_begin - timestamp);
+        }
         EarlyCfsSchedule *cfs_schedule = new EarlyCfsSchedule(next_atlas_schedule, timestamp,
                                                               timestamp, execution_time);
 
@@ -215,7 +218,7 @@ void end_schedule(BaseAtlasSchedule *schedule, AtlasSimulationModel *atlas_model
     if (not schedule) {
         return;
     }
-    unsigned timestamp = atlas_model->_timestamp;
+    int timestamp = atlas_model->_timestamp;
     std::cerr << timestamp << ": End '" << int(schedule->last_data()._scheduler)
               << "' schedule on core " << schedule->_core
               << " for job " << schedule->job()->_id << std::endl;
@@ -238,13 +241,13 @@ void AtlasBeginScheduleAction<T>::add_end_action() const {
 }
 
 template<typename T>
-unsigned AtlasBeginScheduleAction<T>::time() const {
+int AtlasBeginScheduleAction<T>::time() const {
     return this->_schedule->last_data()._begin;
 }
 
 template<>
 void AtlasBeginScheduleAction<LateCfsSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     this->_schedule->atlas_job()->_schedules.push_back(this->_schedule);
     this->_model->add_cfs_schedule(this->_schedule);
 
@@ -263,7 +266,7 @@ void AtlasBeginScheduleAction<LateCfsSchedule>::execute() {
 
 template<>
 void AtlasBeginScheduleAction<EarlyCfsSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     /* check if schedule has been ended by other event */
     if (this->_schedule->_simulation_ended) {
@@ -305,7 +308,7 @@ void AtlasBeginScheduleAction<EarlyCfsSchedule>::execute() {
 
 template<>
 void AtlasBeginScheduleAction<RecoverySchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     /* check if schedule has been ended by other event */
     if (this->_schedule->_simulation_ended) {
@@ -332,7 +335,7 @@ void AtlasBeginScheduleAction<RecoverySchedule>::execute() {
     AtlasScheduleData data = this->_schedule->last_data();
     if (data._begin != timestamp) {
         this->_schedule->add_change_begin(timestamp, timestamp, false);
-        unsigned next_atlas_schedule_begin =
+        int next_atlas_schedule_begin =
             this->_model->next_atlas_schedule(this->_schedule->_core)
             ->last_data()._begin;
         data = this->_schedule->last_data();
@@ -357,7 +360,7 @@ void AtlasBeginScheduleAction<RecoverySchedule>::execute() {
 
 template<>
 void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     AtlasJob *job = this->_schedule->atlas_job();
 
     /* check if ATLAS schedule still exists */
@@ -454,13 +457,13 @@ void AtlasBeginScheduleAction<AtlasSchedule>::execute() {
 }
 
 template<typename T>
-unsigned AtlasEndScheduleAction<T>::time() const {
+int AtlasEndScheduleAction<T>::time() const {
     unsigned time_left_at_start =
         this->_schedule->job()->execution_time_left(this->_schedule->last_data()._begin);
     if (this->_schedule->last_data()._scheduler == AtlasSchedulerType::CFS) {
         time_left_at_start *= this->_model->_cfs_factor;
     }
-    unsigned time = this->_schedule->last_data()._begin
+    int time = this->_schedule->last_data()._begin
                + std::min(time_left_at_start, this->_schedule->last_data()._execution_time);
 
     /* check if there is still time left when there should not. This means there are dependencies */
@@ -471,8 +474,8 @@ unsigned AtlasEndScheduleAction<T>::time() const {
 }
 
 template<>
-unsigned AtlasEndScheduleAction<EarlyCfsSchedule>::time() const {
-    unsigned timestamp = this->_model->_timestamp;
+int AtlasEndScheduleAction<EarlyCfsSchedule>::time() const {
+    int timestamp = this->_model->_timestamp;
 
     /* calculate left execution time */
     unsigned execution_time_left = this->_schedule->job()->execution_time_left(timestamp);
@@ -485,9 +488,10 @@ unsigned AtlasEndScheduleAction<EarlyCfsSchedule>::time() const {
     /* calculate begin of corresponding atlas schedule */
     BaseAtlasSchedule *next_atlas_schedule =
         this->_model->next_atlas_schedule(this->_schedule->_core);
-    unsigned next_atlas_begin = next_atlas_schedule->last_data()._begin;
+    int next_atlas_begin = next_atlas_schedule->last_data()._begin;
 
-    unsigned expected_end = std::min(timestamp + execution_time_left, next_atlas_begin);
+    int expected_end = std::min(timestamp + static_cast<int>(execution_time_left),
+                                next_atlas_begin);
 
     if (this->_schedule->atlas_job()->all_dependencies_finished(timestamp)) {
         return expected_end;
@@ -509,7 +513,7 @@ unsigned AtlasEndScheduleAction<EarlyCfsSchedule>::time() const {
 template<>
 void AtlasEndScheduleAction<EarlyCfsSchedule>::execute() {
     AtlasJob *job = this->_schedule->atlas_job();
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     /* check if execution is finished */
     if (job->execution_time_left(this->_model->_timestamp) <= 0) {
@@ -558,7 +562,7 @@ void AtlasEndScheduleAction<LateCfsSchedule>::execute() {
 
 template<>
 void AtlasEndScheduleAction<RecoverySchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     AtlasJob *job = this->_schedule->atlas_job();
     unsigned time_left = job->execution_time_left(timestamp);
     unsigned estimated_time_left = job->estimated_execution_time_left(timestamp);
@@ -566,7 +570,7 @@ void AtlasEndScheduleAction<RecoverySchedule>::execute() {
     if (time_left <= 0) {
         std::cerr << timestamp << ": Recovery schedule ended for job " << job->_id << std::endl;
         AtlasScheduleData data = this->_schedule->last_data();
-        if (timestamp < data._begin + data._execution_time) {
+        if (timestamp < data._begin + static_cast<int>(data._execution_time)) {
             /* adjust recovery schedule in model */
             this->_schedule->add_change_end(timestamp, timestamp);
         }
@@ -601,7 +605,7 @@ void AtlasEndScheduleAction<RecoverySchedule>::execute() {
 template<>
 void AtlasEndScheduleAction<AtlasSchedule>::execute() {
     AtlasJob *job = this->_schedule->atlas_job();
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     /* check if ATLAS schedule still exists */
     if (job->execution_time_left(this->_schedule->last_data()._begin) <= 0) {
@@ -616,7 +620,7 @@ void AtlasEndScheduleAction<AtlasSchedule>::execute() {
                   << ": Atlas schedule ended " << early << "for job " << job->_id
                   << std::endl;
         AtlasScheduleData data = this->_schedule->last_data();
-        if (timestamp < data._begin + data._execution_time) {
+        if (timestamp < data._begin + static_cast<int>(data._execution_time)) {
             /* adjust atlas schedule in model */
             this->_schedule->add_change_end(timestamp, timestamp);
         }

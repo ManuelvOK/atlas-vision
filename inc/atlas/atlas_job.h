@@ -41,8 +41,8 @@ public:
      * @param execution_time real execution time
      * @param submission_time timestamp of jobs submission
      */
-    AtlasJob(const AtlasSimulationModel *atlas_model, unsigned id, unsigned deadline,
-             unsigned execution_time_estimate, unsigned execution_time, unsigned submission_time)
+    AtlasJob(const AtlasSimulationModel *atlas_model, unsigned id, int deadline,
+             unsigned execution_time_estimate, unsigned execution_time, int submission_time)
         : Job(id, deadline, execution_time, submission_time), _atlas_model(atlas_model),
         _execution_time_estimate(execution_time_estimate) {}
 
@@ -103,17 +103,17 @@ public:
     unsigned calculate_dependency_level();
 
     /* amount of time estimated to still be executed */
-    unsigned estimated_execution_time_left(unsigned timestamp) const;
+    unsigned estimated_execution_time_left(int timestamp) const;
 
-    bool all_known_dependencies_finished(unsigned timestamp) const;
+    bool all_known_dependencies_finished(int timestamp) const;
 
-    bool all_dependencies_finished(unsigned timestamp) const;
+    bool all_dependencies_finished(int timestamp) const;
 
     bool depends_on(const AtlasJob *job) const;
 
     void set_atlas_schedule(AtlasSchedule *schedule);
 
-    unsigned time_executed(unsigned timestamp) const override;
+    unsigned time_executed(int timestamp) const override;
 
     std::string to_string() const override;
 };

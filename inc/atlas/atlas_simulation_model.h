@@ -37,7 +37,7 @@ public:
     std::vector<AtlasSchedule *> next_atlas_schedules(unsigned core) const;
     std::vector<AtlasJob *> next_atlas_scheduled_jobs(unsigned core) const;
 
-    unsigned space_on_atlas(unsigned begin, unsigned end) const;
+    unsigned space_on_atlas(int begin, int end) const;
 
     void tidy_up_queues();
     void resort_schedules() override;

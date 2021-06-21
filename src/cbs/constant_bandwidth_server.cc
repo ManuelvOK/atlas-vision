@@ -7,9 +7,9 @@ unsigned ConstantBandwidthServer::id() const {
     return this->_id;
 }
 
-unsigned ConstantBandwidthServer::budget(unsigned timestamp) const {
-    unsigned last_fill_time = 0;
-    for (unsigned fill_time: this->_budget_fill_times) {
+unsigned ConstantBandwidthServer::budget(int timestamp) const {
+    int last_fill_time = 0;
+    for (int fill_time: this->_budget_fill_times) {
         if (fill_time > timestamp) {
             break;
         }
@@ -48,12 +48,12 @@ unsigned ConstantBandwidthServer::period() const {
     return this->_period;
 }
 
-std::set<unsigned> ConstantBandwidthServer::budget_fill_times() const {
+std::set<int> ConstantBandwidthServer::budget_fill_times() const {
     return this->_budget_fill_times;
 }
 
-unsigned ConstantBandwidthServer::deadline(unsigned timestamp) const {
-    unsigned deadline = 0;
+int ConstantBandwidthServer::deadline(int timestamp) const {
+    int deadline = 0;
     for (auto [t, dl]: this->_deadlines) {
         if (t > timestamp) {
             break;
@@ -70,7 +70,7 @@ SoftRtJob *ConstantBandwidthServer::job() const {
     return this->_job_queue.front();
 }
 
-std::map<unsigned, SoftRtJob *> ConstantBandwidthServer::jobs() const {
+std::map<int, SoftRtJob *> ConstantBandwidthServer::jobs() const {
     return this->_jobs;
 }
 
@@ -78,21 +78,21 @@ std::list<SoftRtJob *> ConstantBandwidthServer::job_queue() const {
     return this->_job_queue;
 }
 
-std::map<unsigned, unsigned> ConstantBandwidthServer::budget_line() const {
+std::map<int, unsigned> ConstantBandwidthServer::budget_line() const {
     std::vector<SoftRtSchedule *> schedules(this->_schedules.begin(), this->_schedules.end());
     std::sort(schedules.begin(), schedules.end(),
         [](SoftRtSchedule *a, SoftRtSchedule *b) {
             return a->last_data()._begin < b->last_data()._begin;
         });
 
-    std::map<unsigned, unsigned> budget_line;
+    std::map<int, unsigned> budget_line;
     budget_line[0] = this->_max_budget;
     unsigned current_budget = this->_max_budget;
     for (SoftRtSchedule *schedule: schedules) {
         CbsScheduleData data = schedule->last_data();
 
         /* add point at beginning of schedule */
-        unsigned current_time = data._begin;
+        int current_time = data._begin;
         budget_line[current_time] = current_budget;
 
         unsigned execution_time_left = data._execution_time;
@@ -110,7 +110,7 @@ std::map<unsigned, unsigned> ConstantBandwidthServer::budget_line() const {
         budget_line[data.end()] = current_budget;
     }
 
-    for (unsigned fill_time: this->_budget_fill_times) {
+    for (int fill_time: this->_budget_fill_times) {
         budget_line[fill_time] = 0;
     }
 
@@ -131,8 +131,8 @@ void ConstantBandwidthServer::add_schedule(SoftRtSchedule *schedule) {
     this->_jobs[job->_submission_time] = job;
 }
 
-unsigned ConstantBandwidthServer::generate_new_deadline_and_refill(unsigned timestamp) {
-    unsigned deadline;
+int ConstantBandwidthServer::generate_new_deadline_and_refill(int timestamp) {
+    int deadline;
     if (this->is_active()) {
         deadline = this->deadline(timestamp) + this->_period;
     } else {
@@ -143,7 +143,7 @@ unsigned ConstantBandwidthServer::generate_new_deadline_and_refill(unsigned time
     return deadline;
 }
 
-void ConstantBandwidthServer::refill_budget(unsigned timestamp) {
+void ConstantBandwidthServer::refill_budget(int timestamp) {
     this->_budgets[timestamp] = this->_max_budget;
     this->_budget_fill_times.insert(timestamp);
 }

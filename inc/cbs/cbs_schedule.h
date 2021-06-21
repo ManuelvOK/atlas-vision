@@ -11,10 +11,10 @@ class CbsSchedule : public Schedule<CbsScheduleData> {
   protected:
     CbsJob *_cbs_job;
   public:
-    CbsSchedule(unsigned id, CbsJob *job, unsigned submission_time, unsigned core,
-                unsigned execution_time, unsigned begin);
-    CbsSchedule(CbsJob *job, unsigned submission_time, unsigned core, unsigned execution_time,
-                unsigned begin);
+    CbsSchedule(unsigned id, CbsJob *job, int submission_time, unsigned core, int begin,
+                unsigned execution_time);
+    CbsSchedule(CbsJob *job, int submission_time, unsigned core, int begin,
+                unsigned execution_time);
 
     CbsJob *cbs_job() const;
 
@@ -26,8 +26,8 @@ class HardRtSchedule : public CbsSchedule {
   public:
     HardRtJob *_rt_job;
 
-    HardRtSchedule(HardRtJob *job, int submission_time, unsigned core, unsigned execution_time,
-                   unsigned begin);
+    HardRtSchedule(HardRtJob *job, int submission_time, unsigned core, int begin,
+                   unsigned execution_time);
 };
 
 class SoftRtJob;
@@ -35,8 +35,8 @@ class SoftRtSchedule : public CbsSchedule {
   public:
     SoftRtJob *_rt_job;
 
-    SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, unsigned execution_time,
-                   unsigned begin);
+    SoftRtSchedule(SoftRtJob *job, int submission_time, unsigned core, int begin,
+                   unsigned execution_time);
 
-    GuiScheduleData get_vision_data_at_time(unsigned timestamp = 0) const override;
+    GuiScheduleData get_vision_data_at_time(int timestamp) const override;
 };

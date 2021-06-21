@@ -17,7 +17,7 @@
 class BaseSimulationModel : public SDL_GUI::ModelBase {
 public:
     virtual ~BaseSimulationModel();
-    unsigned _timestamp = 0;
+    int _timestamp = 0;
     unsigned _n_cores = -1;                      /**< number of cores the jobs get scheduled on */
 
     std::list<SimulationAction *> _actions_to_do;
@@ -44,7 +44,7 @@ public:
 
     virtual std::vector<BaseJob *> jobs() const = 0;
 
-    void add_message(unsigned timestamp, std::string text, std::set<unsigned> jobs = std::set<unsigned>());
+    void add_message(int timestamp, std::string text, std::set<unsigned> jobs = std::set<unsigned>());
 };
 
 template <typename T>
@@ -97,7 +97,7 @@ public:
         return this->_jobs;
     }
 
-    virtual const S *active_schedule(unsigned core, unsigned timestamp) const {
+    virtual const S *active_schedule(unsigned core, int timestamp) const {
         for (const S *s: this->_schedules) {
             if (s->is_active_at_time(timestamp) and s->_core == core) {
                 return s;
@@ -115,8 +115,6 @@ public:
     }
 
     virtual void reset_for_simulation() {
-        this->_timestamp = 0;
-
         for (S *schedule: this->_schedules) {
             delete schedule;
         }
@@ -124,6 +122,7 @@ public:
 
         for (J *job: this->_jobs) {
             job->_schedules.clear();
+            this->_timestamp = std::min(this->_timestamp, job->_submission_time);
         }
         for (SimulationAction *action: this->_actions_done) {
             delete action;

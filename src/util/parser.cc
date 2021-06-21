@@ -17,7 +17,7 @@ void BaseParser::parse_n_cores(std::stringstream *line) {
 }
 
 void BaseParser::parse_message(std::stringstream *line) {
-    unsigned timestamp;
+    int timestamp;
     *line >> timestamp;
     unsigned pos = line->tellg();
     std::string message = line->str();

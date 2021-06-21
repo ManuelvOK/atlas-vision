@@ -9,8 +9,8 @@ bool same_data(const AtlasScheduleData &a, const AtlasScheduleData &b) {
            and a._execution_time == b._execution_time;
 }
 
-BaseAtlasSchedule::BaseAtlasSchedule(unsigned id, AtlasJob *job, unsigned submission_time,
-                                     unsigned core, AtlasSchedulerType scheduler, unsigned begin,
+BaseAtlasSchedule::BaseAtlasSchedule(unsigned id, AtlasJob *job, int submission_time,
+                                     unsigned core, AtlasSchedulerType scheduler, int begin,
                                      unsigned execution_time, bool end_known)
     : Schedule<AtlasScheduleData>(id, job, submission_time, core),
       _atlas_job(job) {
@@ -20,8 +20,8 @@ BaseAtlasSchedule::BaseAtlasSchedule(unsigned id, AtlasJob *job, unsigned submis
                                           end_known, scheduler});
 }
 
-BaseAtlasSchedule::BaseAtlasSchedule(AtlasJob *job, unsigned submission_time, unsigned core,
-                                     AtlasSchedulerType scheduler, unsigned begin,
+BaseAtlasSchedule::BaseAtlasSchedule(AtlasJob *job, int submission_time, unsigned core,
+                                     AtlasSchedulerType scheduler, int begin,
                                      unsigned execution_time, bool end_known)
     : BaseAtlasSchedule(Schedule::next_id(), job, submission_time, core, scheduler, begin,
                         execution_time, end_known) {}
@@ -30,7 +30,7 @@ AtlasJob *BaseAtlasSchedule::atlas_job() const {
     return this->_atlas_job;
 }
 
-GuiScheduleData BaseAtlasSchedule::get_vision_data_at_time(unsigned timestamp) const {
+GuiScheduleData BaseAtlasSchedule::get_vision_data_at_time(int timestamp) const {
     AtlasScheduleData data = this->data_at_time(timestamp);
     GuiScheduleData gui_data = Schedule<AtlasScheduleData>::get_vision_data_at_time(timestamp);
 
@@ -53,8 +53,7 @@ std::string BaseAtlasSchedule::to_string() const {
     return ss.str();
 }
 
-CfsSchedule::CfsSchedule(AtlasSchedule *s, unsigned submission_time, unsigned begin,
-                         unsigned execution_time)
+CfsSchedule::CfsSchedule(AtlasSchedule *s, int submission_time, int begin, unsigned execution_time)
     : BaseAtlasSchedule(s) {
     this->_submission_time = submission_time;
     this->_data.clear();
@@ -63,7 +62,7 @@ CfsSchedule::CfsSchedule(AtlasSchedule *s, unsigned submission_time, unsigned be
                                           AtlasSchedulerType::CFS});
 }
 
-EarlyCfsSchedule::EarlyCfsSchedule(AtlasSchedule *s, unsigned submission_time, unsigned begin,
+EarlyCfsSchedule::EarlyCfsSchedule(AtlasSchedule *s, int submission_time, int begin,
                                    unsigned execution_time)
     : CfsSchedule(s, submission_time, begin, execution_time),
     _atlas_schedule(s) {

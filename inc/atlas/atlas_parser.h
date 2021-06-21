@@ -7,15 +7,15 @@ struct ParsedAtlasSchedule : public ParsedSchedule {
     char _scheduler;
 
     ParsedAtlasSchedule(unsigned id, unsigned job_id, unsigned core, char scheduler,
-                        unsigned submission_time, unsigned begin, unsigned execution_time)
+                        int submission_time, int begin, unsigned execution_time)
         : ParsedSchedule(id, job_id, core, submission_time, begin, execution_time),
           _scheduler(scheduler) {}
 };
 
 struct ParsedVisibility {
     unsigned _schedule_id;
-    unsigned _begin;
-    unsigned _end;
+    int _begin;
+    int _end;
 };
 
 struct ParsedDependency {

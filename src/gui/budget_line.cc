@@ -1,7 +1,7 @@
 #include <gui/budget_line.h>
 
 BudgetLine::BudgetLine(InterfaceModel *interface_model, const PlayerModel *player_model,
-                       unsigned interval_begin, unsigned interval_end, int y_begin, int y_end)
+                       int interval_begin, int interval_end, int y_begin, int y_end)
     : SDL_GUI::Line({0, y_begin}, {0, y_end}),
       _interface_model(interface_model),
       _player_model(player_model),

@@ -10,7 +10,7 @@ class CbsSchedule;
 class CbsJob;
 class CbsParser : public Parser<CbsSchedule, CbsJob> {
     std::vector<ParsedCbsSchedule> _parsed_schedules;
-    std::map<unsigned, std::vector<ParsedScheduleChange>> _changes;
+    std::map<int, std::vector<ParsedScheduleChange>> _changes;
     std::map<unsigned, unsigned> _cbs_memberships;
 
     void parse_line(std::string line, CbsSimulationModel *cbs_model);

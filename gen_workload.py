@@ -124,17 +124,21 @@ def process_cmd_args():
 def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
               utilisation: int, simulation_length: int, normal_gen: numpy.random.Generator):
     task_periods = [random.randrange(500, 2000) for _ in range(num_tasks)]
-    total_length = sum(task_periods)
-    task_periods_norm = [period / total_length for period in task_periods]
+    max_period = max(task_periods)
+    maximal_length = max_period * num_jobs
+    task_periods_norm = [period / maximal_length for period in task_periods]
 
     task_lengths = [random.randrange(500, 2000) for _ in range(num_tasks)]
     total_length = sum(task_lengths)
-    task_lengths_norm = [length / total_length for length in task_lengths]
+    task_lengths_norm = [length / total_length * utilisation / 100 for length in task_lengths]
+
+    if max(task_lengths_norm) > 1:
+        print("There are Tasks with utilisation > 1", file=sys.stderr)
 
     tasks = []
     for task_id, (period_n, length_n) in enumerate(zip(task_periods_norm, task_lengths_norm)):
         period = int(period_n * simulation_length)
-        execution_time = int(length_n * period * utilisation / 100)
+        execution_time = int(length_n * period)
         tasks.append(Task(task_id, period, execution_time))
 
     max_period = max([t.period for t in tasks])
@@ -145,7 +149,7 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
     for task in tasks:
         # fill jobs to maximal deadline
         num_jobs = int(max_dl / task.period)
-        current_submission = 0
+        current_submission = -task.period
         for n in range(1, num_jobs + 1):
             prev_submission = current_submission
 

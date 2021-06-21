@@ -8,7 +8,7 @@ void PlayerModel::toggle() {
 
 void PlayerModel::rewind() {
     this->_running = false;
-    this->set_position(0);
+    this->set_position(this->_min_position);
 }
 
 void PlayerModel::skip_forwards(unsigned value) {
@@ -16,34 +16,28 @@ void PlayerModel::skip_forwards(unsigned value) {
 }
 
 void PlayerModel::skip_backwards(unsigned value) {
-    int new_position = static_cast<int>(this->_position) - (value / this->_zoom);
-    if (new_position < 0) {
-        this->set_position(0);
-    } else {
-        this->set_position(new_position);
-    }
+    int new_position = this->_position - (value / this->_zoom);
+    new_position = std::max(new_position, this->_min_position);
+    this->set_position(new_position);
 }
 
-void PlayerModel::set_position(unsigned position) {
+void PlayerModel::set_position(int position) {
     this->_position_before = this->_position;
     this->_position = std::min(position, this->_max_position);
+    this->_position = std::max(this->_position, this->_min_position);
     unsigned half_width_unit = this->_half_width / this->_zoom;
     int window_begin = this->_scroll - half_width_unit;
     int window_end = this->_scroll + half_width_unit;
-    if (static_cast<int>(this->_position) < window_begin + 100
-        || static_cast<int>(this->_position) > window_end - 100) {
+    if (this->_position < window_begin + 100
+        || this->_position > window_end - 100) {
         this->recenter();
     }
 }
 
-void PlayerModel::set_position_with_click(unsigned position) {
+void PlayerModel::set_position_with_click(int position) {
     int new_position = this->position_from_coord(position);
-
-    if (new_position < 0) {
-        this->set_position(0);
-    } else {
-        this->set_position(new_position);
-    }
+    new_position = std::max(new_position, this->_min_position);
+    this->set_position(new_position);
 }
 
 void PlayerModel::tick() {
@@ -62,7 +56,7 @@ void PlayerModel::zoom_in(float value) {
     this->set_zoom(this->_zoom * value);
 }
 
-void PlayerModel::zoom_in_pos(unsigned position, float value) {
+void PlayerModel::zoom_in_pos(int position, float value) {
     this->zoom_pos(position, value);
 }
 
@@ -70,7 +64,7 @@ void PlayerModel::zoom_out(float value) {
     this->set_zoom(this->_zoom / value);
 }
 
-void PlayerModel::zoom_out_pos(unsigned position, float value) {
+void PlayerModel::zoom_out_pos(int position, float value) {
     this->zoom_pos(position, 1 / value);
 }
 
@@ -79,9 +73,9 @@ void PlayerModel::set_zoom(float value) {
     this->reposition_scroll();
 }
 
-void PlayerModel::zoom_pos(unsigned position, float value) {
+void PlayerModel::zoom_pos(int position, float value) {
     position = this->position_from_coord(position);
-    int pos_diff = static_cast<int>(position) - this->_scroll;
+    int pos_diff = position - this->_scroll;
 
     float new_zoom = this->_zoom * value;
 
@@ -105,7 +99,7 @@ float PlayerModel::zoom() const {
 void PlayerModel::set_width(unsigned width) {
     this->_width = width;
     this->_half_width = this->_width / 2.0;
-    this->_zoom_min = this->_width * 1.0 / this->_max_position;
+    this->_zoom_min = this->_width * 1.0 / (this->_max_position - this->_min_position);
     this->_zoom = this->_zoom_min;
     this->set_scroll(0);
 }
@@ -121,8 +115,8 @@ void PlayerModel::scroll_right(int value) {
 
 void PlayerModel::set_scroll(int value) {
     int half_width_unit = this->_half_width / this->_zoom;
-    this->_scroll = std::min(std::max(value, half_width_unit),
-                             static_cast<int>(this->_max_position) - half_width_unit);
+    this->_scroll = std::min(std::max(value, this->_min_position + half_width_unit),
+                             this->_max_position - half_width_unit);
 }
 
 int PlayerModel::scroll() const {
@@ -133,7 +127,7 @@ int PlayerModel::scroll_offset() const {
     return (this->_scroll * this->_zoom) - this->_half_width;
 }
 
-unsigned PlayerModel::position_from_coord(unsigned x) const {
+int PlayerModel::position_from_coord(unsigned x) const {
     /* left margin */
     x = std::max<unsigned>(x, 10);
     x -= 10;

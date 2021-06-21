@@ -41,17 +41,17 @@ class SimulationAction {
     SimulationAction(int weight = 0)
         : _weight(weight) {}
     virtual ~SimulationAction() = default;
-    virtual unsigned time() const = 0;
+    virtual int time() const = 0;
     virtual void execute() = 0;
 };
 
 class TimedAction : public SimulationAction {
   public:
-    unsigned _time;
-    TimedAction(unsigned time, int weight = 0)
+    int _time;
+    TimedAction(int time, int weight = 0)
         : SimulationAction(weight), _time(time) {}
 
-    virtual unsigned time() const override;
+    virtual int time() const override;
 };
 
 class SubmissionAction : public TimedAction {

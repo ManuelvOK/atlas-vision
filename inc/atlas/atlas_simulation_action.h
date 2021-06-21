@@ -45,7 +45,7 @@ class AtlasFillAction : public WithModel<AtlasSimulationModel>,
                         public TimedAction {
     unsigned _core;
   public:
-    AtlasFillAction(AtlasSimulationModel *atlas_model, unsigned time, unsigned core)
+    AtlasFillAction(AtlasSimulationModel *atlas_model, int time, unsigned core)
         : WithModel(atlas_model),
           TimedAction(time, 60),
           _core(core) {}
@@ -64,7 +64,7 @@ class AtlasBeginScheduleAction : public WithAtlas,
           WithSchedule<T>(schedule),
           SimulationAction(50) {}
 
-    virtual unsigned time() const override;
+    virtual int time() const override;
     virtual void execute() override;
 };
 
@@ -78,6 +78,6 @@ class AtlasEndScheduleAction : public WithAtlas,
           WithSchedule<T>(schedule),
           SimulationAction(40) {}
 
-    virtual unsigned time() const override;
+    virtual int time() const override;
     virtual void execute() override;
 };

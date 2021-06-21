@@ -165,9 +165,9 @@ SDL_GUI::Drawable *CbsViewController::create_job_information(const CbsJob *job) 
         t2->add_recalculation_callback(
             [this, t2, job](SDL_GUI::Drawable *d){
                 (void) d;
-                unsigned timestamp = this->_player_model->_position;
-                std::map<const CbsJob *, unsigned> deadlines;
-                unsigned deadline = job->deadline(timestamp);
+                int timestamp = this->_player_model->_position;
+                std::map<const CbsJob *, int> deadlines;
+                int deadline = job->deadline(timestamp);
                 if (deadlines[job] == deadline) {
                     return;
                 }
@@ -196,7 +196,7 @@ SDL_GUI::Drawable *CbsViewController::create_job_information(const CbsJob *job) 
 }
 
 std::vector<JobArrow *>
-CbsViewController::create_submission_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+CbsViewController::create_submission_drawables(std::map<int, std::vector<unsigned>> deadlines) {
     std::vector<JobArrow *> arrows =
         SimulationViewController<CbsSchedule, CbsJob>::create_submission_drawables(deadlines);
     for (JobArrow *arrow: arrows) {
@@ -206,7 +206,7 @@ CbsViewController::create_submission_drawables(std::map<unsigned, std::vector<un
 }
 
 std::vector<JobArrow *>
-CbsViewController::create_deadline_drawables(std::map<unsigned, std::vector<unsigned>> deadlines) {
+CbsViewController::create_deadline_drawables(std::map<int, std::vector<unsigned>> deadlines) {
     this->_cbs_model->_dl_arrows =
         SimulationViewController<CbsSchedule, CbsJob>::create_deadline_drawables(deadlines);
 
@@ -245,14 +245,14 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
     int height = interface_config.unit.height_px;
 
     unsigned budget_before = cbs.max_budget();
-    unsigned time_before = 0;
+    int time_before = 0;
     int value_before = y_offset;
 
     for (SoftRtSchedule *schedule: schedules) {
         CbsScheduleData data = schedule->last_data();
 
         /* add point at beginning of schedule */
-        unsigned current_time = data._begin;
+        int current_time = data._begin;
 
         /* add horizontal line */
         if (current_time != time_before) {
@@ -314,7 +314,7 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
 
 void CbsViewController::update() {
     SimulationViewController::update();
-    static std::map<SoftRtJob *, unsigned> deadlines;
+    static std::map<SoftRtJob *, int> deadlines;
     bool deadline_changed = false;
 
     /* add recalculation callback for position */
@@ -326,8 +326,8 @@ void CbsViewController::update() {
         }
 
         SoftRtJob *job = this->_cbs_model->_soft_rt_job_mapping.at(base_job);
-        unsigned timestamp = this->_player_model->_position;
-        unsigned deadline = job->deadline(timestamp);
+        int timestamp = this->_player_model->_position;
+        int deadline = job->deadline(timestamp);
         if (deadlines[job] == deadline) {
             continue;
         }
@@ -349,9 +349,9 @@ void CbsViewController::update() {
     }
 
     /* set y position */
-    std::map<unsigned, unsigned> n_deadlines;
+    std::map<int, unsigned> n_deadlines;
     for (JobArrow *arrow: this->_cbs_model->_dl_arrows) {
-        unsigned deadline = arrow->job()->deadline(this->_player_model->_position);
+        int deadline = arrow->job()->deadline(this->_player_model->_position);
         if (not n_deadlines.contains(deadline)) {
             n_deadlines[deadline] = 0;
         }

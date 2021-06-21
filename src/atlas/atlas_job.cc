@@ -74,7 +74,7 @@ unsigned AtlasJob::calculate_dependency_level() {
     return this->_dependency_level;
 }
 
-unsigned AtlasJob::estimated_execution_time_left(unsigned timestamp) const {
+unsigned AtlasJob::estimated_execution_time_left(int timestamp) const {
     unsigned time_executed = this->time_executed(timestamp);
     if (time_executed > this->_execution_time_estimate) {
         return 0;
@@ -82,7 +82,7 @@ unsigned AtlasJob::estimated_execution_time_left(unsigned timestamp) const {
     return this->_execution_time_estimate - time_executed;
 }
 
-bool AtlasJob::all_known_dependencies_finished(unsigned timestamp) const {
+bool AtlasJob::all_known_dependencies_finished(int timestamp) const {
     for (const AtlasJob *j: this->_known_dependencies) {
         if (j->finished(timestamp)) {
             continue;
@@ -92,7 +92,7 @@ bool AtlasJob::all_known_dependencies_finished(unsigned timestamp) const {
     return true;
 }
 
-bool AtlasJob::all_dependencies_finished(unsigned timestamp) const {
+bool AtlasJob::all_dependencies_finished(int timestamp) const {
     if (not this->all_known_dependencies_finished(timestamp)) {
         return false;
     }
@@ -115,7 +115,7 @@ void AtlasJob::set_atlas_schedule(AtlasSchedule *schedule) {
     this->_schedules.push_back(schedule);
 }
 
-unsigned AtlasJob::time_executed(unsigned timestamp) const {
+unsigned AtlasJob::time_executed(int timestamp) const {
     if (not this->all_dependencies_finished(timestamp)) {
         return 0;
     }
@@ -127,7 +127,7 @@ unsigned AtlasJob::time_executed(unsigned timestamp) const {
         }
         unsigned value = data._execution_time;
         if (data._begin <= timestamp) {
-            value = std::min(value, timestamp - data._begin);
+            value = std::min<unsigned>(value, timestamp - data._begin);
         }
         if (data._scheduler == AtlasSchedulerType::CFS) {
             value /= this->_atlas_model->_cfs_factor;

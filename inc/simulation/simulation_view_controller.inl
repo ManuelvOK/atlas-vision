@@ -5,9 +5,9 @@ template <typename S, typename J>
 inline void SimulationViewController<S, J>::init() {
     this->_interface_model->init_colors(this->_simulation_model->_jobs.size());
 
-    std::map<unsigned, std::vector<unsigned>> submissions;
+    std::map<int, std::vector<unsigned>> submissions;
     unsigned max_submissions = 0;
-    std::map<unsigned, std::vector<unsigned>> deadlines;
+    std::map<int, std::vector<unsigned>> deadlines;
     unsigned max_deadlines = 0;
 
     std::tie(submissions, max_submissions) = submissions_from_jobs(this->_simulation_model->_jobs);
@@ -53,9 +53,9 @@ inline void SimulationViewController<S, J>::reinit() {
 }
 
 template <typename S, typename J>
-inline std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
+inline std::tuple<std::map<int, std::vector<unsigned>>, unsigned>
 SimulationViewController<S, J>::submissions_from_jobs(std::vector<J *> jobs) const {
-    std::map<unsigned, std::vector<unsigned>> submissions;
+    std::map<int, std::vector<unsigned>> submissions;
     size_t max_submissions = 0;
     for (const J *job: jobs) {
         submissions[job->_submission_time].push_back(job->_id);
@@ -66,9 +66,9 @@ SimulationViewController<S, J>::submissions_from_jobs(std::vector<J *> jobs) con
 }
 
 template <typename S, typename J>
-inline std::tuple<std::map<unsigned, std::vector<unsigned>>, unsigned>
+inline std::tuple<std::map<int, std::vector<unsigned>>, unsigned>
 SimulationViewController<S, J>::deadlines_from_jobs(std::vector<J *> jobs) const {
-    std::map<unsigned, std::vector<unsigned>> deadlines;
+    std::map<int, std::vector<unsigned>> deadlines;
     size_t max_deadlines = 0;
     for (const J *job: jobs) {
         deadlines[job->_deadline].push_back(job->_id);
@@ -79,7 +79,7 @@ SimulationViewController<S, J>::deadlines_from_jobs(std::vector<J *> jobs) const
 
 template <typename S, typename J>
 inline std::vector<JobArrow *>
-SimulationViewController<S, J>::create_submission_drawables(std::map<unsigned,
+SimulationViewController<S, J>::create_submission_drawables(std::map<int,
                                                             std::vector<unsigned>> submissions) {
     std::vector<JobArrow *> arrows;
     SDL_GUI::Drawable *deadline_rect =
@@ -106,7 +106,7 @@ SimulationViewController<S, J>::create_submission_drawables(std::map<unsigned,
 
 template <typename S, typename J>
 inline std::vector<JobArrow *>
-SimulationViewController<S, J>::create_deadline_drawables(std::map<unsigned,
+SimulationViewController<S, J>::create_deadline_drawables(std::map<int,
                                                           std::vector<unsigned>> deadlines) {
     std::vector<JobArrow *> arrows;
     SDL_GUI::Drawable *deadline_rect =
@@ -132,11 +132,11 @@ SimulationViewController<S, J>::create_deadline_drawables(std::map<unsigned,
 
 template <typename S, typename J>
 inline void
-SimulationViewController<S, J>::init_deadline_rect(std::map<unsigned,
+SimulationViewController<S, J>::init_deadline_rect(std::map<int,
                                                    std::vector<unsigned>> submissions,
-                                                   std::map<unsigned,
+                                                   std::map<int,
                                                             std::vector<unsigned>> deadlines) {
-    std::map<unsigned, int> heights;
+    std::map<int, int> heights;
 
     int sub_height = Arrow::height(Arrow::Direction::UP);
 

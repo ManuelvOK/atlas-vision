@@ -103,14 +103,22 @@ void PlayerController::drag() {
 
 void PlayerController::init() {
     /* set max position */
-    unsigned max_position = 0;
+    int max_position = 0;
     for (BaseSchedule * schedule: this->_simulation_model->schedules()) {
-        unsigned max_end = schedule->get_maximal_end();
-        unsigned deadline = schedule->job()->deadline(max_end);
+        int max_end = schedule->get_maximal_end();
+        int deadline = schedule->job()->deadline(max_end);
         max_position = std::max(max_position, std::max(max_end, deadline));
     }
     max_position = (max_position / 20.0 + 10) * 20;
     this->_player_model->_max_position = max_position;
+
+    int min_position = 0;
+    for (BaseJob *job: this->_simulation_model->jobs()) {
+        min_position = std::min(min_position, job->_submission_time);
+    }
+    min_position = (min_position / 20.0 - 10) * 20;
+    this->_player_model->_min_position = min_position;
+    this->_player_model->_position = this->_player_model->_min_position;
 
     /* bind player position line to the models variable */
     SDL_GUI::Drawable *player_position_line =
@@ -169,7 +177,10 @@ void PlayerController::init() {
     unsigned height = grid->height();
     unsigned grid_dark_distance =
         interface_config.player.grid_dark_distance * interface_config.player.grid_distance;
-    for (unsigned i = 0; i < max_position; i += interface_config.player.grid_distance) {
+    /* TOOD: Add grid for t < 0 */
+    unsigned grid_distance = interface_config.player.grid_distance;
+    int begin = min_position - (min_position % grid_distance) - grid_distance;
+    for (int i = begin; i < max_position; i += grid_distance){
         SDL_GUI::VerticalLine *l = new SDL_GUI::VerticalLine();
         /* every 5th line has a different color */
         if (i % grid_dark_distance == 0) {
@@ -187,8 +198,8 @@ void PlayerController::init() {
     std::vector<SDL_GUI::Drawable *> backgrounds =
         this->_default_interface_model->find_drawables("scheduler");
     for (SDL_GUI::Drawable *d: backgrounds) {
-        d->add_recalculation_callback([interface_model, max_position](SDL_GUI::Drawable *d) {
-                d->set_width(interface_model->px_width(max_position));
+        d->add_recalculation_callback([interface_model, max_position, min_position](SDL_GUI::Drawable *d) {
+                d->set_width(interface_model->px_width(max_position - min_position));
             });
     }
 

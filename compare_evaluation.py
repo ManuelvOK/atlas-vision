@@ -72,7 +72,7 @@ def main():
     cbs_tard = parse_eval(args.cbs_input)
 
     out_file = sys.stdout
-    if (args.output != ''):
+    if (args.output and args.output != ''):
         out_file = open(args.output, 'a')
 
     compare(atlas_tard, cbs_tard, args.utilisation, out_file)

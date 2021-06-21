@@ -15,13 +15,13 @@ void CbsSubmissionAction<HardRtJob>::execute() {
 
 template<>
 void CbsSubmissionAction<SoftRtJob>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     std::cout << timestamp << ": SoftRtJob " << this->_job->_id << " submitted. " << std::endl;
     ConstantBandwidthServer *cbs = this->_job->_cbs;
 
 
     /* change deadline */
-    unsigned deadline = cbs->deadline(timestamp);
+    int deadline = cbs->deadline(timestamp);
     if (not cbs->is_active()) {
         std::cout << timestamp << ": cbs " << cbs->id() << " is inactive" << std::endl;
         unsigned current_budget = cbs->budget(timestamp);
@@ -54,12 +54,12 @@ void CbsDeadlineAction::execute() {
 }
 
 void CbsFillBudgetAction::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
     if (this->_cbs->budget(timestamp) != 0) {
         std::cout << timestamp << ": try to refill budget for cbs " << this->_cbs->id() << " but its not 0." << std::endl;
         return;
     }
-    unsigned deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
+    int deadline = this->_cbs->generate_new_deadline_and_refill(timestamp);
 
     std::stringstream message;
     message << "Refill Budget for cbs " << this->_cbs->id() << ". New deadline: " << deadline;
@@ -87,7 +87,7 @@ void CbsFillBudgetAction::execute() {
 }
 
 void CbsFillAction::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
 
     /* check if a job just started execution */
@@ -149,13 +149,13 @@ void CbsFillAction::execute() {
 }
 
 template<typename T>
-unsigned CbsBeginScheduleAction<T>::time() const {
+int CbsBeginScheduleAction<T>::time() const {
     return this->_schedule->last_data()._begin;
 }
 
 template<>
 void CbsBeginScheduleAction<HardRtSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     this->_schedule->add_change_begin(timestamp, timestamp);
     this->_schedule->add_change_does_execute(timestamp, true);
@@ -170,7 +170,7 @@ void CbsBeginScheduleAction<HardRtSchedule>::execute() {
 
 template<>
 void CbsBeginScheduleAction<SoftRtSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     this->_schedule->add_change_begin(timestamp, timestamp);
     this->_schedule->add_change_does_execute(timestamp, true);
@@ -194,13 +194,13 @@ void CbsBeginScheduleAction<SoftRtSchedule>::execute() {
 }
 
 template<typename T>
-unsigned CbsEndScheduleAction<T>::time() const {
+int CbsEndScheduleAction<T>::time() const {
     return this->_schedule->last_data().end();
 }
 
 template<>
 void CbsEndScheduleAction<HardRtSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     HardRtJob *job = this->_schedule->_rt_job;
     this->_model->_active_schedule = nullptr;
@@ -223,7 +223,7 @@ void CbsEndScheduleAction<HardRtSchedule>::execute() {
 
 template<>
 void CbsEndScheduleAction<SoftRtSchedule>::execute() {
-    unsigned timestamp = this->_model->_timestamp;
+    int timestamp = this->_model->_timestamp;
 
     SoftRtJob *job = this->_schedule->_rt_job;
     job->_cbs->_active_schedule = nullptr;
