@@ -21,9 +21,9 @@
         </rect>
     </rect>
     <rect width="250" height="530" x="650" y="20" border="true" attributes="sidebar">
-        <rect width="250" height="330" x="0" y="0" attributes="dependencies">
+        <rect width="250" height="530" x="0" y="0" attributes="dependencies">
         </rect>
-        <rect width="250" height="200" x="0" y="330" border="true" attributes="debug">
+        <rect width="250" height="00" x="0" y="330" border="true" attributes="debug">
         </rect>
     </rect>
     <rect width="500" height="530" x="920" y="20" border="true" attributes="messages">
