@@ -134,6 +134,7 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
 
     if max(task_lengths_norm) > 1:
         print("There are Tasks with utilisation > 1", file=sys.stderr)
+        return []
 
     tasks = []
     for task_id, (period_n, length_n) in enumerate(zip(task_periods_norm, task_lengths_norm)):
@@ -152,24 +153,25 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
         current_submission = -task.period
         for n in range(1, num_jobs + 1):
             prev_submission = current_submission
-
-            current_submission = int(normal_gen.normal((n-1) * task.period,
-                                                       estimation_error / 100 * task.period))
-
-            # submission has to be after previous one
-            current_submission = max(current_submission, prev_submission)
-
-            # there has to be enough time before dl
             deadline = n * task.period
-            current_submission = min(current_submission, deadline - task.execution_time)
 
+            # enforce that the submission time is not more than a period away
+            submission_mean = (n-1) * task.period
+            upper_bound = submission_mean + task.period
+            lower_bound = max(submission_mean - task.period, prev_submission)
+
+            current_submission = lower_bound
+            while current_submission <= lower_bound or current_submission >= upper_bound:
+                current_submission = int(normal_gen.normal(submission_mean,
+                                                           estimation_error / 100 * task.period))
+
+            # enforce that the execution time is over 20
             execution_time_estimate = task.execution_time
-            execution_time = int(normal_gen.normal(execution_time_estimate,
-                                                   estimation_error / 100
-                                                   * execution_time_estimate))
-
-            # execution time has to be more than 20
-            execution_time = max(execution_time, 20)
+            execution_time = 0
+            while execution_time <= 20:
+                execution_time = int(normal_gen.normal(execution_time_estimate,
+                                                       estimation_error / 100
+                                                       * execution_time_estimate))
 
             task.jobs.append(Job(job_id, current_submission, execution_time, deadline))
             job_id += 1
@@ -224,8 +226,16 @@ def main():
     random.seed(seed)
     normal_gen = numpy.random.default_rng(int(seed))
 
-    tasks = gen_tasks(args.num_tasks, args.num_cores, args.num_jobs, args.estimation_error,
-                      args.utilisation, args.length, normal_gen)
+    tasks = []
+    for _ in range(20):
+        tasks = gen_tasks(args.num_tasks, args.num_cores, args.num_jobs, args.estimation_error,
+                          args.utilisation, args.length, normal_gen)
+        if tasks:
+            break
+
+    if not tasks:
+        print("Tried 20 times but could not generate an appropriate scenario.", file=sys.stderr)
+        return
 
     if args.task_definition != '':
         with open(args.task_definition, 'w') as f:
