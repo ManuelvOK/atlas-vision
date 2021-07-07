@@ -6,7 +6,7 @@ import sys
 import time
 
 from pathlib import Path
-from typing import IO
+from typing import IO, Union
 
 
 class Job:
@@ -76,7 +76,7 @@ class CbsConfig:
             self.output_file.close()
 
 
-def is_greater_zero(value):
+def is_greater_zero(value: str) -> int:
     num_value = int(value)
     if num_value < 1:
         raise argparse.ArgumentTypeError(
@@ -84,7 +84,7 @@ def is_greater_zero(value):
     return num_value
 
 
-def is_positive(value):
+def is_positive(value: str) -> int:
     num_value = int(value)
     if num_value < 1:
         raise argparse.ArgumentTypeError(
@@ -92,7 +92,7 @@ def is_positive(value):
     return num_value
 
 
-def process_cmd_args():
+def process_cmd_args() -> argparse.Namespace:
     aparser = argparse.ArgumentParser()
     aparser.add_argument('-n', '--num-cores', type=is_greater_zero, default=1,
                          help='number of cores')
@@ -121,8 +121,58 @@ def process_cmd_args():
     return aparser.parse_args()
 
 
+def gen_job(job_id: int, prev_submission: int, task: Task, position_in_task: int,
+            estimation_error: int, normal_gen: numpy.random.Generator) -> Union[Job, None]:
+    deadline = position_in_task * task.period
+
+    # submission mean is definetely after the previous submission
+    submission_mean = (position_in_task-1) * task.period
+    if position_in_task:
+        submission_mean = min(submission_mean, prev_submission)
+
+    in_bounds = False
+    n_tries = 0
+    for _ in range(20):
+        n_tries += 1
+        current_submission = int(normal_gen.normal(submission_mean,
+                                                   estimation_error / 100 * task.period))
+        if current_submission <= prev_submission:
+            continue
+        in_bounds = True
+        break
+
+    if not in_bounds:
+        return None
+
+    # if n_tries > 1:
+    #     print(f"{n_tries} tries needed for submission_time", file=sys.stderr)
+
+    # enforce that the execution time is over 20
+    execution_time_estimate = task.execution_time
+    in_bounds = False
+    n_tries = 0
+    for _ in range(20):
+        n_tries += 1
+        execution_time = int(normal_gen.normal(execution_time_estimate,
+                                               estimation_error / 100
+                                               * execution_time_estimate))
+        if execution_time <= 20:
+            continue
+        in_bounds = True
+        break
+
+    # if n_tries > 1:
+    #     print(f"{n_tries} tries needed for execution_time", file=sys.stderr)
+
+    if not in_bounds:
+        return None
+
+    return Job(job_id, current_submission, execution_time, deadline)
+
+
 def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
-              utilisation: int, simulation_length: int, normal_gen: numpy.random.Generator):
+              utilisation: int, simulation_length: int,
+              normal_gen: numpy.random.Generator) -> list[Task]:
     task_periods = [random.randrange(500, 2000) for _ in range(num_tasks)]
     max_period = max(task_periods)
     maximal_length = max_period * num_jobs
@@ -133,7 +183,7 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
     task_lengths_norm = [length / total_length * utilisation / 100 for length in task_lengths]
 
     if max(task_lengths_norm) > 1:
-        print("There are Tasks with utilisation > 1", file=sys.stderr)
+        # print("There are Tasks with utilisation > 1", file=sys.stderr)
         return []
 
     tasks = []
@@ -151,47 +201,19 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
         # fill jobs to maximal deadline
         num_jobs = int(max_dl / task.period)
         current_submission = -task.period
-        for n in range(1, num_jobs + 1):
-            prev_submission = current_submission
-            deadline = n * task.period
-
-            # enforce that the submission time is not more than a period away
-            submission_mean = (n-1) * task.period
-            upper_bound = submission_mean + task.period
-            lower_bound = max(submission_mean - task.period, prev_submission)
-
-            in_bounds = False
-            for _ in range(20):
-                current_submission = int(normal_gen.normal(submission_mean,
-                                                           estimation_error / 100 * task.period))
-                if current_submission <= lower_bound or current_submission >= upper_bound:
-                    continue
-                in_bounds = True
-
-            if not in_bounds:
+        for position_in_task in range(1, num_jobs + 1):
+            job = gen_job(job_id, current_submission, task, position_in_task, estimation_error,
+                          normal_gen)
+            if not job:
                 return []
-
-            # enforce that the execution time is over 20
-            execution_time_estimate = task.execution_time
-            in_bounds = False
-            for _ in range(20):
-                execution_time = int(normal_gen.normal(execution_time_estimate,
-                                                       estimation_error / 100
-                                                       * execution_time_estimate))
-                if execution_time <= 20:
-                    continue
-                in_bounds = True
-
-            if not in_bounds:
-                return []
-
-            task.jobs.append(Job(job_id, current_submission, execution_time, deadline))
+            current_submission = job.submission_time
+            task.jobs.append(job)
             job_id += 1
 
     return tasks
 
 
-def gen_atlas_workload(tasks: list[Task], config: AtlasConfig):
+def gen_atlas_workload(tasks: list[Task], config: AtlasConfig) -> None:
     print(f"c {config.num_cores}", file=config.output_file)
     print(f"f {config.cfs_factor}", file=config.output_file)
 
@@ -208,7 +230,7 @@ def gen_atlas_workload(tasks: list[Task], config: AtlasConfig):
         first_in_task = True
 
 
-def gen_cbs_workload(tasks: list[Task], config: CbsConfig):
+def gen_cbs_workload(tasks: list[Task], config: CbsConfig) -> None:
     print(f"c {config.num_cores}", file=config.output_file)
 
     for task in tasks:
@@ -221,7 +243,7 @@ def gen_cbs_workload(tasks: list[Task], config: CbsConfig):
                   file=config.output_file)
 
 
-def write_tasks(tasks: list[Task], file: IO):
+def write_tasks(tasks: list[Task], file: IO) -> None:
     for task in tasks:
         print(f"t {task.task_id} {task.period} {task.execution_time}", file=file)
         for job in task.jobs:
@@ -229,7 +251,7 @@ def write_tasks(tasks: list[Task], file: IO):
                   f" {job.deadline}", file=file)
 
 
-def main():
+def main() -> None:
     args = process_cmd_args()
     cbs_config = CbsConfig(args)
     atlas_config = AtlasConfig(args)
@@ -239,15 +261,21 @@ def main():
     normal_gen = numpy.random.default_rng(int(seed))
 
     tasks = []
-    for _ in range(20):
+    n_tries = 0
+    for _ in range(50):
+        n_tries += 1
         tasks = gen_tasks(args.num_tasks, args.num_cores, args.num_jobs, args.estimation_error,
                           args.utilisation, args.length, normal_gen)
         if tasks:
             break
 
     if not tasks:
-        print("Tried 20 times but could not generate an appropriate scenario.", file=sys.stderr)
-        return
+        print(f"Tried 50 times but could not generate an appropriate scenario. Seed: {seed}",
+              file=sys.stderr)
+        exit(1)
+
+    # if n_tries > 1:
+    #     print(f"{n_tries} tries needed for gen_tasks()", file=sys.stderr)
 
     if args.task_definition != '':
         with open(args.task_definition, 'w') as f:
