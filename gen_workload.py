@@ -160,18 +160,30 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
             upper_bound = submission_mean + task.period
             lower_bound = max(submission_mean - task.period, prev_submission)
 
-            current_submission = lower_bound
-            while current_submission <= lower_bound or current_submission >= upper_bound:
+            in_bounds = False
+            for _ in range(20):
                 current_submission = int(normal_gen.normal(submission_mean,
                                                            estimation_error / 100 * task.period))
+                if current_submission <= lower_bound or current_submission >= upper_bound:
+                    continue
+                in_bounds = True
+
+            if not in_bounds:
+                return []
 
             # enforce that the execution time is over 20
             execution_time_estimate = task.execution_time
-            execution_time = 0
-            while execution_time <= 20:
+            in_bounds = False
+            for _ in range(20):
                 execution_time = int(normal_gen.normal(execution_time_estimate,
                                                        estimation_error / 100
                                                        * execution_time_estimate))
+                if execution_time <= 20:
+                    continue
+                in_bounds = True
+
+            if not in_bounds:
+                return []
 
             task.jobs.append(Job(job_id, current_submission, execution_time, deadline))
             job_id += 1
