@@ -125,10 +125,10 @@ def gen_job(job_id: int, prev_submission: int, task: Task, position_in_task: int
             estimation_error: int, normal_gen: numpy.random.Generator) -> Union[Job, None]:
     deadline = position_in_task * task.period
 
-    # submission mean is definetely after the previous submission
-    submission_mean = (position_in_task-1) * task.period
-    if position_in_task:
-        submission_mean = min(submission_mean, prev_submission)
+    # submission mean is definitely after the previous submission
+    submission_mean = (position_in_task - 1) * task.period
+    if position_in_task - 1:
+        submission_mean = max(submission_mean, prev_submission)
 
     in_bounds = False
     n_tries = 0
