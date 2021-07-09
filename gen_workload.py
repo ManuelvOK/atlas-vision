@@ -102,7 +102,7 @@ def process_cmd_args() -> argparse.Namespace:
                          help='minimum number of jobs per task')
     aparser.add_argument('-u', '--utilisation', type=is_positive, default=80,
                          help='desired overall utilisation in percent (before applying error)')
-    aparser.add_argument('-l', '--length', type=is_positive, default=10000,
+    aparser.add_argument('-l', '--length', type=is_positive, default=50000,
                          help='length of simulation. Latest deadline.')
     aparser.add_argument('-e', '--estimation-error', type=is_positive, default=5,
                          help='estimation error in percent')
@@ -127,8 +127,9 @@ def gen_job(job_id: int, prev_submission: int, task: Task, position_in_task: int
 
     # submission mean is definitely after the previous submission
     submission_mean = (position_in_task - 1) * task.period
-    if position_in_task - 1:
-        submission_mean = max(submission_mean, prev_submission)
+    if not position_in_task - 1:
+        prev_submission = 0
+    submission_mean = max(submission_mean, prev_submission)
 
     in_bounds = False
     n_tries = 0
@@ -173,12 +174,12 @@ def gen_job(job_id: int, prev_submission: int, task: Task, position_in_task: int
 def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
               utilisation: int, simulation_length: int,
               normal_gen: numpy.random.Generator) -> list[Task]:
-    task_periods = [random.randrange(500, 2000) for _ in range(num_tasks)]
+    task_periods = [random.randrange(500, 10000) for _ in range(num_tasks)]
     max_period = max(task_periods)
     maximal_length = max_period * num_jobs
     task_periods_norm = [period / maximal_length for period in task_periods]
 
-    task_lengths = [random.randrange(500, 2000) for _ in range(num_tasks)]
+    task_lengths = [random.randrange(500, 10000) for _ in range(num_tasks)]
     total_length = sum(task_lengths)
     task_lengths_norm = [length / total_length * utilisation / 100 for length in task_lengths]
 
@@ -188,8 +189,8 @@ def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: i
 
     tasks = []
     for task_id, (period_n, length_n) in enumerate(zip(task_periods_norm, task_lengths_norm)):
-        period = int(period_n * simulation_length)
-        execution_time = int(length_n * period)
+        period = round(period_n * simulation_length)
+        execution_time = round(length_n * period)
         tasks.append(Task(task_id, period, execution_time))
 
     max_period = max([t.period for t in tasks])
