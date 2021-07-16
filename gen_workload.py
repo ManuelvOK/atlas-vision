@@ -174,30 +174,34 @@ def gen_job(job_id: int, prev_submission: int, task: Task, position_in_task: int
 def gen_tasks(num_tasks: int, num_cores: int, num_jobs: int, estimation_error: int,
               utilisation: int, simulation_length: int,
               normal_gen: numpy.random.Generator) -> list[Task]:
-    task_periods = [random.randrange(500, 10000) for _ in range(num_tasks)]
-    max_period = max(task_periods)
-    maximal_length = max_period * num_jobs
-    task_periods_norm = [period / maximal_length for period in task_periods]
+    # UUniFast
+    utilisations = []
+    sum_util = float(utilisation)
+    for i in range(1, num_tasks):
+        next_sum_util = sum_util * random.random() ** (1.0 / (num_tasks - i))
+        utilisations.append(sum_util - next_sum_util)
+        sum_util = next_sum_util
+    utilisations.append(sum_util)
 
-    task_lengths = [random.randrange(500, 10000) for _ in range(num_tasks)]
-    total_length = sum(task_lengths)
-    task_lengths_norm = [length / total_length * utilisation / 100 for length in task_lengths]
-
-    if max(task_lengths_norm) > 1:
-        # print("There are Tasks with utilisation > 1", file=sys.stderr)
+    if any(u >= 100 for u in utilisations):
         return []
 
+    print("\n".join(str(u) for u in utilisations))
+
     tasks = []
-    for task_id, (period_n, length_n) in enumerate(zip(task_periods_norm, task_lengths_norm)):
-        period = round(period_n * simulation_length)
-        execution_time = round(length_n * period)
+    for task_id, task_utilisation in enumerate(utilisations):
+        # roll tasks period
+        max_period = round(simulation_length / num_jobs)
+        period = random.randrange(200, max_period)
+        # calculate tasks execution time based on its utilisation
+        execution_time = round(period * task_utilisation / 100)
         tasks.append(Task(task_id, period, execution_time))
 
-    max_period = max([t.period for t in tasks])
+    max_period = max([task.period for task in tasks])
     max_dl = max_period * num_jobs
 
+    # generate jobs
     job_id = 0
-
     for task in tasks:
         # fill jobs to maximal deadline
         num_jobs = int(max_dl / task.period)
@@ -275,8 +279,8 @@ def main() -> None:
               file=sys.stderr)
         exit(1)
 
-    # if n_tries > 1:
-    #     print(f"{n_tries} tries needed for gen_tasks()", file=sys.stderr)
+    if n_tries > 1:
+        print(f"{n_tries} tries needed for gen_tasks()", file=sys.stderr)
 
     if args.task_definition != '':
         with open(args.task_definition, 'w') as f:
