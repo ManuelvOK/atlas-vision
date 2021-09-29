@@ -54,13 +54,11 @@ class CbsFillBudgetAction : public WithModel<CbsSimulationModel>,
 
 class CbsFillAction : public WithModel<CbsSimulationModel>,
                       public TimedAction {
-    unsigned _core;
 
   public:
-    CbsFillAction(CbsSimulationModel *cbs_model, int time, unsigned core = 0)
+    CbsFillAction(CbsSimulationModel *cbs_model, int time)
         : WithModel(cbs_model),
-          TimedAction(time, 60),
-          _core(core) {}
+          TimedAction(time, 60) {}
     void execute() override;
 };
 

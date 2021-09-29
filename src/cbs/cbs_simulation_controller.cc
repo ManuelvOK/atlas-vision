@@ -22,6 +22,9 @@ void CbsSimulationController::bootstrap_simulation() {
         this->_simulation_model->_actions_to_do.push_back(
             new CbsSubmissionAction(this->_core_assigner, this->_cbs_model, job));
     }
+    for (unsigned i = 0; i < this->_cbs_model->_n_cores; ++i) {
+        this->_cbs_model->_active_schedules[i] = nullptr;
+    }
 }
 
 void CbsSimulationController::write_back(std::string output_file) const {

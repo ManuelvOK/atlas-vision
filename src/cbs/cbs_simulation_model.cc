@@ -43,9 +43,9 @@ std::vector<BaseSchedule *> CbsSimulationModel::schedules() const {
 }
 
 
-CbsJob *CbsSimulationModel::next_job() const {
-    CbsJob *hard_rt_job = this->next_hard_rt_job();
-    CbsJob *soft_rt_job = this->next_soft_rt_job();
+CbsJob *CbsSimulationModel::next_job(unsigned skip) const {
+    CbsJob *hard_rt_job = this->next_hard_rt_job(skip);
+    CbsJob *soft_rt_job = this->next_soft_rt_job(skip);
 
     if (not soft_rt_job) {
         return hard_rt_job;
@@ -62,13 +62,17 @@ CbsJob *CbsSimulationModel::next_job() const {
 
 }
 
-HardRtJob *CbsSimulationModel::next_hard_rt_job() const {
-    return *this->_hard_rt_queue.begin();
+HardRtJob *CbsSimulationModel::next_hard_rt_job(unsigned skip) const {
+    if (skip >= this->_hard_rt_queue.size()) {
+        return nullptr;
+    }
+
+    return *std::next(this->_hard_rt_queue.begin(), skip);
 }
 
-SoftRtJob *CbsSimulationModel::next_soft_rt_job() const {
+SoftRtJob *CbsSimulationModel::next_soft_rt_job(unsigned skip) const {
     std::set<SoftRtJob *, decltype(&compare_jobs_deadline<SoftRtJob>)>
-    jobs(compare_jobs_deadline<SoftRtJob>);
+        jobs(compare_jobs_deadline<SoftRtJob>);
 
     for (auto &[_, cbs]: this->_servers) {
         SoftRtJob *job = cbs.job();
@@ -76,16 +80,20 @@ SoftRtJob *CbsSimulationModel::next_soft_rt_job() const {
             jobs.insert(job);
         }
     }
-    return *jobs.begin();
+    if (skip >= jobs.size()) {
+        return nullptr;
+    }
+
+    return *std::next(jobs.begin(), skip);
 }
 
-
-CbsSchedule *CbsSimulationModel::active_schedule() const {
-    if (this->_active_schedule) {
-        return this->_active_schedule;
+CbsSchedule *CbsSimulationModel::active_schedule(unsigned core) const {
+    CbsSchedule *schedule = this->_active_schedules.at(core);
+    if (schedule) {
+        return schedule;
     }
     for (auto &[_, cbs]: this->_servers) {
-        if (cbs._active_schedule) {
+        if (cbs._active_schedule && cbs._active_schedule->_core == core) {
             return cbs._active_schedule;
         }
     }

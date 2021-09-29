@@ -23,13 +23,26 @@ void CbsViewController::init() {
 }
 
 void CbsViewController::create_schedule_drawables() {
+    std::vector<SDL_GUI::Drawable *> core_rects;
     SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
+    core_rects.push_back(core_rect);
+    SDL_GUI::Drawable *wrapper_rect = this->_default_interface_model->find_first_drawable("cores");
+    for (int i = 1; i < static_cast<int>(this->_cbs_model->_n_cores); ++i) {
+        SDL_GUI::Drawable *new_core = core_rect->deepcopy();
+        new_core->move({0, i * (static_cast<int>(core_rect->height()) + interface_config.player.core_distance_px)});
+        new_core->remove_attribute("core-0");
+        std::stringstream ss;
+        ss << "core-" << i;
+        new_core->add_attribute(ss.str());
+        core_rects.push_back(new_core);
+        wrapper_rect->add_child(new_core);
+    }
 
     for (BaseSchedule *schedule: this->_cbs_model->schedules()) {
         ScheduleRect *r = new ScheduleRect(schedule, this->_interface_model,
                                            this->_player_model, this->_cbs_model);
         this->_cbs_model->_drawables_jobs[r].insert(schedule->job()->_id);
-        core_rect->add_child(r);
+        core_rects[schedule->_core]->add_child(r);
     }
 
 }
@@ -239,7 +252,12 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
             return a->last_data()._begin < b->last_data()._begin;
         });
 
-    SDL_GUI::Drawable *core_rect = this->_default_interface_model->find_first_drawable("core-0");
+    std::vector<SDL_GUI::Drawable *> core_rects;
+    for (unsigned i = 0; i < this->_cbs_model->_n_cores; ++i) {
+        std::stringstream ss;
+        ss << "core-" << i;
+        core_rects.push_back(this->_default_interface_model->find_first_drawable(ss.str()));
+    }
 
     int y_offset = this->_interface_model->scheduler_offset(cbs.id() * 2 + 2) - 2;
     int height = interface_config.unit.height_px;
@@ -257,13 +275,17 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
         /* add horizontal line */
         if (current_time != time_before) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, value_before);
-            core_rect->add_child(l);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
         }
 
         /* check for filling at begin of schedule */
         if (cbs.budget_fill_times().contains(current_time) && budget_before != cbs.max_budget()) {
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, value_before);
-            core_rect->add_child(l);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
 
             value_before = y_offset;
             budget_before = cbs.max_budget();
@@ -279,11 +301,15 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
 
             /* add Line for budget decrease */
             BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, y_offset + height);
-            core_rect->add_child(l);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
 
             /* add line for budget fill */
             l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, y_offset + height);
-            core_rect->add_child(l);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
 
             value_before = y_offset;
 
@@ -301,7 +327,9 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
         float factor = execution_time_left * 1.0 / cbs.max_budget();
         unsigned current_value = value_before + height * factor;
         BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
-        core_rect->add_child(l);
+        for (SDL_GUI::Drawable *core_rect: core_rects) {
+            core_rect->add_child(l);
+        }
 
         value_before = current_value;
         budget_before -= execution_time_left;
@@ -309,7 +337,9 @@ void CbsViewController::create_budget_line(const ConstantBandwidthServer &cbs) {
     }
 
     BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, time_before + 2000, value_before, value_before);
-    core_rect->add_child(l);
+    for (SDL_GUI::Drawable *core_rect: core_rects) {
+        core_rect->add_child(l);
+    }
 }
 
 void CbsViewController::update() {

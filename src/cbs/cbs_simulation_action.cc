@@ -89,62 +89,64 @@ void CbsFillBudgetAction::execute() {
 void CbsFillAction::execute() {
     int timestamp = this->_model->_timestamp;
 
+    for (unsigned core = 0; core < this->_model->_n_cores; ++core) {
+        /* check if a job just started execution */
+        CbsSchedule *active_schedule = this->_model->active_schedule(core);
+        if (active_schedule && active_schedule->last_data()._begin == timestamp) {
+            return;
+        }
 
-    /* check if a job just started execution */
-    CbsSchedule *active_schedule = this->_model->active_schedule();
-    if (active_schedule && active_schedule->last_data()._begin == timestamp) {
-        return;
-    }
-
-    /* end active schedule */
-    if (active_schedule) {
-        active_schedule->add_change_end(timestamp, timestamp);
-        active_schedule->end_simulation(timestamp);
-    }
+        /* end active schedule */
+        if (active_schedule) {
+            active_schedule->add_change_end(timestamp, timestamp);
+            active_schedule->end_simulation(timestamp);
+        }
 
 
-    /* check if the next job is hard rt or soft rt */
-    CbsJob *next_job = this->_model->next_job();
-    HardRtJob *next_hard_rt_job = this->_model->next_hard_rt_job();
-    SoftRtJob *next_soft_rt_job = this->_model->next_soft_rt_job();
+        /* check if the next job is hard rt or soft rt */
+        CbsJob *next_job = this->_model->next_job(core);
+        HardRtJob *next_hard_rt_job = this->_model->next_hard_rt_job(core);
+        SoftRtJob *next_soft_rt_job = this->_model->next_soft_rt_job(core);
 
-    if (not next_job) {
-        return;
-    }
-    std::cout << timestamp << ": Start next job" << std::endl;
+        if (not next_job) {
+            std::cout << timestamp << ": no next job found" << std::endl;
+            return;
+        }
+        std::cout << timestamp << ": Start next job on core " << core << std::endl;
 
-    if (next_job == next_hard_rt_job) {
-        std::stringstream message;
-        message << "Next EDF: Job " << next_hard_rt_job->_id << " (hard rt)"
-                << " Execution time left: " << next_hard_rt_job->execution_time_left(timestamp)
-                << " Deadline: " << next_hard_rt_job->_deadline;
-        this->_model->add_message(timestamp, message.str(), {next_hard_rt_job->_id});
-        /* generate schedule */
-        HardRtSchedule *schedule =
-            new HardRtSchedule(next_hard_rt_job, next_hard_rt_job->_submission_time, this->_core,
-                               timestamp, next_hard_rt_job->execution_time_left(timestamp));
-        next_hard_rt_job->_schedules.push_back(schedule);
-        this->_model->add_schedule(schedule);
+        if (next_job == next_hard_rt_job) {
+            std::stringstream message;
+            message << "Next EDF: Job " << next_hard_rt_job->_id << " (hard rt)"
+                    << " Execution time left: " << next_hard_rt_job->execution_time_left(timestamp)
+                    << " Deadline: " << next_hard_rt_job->_deadline;
+            this->_model->add_message(timestamp, message.str(), {next_hard_rt_job->_id});
+            /* generate schedule */
+            HardRtSchedule *schedule =
+                new HardRtSchedule(next_hard_rt_job, next_hard_rt_job->_submission_time, core,
+                                timestamp, next_hard_rt_job->execution_time_left(timestamp));
+            next_hard_rt_job->_schedules.push_back(schedule);
+            this->_model->add_schedule(schedule);
 
-        /* add begin action */
-        this->_model->_actions_to_do.push_back(
-            new CbsBeginScheduleAction{this->_model, next_hard_rt_job, schedule});
-    } else if (next_job == next_soft_rt_job) {
-        std::stringstream message;
-        message << "Next EDF: Job " << next_soft_rt_job->_id << " (soft rt, cbs "
-                << next_soft_rt_job->_cbs->id() << ")" << " Execution time left: "
-                << next_soft_rt_job->execution_time_left(timestamp) << " Deadline: "
-                << next_soft_rt_job->deadline(timestamp);
-        this->_model->add_message(timestamp, message.str(), {next_soft_rt_job->_id});
-        SoftRtSchedule *schedule =
-            new SoftRtSchedule(next_soft_rt_job, next_soft_rt_job->_submission_time, this->_core,
-                               timestamp, next_soft_rt_job->execution_time_left(timestamp));
-        next_soft_rt_job->_schedules.push_back(schedule);
-        next_soft_rt_job->_cbs->add_schedule(schedule);
+            /* add begin action */
+            this->_model->_actions_to_do.push_back(
+                new CbsBeginScheduleAction{this->_model, next_hard_rt_job, schedule});
+        } else if (next_job == next_soft_rt_job) {
+            std::stringstream message;
+            message << "Next EDF: Job " << next_soft_rt_job->_id << " (soft rt, cbs "
+                    << next_soft_rt_job->_cbs->id() << ")" << " Execution time left: "
+                    << next_soft_rt_job->execution_time_left(timestamp) << " Deadline: "
+                    << next_soft_rt_job->deadline(timestamp);
+            this->_model->add_message(timestamp, message.str(), {next_soft_rt_job->_id});
+            SoftRtSchedule *schedule =
+                new SoftRtSchedule(next_soft_rt_job, next_soft_rt_job->_submission_time, core,
+                                timestamp, next_soft_rt_job->execution_time_left(timestamp));
+            next_soft_rt_job->_schedules.push_back(schedule);
+            next_soft_rt_job->_cbs->add_schedule(schedule);
 
-        /* add begin action */
-        this->_model->_actions_to_do.push_back(
-            new CbsBeginScheduleAction{this->_model, next_soft_rt_job, schedule});
+            /* add begin action */
+            this->_model->_actions_to_do.push_back(
+                new CbsBeginScheduleAction{this->_model, next_soft_rt_job, schedule});
+        }
     }
 }
 
@@ -161,7 +163,7 @@ void CbsBeginScheduleAction<HardRtSchedule>::execute() {
     this->_schedule->add_change_does_execute(timestamp, true);
 
     /* set this schedule as active */
-    this->_model->_active_schedule = this->_schedule;
+    this->_model->_active_schedules[this->_schedule->_core] = this->_schedule;
 
     /* Add End Action */
     this->_model->_actions_to_do.push_back(
@@ -203,7 +205,7 @@ void CbsEndScheduleAction<HardRtSchedule>::execute() {
     int timestamp = this->_model->_timestamp;
 
     HardRtJob *job = this->_schedule->_rt_job;
-    this->_model->_active_schedule = nullptr;
+    this->_model->_active_schedules[this->_schedule->_core] = nullptr;
 
     if (not job->finished(timestamp)) {
         std::cout << timestamp << ": execution for job " << this->_schedule->job()->_id
@@ -242,5 +244,5 @@ void CbsEndScheduleAction<SoftRtSchedule>::execute() {
 
     /* Add Fill Action */
     this->_model->_actions_to_do.push_back(
-        new CbsFillAction(this->_model, timestamp, this->_schedule->_core));
+        new CbsFillAction(this->_model, timestamp));
 }
