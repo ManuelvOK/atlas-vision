@@ -14,7 +14,13 @@
 #include <cbs/cbs_simulation_model.h>
 #include <cbs/cbs_view_controller.h>
 #include <config/input_config.h>
+#include <deadline/deadline_simulation_controller.h>
+#include <deadline/deadline_simulation_model.h>
+#include <deadline/deadline_view_controller.h>
 #include <gui/interface_model.h>
+#include <grub/grub_simulation_controller.h>
+#include <grub/grub_simulation_model.h>
+#include <grub/grub_view_controller.h>
 #include <input/input_model.h>
 #include <player/player_controller.h>
 #include <player/player_model.h>
@@ -77,55 +83,42 @@ class SimulationPlugin: public SDL_GUI::PluginBase {
     }
 
     /**
-     * Generate Atlas Model from an input stream
+     * Generate Model M from an input stream using parser P
+     * @param input input stream
+     * @return Model with all the parsed information
+     */
+    template<typename M, typename P>
+    M *parse_file(std::istream *input) const {
+        P parser;
+        M *model = new M();
+        parser.parse(input, model);
+
+        return model;
+    }
+
+    /**
+     * Generate Model M from an input stream
      * @param input input stream
      * @return Model with all the parsed information
      */
     template <typename T>
     T *parse_file(std::istream *input) const;
-public:
-    /** Constructor */
-    SimulationPlugin(SDL_GUI::CommandLine *command_line);
 
-    /**
-     * Create all the needed Models, Controllers and Views
-     * @tparam Ts List of already instantiated plugin types
-     * @param app The application
-     * @param plugins tuple of other plugins
-     */
-    template <typename ... Ts>
-    void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> *plugins) {
+    template <typename M, typename C, typename V>
+    void init_sim(SDL_GUI::ApplicationBase *app, SDL_GUI::DefaultPlugin &default_plugin) {
         /* headless things */
         this->_player_model = new PlayerModel();
         app->add_model(this->_player_model);
 
-        CbsSimulationModel *cbs_model;
-        CbsSimulationController *cbs_simulation_controller;
+        M *simulation_model = this->build_model<M>();
+        app->add_model(simulation_model);
+        this->_simulation_model = simulation_model;
+        this->_simulation_model->_only_simulation = app->is_headless();
+        this->_simulation_model->_output_file = this->_command_line->get_option("output");
 
-        AtlasSimulationModel *atlas_model;
-        AtlasSimulationController *atlas_simulation_controller;
-
-        if (this->_command_line->get_flag("simulate_cbs")) {
-            cbs_model = this->build_model<CbsSimulationModel>();
-            app->add_model(cbs_model);
-            this->_simulation_model = cbs_model;
-            this->_simulation_model->_only_simulation = app->is_headless();
-            this->_simulation_model->_output_file = this->_command_line->get_option("output");
-
-            cbs_simulation_controller =
-                new CbsSimulationController(app, cbs_model, this->_player_model);
-            app->add_controller(cbs_simulation_controller);
-        } else {
-            atlas_model = this->build_model<AtlasSimulationModel>();
-            app->add_model(atlas_model);
-            this->_simulation_model = atlas_model;
-            this->_simulation_model->_only_simulation = app->is_headless();
-            this->_simulation_model->_output_file = this->_command_line->get_option("output");
-
-            atlas_simulation_controller =
-                new AtlasSimulationController(app, atlas_model, this->_player_model);
-            app->add_controller(atlas_simulation_controller);
-        }
+        C *simulation_controller =
+            new C(app, simulation_model, this->_player_model);
+        app->add_controller(simulation_controller);
 
         if (app->is_headless()) {
             return;
@@ -145,25 +138,43 @@ public:
                 mouse_input_config, InputKey::QUIT);
         app->add_controller(input_controller);
 
-        SDL_GUI::DefaultPlugin &default_plugin = std::get<SDL_GUI::DefaultPlugin>(*plugins);
         SDL_GUI::InterfaceModel *default_interface_model = default_plugin.interface_model();
 
-        if (this->_command_line->get_flag("simulate_cbs")) {
-            CbsViewController *cbs_view_controller =
-                new CbsViewController(app, cbs_model, interface_model, default_interface_model,
-                                      input_model, this->_player_model);
-            app->add_controller(cbs_view_controller);
-        } else {
-            AtlasViewController *atlas_view_controller =
-                new AtlasViewController(app, atlas_model, interface_model, default_interface_model,
-                                        input_model, this->_player_model);
-            app->add_controller(atlas_view_controller);
-        }
-
+        V *simulation_view_controller =
+            new V(app, simulation_model, interface_model, default_interface_model,
+                                    input_model, this->_player_model);
+        app->add_controller(simulation_view_controller);
 
         PlayerController *player_controller =
             new PlayerController(this->_player_model, input_model, this->_simulation_model,
                                  interface_model, default_interface_model);
         app->add_controller(player_controller);
+
+    }
+
+public:
+    /** Constructor */
+    SimulationPlugin(SDL_GUI::CommandLine *command_line);
+
+    /**
+     * Create all the needed Models, Controllers and Views
+     * @tparam Ts List of already instantiated plugin types
+     * @param app The application
+     * @param plugins tuple of other plugins
+     */
+    template <typename ... Ts>
+    void init(SDL_GUI::ApplicationBase *app, std::tuple<Ts...> *plugins) {
+
+        SDL_GUI::DefaultPlugin &default_plugin = std::get<SDL_GUI::DefaultPlugin>(*plugins);
+
+        if (this->_command_line->get_flag("simulate_cbs")) {
+            this->init_sim<CbsSimulationModel, CbsSimulationController, CbsViewController>(app, default_plugin);
+        } else if (this->_command_line->get_flag("simulate_grub")) {
+            this->init_sim<GrubSimulationModel, GrubSimulationController, GrubViewController>(app, default_plugin);
+        } else if (this->_command_line->get_flag("simulate_deadline")) {
+            this->init_sim<DeadlineSimulationModel, DeadlineSimulationController, DeadlineViewController>(app, default_plugin);
+        } else {
+            this->init_sim<AtlasSimulationModel, AtlasSimulationController, AtlasViewController>(app, default_plugin);
+        }
     }
 };
