@@ -280,8 +280,8 @@ void GrubDeactivateServerAction::execute() {
     }
 
     /* already is inactive */
-    if (server->_state == GrubState::INACTIVE) {
-        std::cout << timestamp << ": tried to deactivate server " << server->id() << " but already is inactive." << std::endl;
+    if (server->_state != GrubState::ACTIVE_NON_CONTENDING) {
+        std::cout << timestamp << ": tried to deactivate server " << server->id() << " but not in ActiveNonContending." << std::endl;
         return;
     }
 
