@@ -51,13 +51,13 @@ class GrubBeginScheduleAction :  public WithGrub,
 };
 
 class GrubPostponeDeadlineAction : public WithModel<GrubSimulationModel>,
-                                   public WithJob<SoftGrubJob>,
                                    public SimulationAction {
+    GrubConstantBandwidthServer *_server;
   public:
-    GrubPostponeDeadlineAction(GrubSimulationModel *grub_model, SoftGrubJob *grub_job)
+    GrubPostponeDeadlineAction(GrubSimulationModel *grub_model, GrubConstantBandwidthServer *grub_server)
         : WithModel<GrubSimulationModel>(grub_model),
-          WithJob<SoftGrubJob>(grub_job),
-          SimulationAction(0) {}
+          SimulationAction(0),
+          _server(grub_server) {}
 
     virtual int time() const override;
     virtual void execute() override;
@@ -73,6 +73,19 @@ class GrubEndScheduleAction :  public WithGrub,
         : WithGrub(grub_model, job),
           WithSchedule<T>(schedule),
           SimulationAction(40) {}
+
+    virtual int time() const override;
+    virtual void execute() override;
+};
+
+class GrubDeactivateServerAction : public WithModel<GrubSimulationModel>,
+                                   public TimedAction {
+    GrubConstantBandwidthServer *_server;
+  public:
+    GrubDeactivateServerAction(GrubSimulationModel *grub_model, int deactivation_time, GrubConstantBandwidthServer *grub_server)
+        : WithModel<GrubSimulationModel>(grub_model),
+          TimedAction(deactivation_time, 0),
+          _server(grub_server) {}
 
     virtual int time() const override;
     virtual void execute() override;

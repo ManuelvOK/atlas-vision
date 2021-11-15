@@ -27,13 +27,17 @@ void GrubSubmissionAction<SoftGrubJob>::execute() {
             this->_job->add_change_deadline(timestamp, timestamp + server->period());
             this->_model->change_total_utilisation(server->processor_share());
             server->_state = GrubState::ACTIVE_CONTENDING;
+            std::cout << timestamp << ": Server " << server->id() << " inactive. New deadline: " << timestamp + server->period() << std::endl;
             break;
         case GrubState::ACTIVE_CONTENDING:
+            this->_job->add_change_deadline(timestamp, server->deadline());
+            std::cout << timestamp << ": Server " << server->id() << " activeContending. Deadline: " << server->deadline() << std::endl;
             break;
         case GrubState::ACTIVE_NON_CONTENDING:
             server->set_deadline(timestamp, timestamp + server->period());
             this->_job->add_change_deadline(timestamp, timestamp + server->period());
             server->_state = GrubState::ACTIVE_CONTENDING;
+            std::cout << timestamp << ": Server " << server->id() << " activeNonContending. New deadline: " << timestamp + server->period() << std::endl;
             break;
         default:
             break;
@@ -138,24 +142,41 @@ void GrubBeginScheduleAction<SoftGrubSchedule>::execute() {
     /* set this schedule as active */
     SoftGrubJob *job = this->_schedule->_grub_job;
     job->_cbs->_active_schedule = this->_schedule;
+    job->_cbs->update_virtual_time(timestamp, this->_model->total_utilisation());
+    job->_cbs->set_running(true);
 
     /* Add End Action */
     this->_model->_actions_to_do.push_back(
         new GrubEndScheduleAction(this->_model, job, this->_schedule));
 
+    std::cout << timestamp << ": Starting schedule for job " << job->_id << std::endl
+              << "\tTotal_utilisation: " << this->_model->total_utilisation() << std::endl
+              << "\tvruntime_inc: " << this->_model->total_utilisation() / job->_cbs->processor_share() << std::endl
+              << "\tDeadline postponement: " << job->_cbs->next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
+
     /* Add RefillBudget Action */
     this->_model->_actions_to_do.push_back(
-        new GrubPostponeDeadlineAction(this->_model, job));
+        new GrubPostponeDeadlineAction(this->_model, job->_cbs));
 }
 
 int GrubPostponeDeadlineAction::time() const {
-    return this->_job->_cbs->next_virtual_time_deadline_miss(this->_model->total_utilisation());
+    return this->_server->next_virtual_time_deadline_miss(this->_model->total_utilisation());
 }
 
 void GrubPostponeDeadlineAction::execute() {
     int timestamp = this->_model->_timestamp;
-    GrubConstantBandwidthServer *server = this->_job->_cbs;
+    GrubConstantBandwidthServer *server = this->_server;
     if (not server->running()) {
+        std::cout << timestamp << ": possible postponement of server " << server->id() << ". But is not running" << std::endl;
+        return;
+    }
+    server->update_virtual_time(timestamp, this->_model->total_utilisation());
+    int virtual_time = server->virtual_time();
+    if (virtual_time < server->deadline()) {
+        std::cout << timestamp << ": possible postponement of server " << server->id() << ". But seems like already happened." << std::endl
+                  << "\t vtime: " << virtual_time << std::endl
+                  << "\t deadline: " << server->deadline() << std::endl;
+
         return;
     }
     int new_deadline = server->deadline() + server->period();
@@ -163,6 +184,8 @@ void GrubPostponeDeadlineAction::execute() {
     for (SoftGrubJob *job: server->job_queue()) {
         job->add_change_deadline(timestamp, new_deadline);
     }
+
+    std::cout << timestamp << ": virtual runtime of server " << server->id() << " equals deadline. New Deadline: " << new_deadline << std::endl;
 
     SoftGrubSchedule *active_schedule = server->_active_schedule;
     if (active_schedule) {
@@ -208,21 +231,73 @@ void GrubEndScheduleAction<SoftGrubSchedule>::execute() {
     int timestamp = this->_model->_timestamp;
 
     SoftGrubJob *job = this->_schedule->_grub_job;
-    job->_cbs->_active_schedule = nullptr;
+    GrubConstantBandwidthServer *server = job->_cbs;
+    server->_active_schedule = nullptr;
+    server->update_virtual_time(timestamp, this->_model->total_utilisation());
+    server->set_running(false);
 
     if (not job->finished(timestamp)) {
         std::cout << timestamp << ": execution for job " << this->_schedule->job()->_id
-                  << " (soft) stopped but not finished." << std::endl;
+                  << " (soft) stopped but not finished." << std::endl
+                  << "\tVirtual time: " << server->virtual_time() << std::endl;
         return;
     }
 
     std::cout << timestamp << ": execution for job " << this->_schedule->job()->_id
-              << " (soft) finished." << std::endl;
+              << " (soft) finished." << std::endl
+                << "\tVirtual time: " << server->virtual_time() << std::endl;
 
     /* dequeue job */
     job->_cbs->dequeue_job(job);
 
+    /* change State if no next job */
+    if (server->job_queue().empty()) {
+        std::cout << timestamp << ": No next job. Going ActiveNonContending, Inactive at " << server->virtual_time() << std::endl;
+        server->_state = GrubState::ACTIVE_NON_CONTENDING;
+        /* Add DeactivateAction */
+        this->_model->_actions_to_do.push_back(
+            new GrubDeactivateServerAction(this->_model, server->virtual_time(), server));
+    }
+
     /* Add Fill Action */
     this->_model->_actions_to_do.push_back(
         new GrubFillAction(this->_model, timestamp));
+}
+
+int GrubDeactivateServerAction::time() const {
+    return this->_server->virtual_time();
+}
+
+void GrubDeactivateServerAction::execute() {
+    int timestamp = this->_model->_timestamp;
+    GrubConstantBandwidthServer *server = this->_server;
+
+    /* TODO: Why should this ever happen? */
+    int virtual_time = server->virtual_time();
+    if (virtual_time > timestamp) {
+        std::cout << timestamp << ": tried to deactivate server " << server->id() << " but virtual time " << virtual_time << " > now " << std::endl;
+        return;
+    }
+
+    /* already is inactive */
+    if (server->_state == GrubState::INACTIVE) {
+        std::cout << timestamp << ": tried to deactivate server " << server->id() << " but already is inactive." << std::endl;
+        return;
+    }
+
+    /* change server's state */
+    server->_state = GrubState::INACTIVE;
+
+    /* alter total_utilisation */
+    this->_model->change_total_utilisation(-server->processor_share());
+
+    std::cout << timestamp << ": Server " << server->id() << " goes inactive." << std::endl;
+    for (auto &[_, other_server]: this->_model->_servers) {
+        if (other_server.id() == server->id()) {
+            continue;
+        }
+        std::cout << "\t Vtime Server " << other_server.id() << ": " << other_server.virtual_time() << std::endl
+                  << "\tDeadline postponement Server: " << other_server.id() << ": " << other_server.next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
+    }
+
 }

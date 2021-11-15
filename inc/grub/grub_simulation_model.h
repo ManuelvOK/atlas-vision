@@ -40,8 +40,8 @@ class GrubSimulationModel : public SimulationModel<GrubSchedule, GrubJob> {
 
     void update_servers_virtual_times();
 
-    std::vector<BaseJob *> jobs() const;
-    std::vector<BaseSchedule *> schedules() const;
+    std::vector<BaseJob *> jobs() const override;
+    std::vector<BaseSchedule *> schedules() const override;
 
     GrubJob *next_job(unsigned skip = 0) const;
     HardGrubJob *next_hard_job(unsigned skip = 0) const;

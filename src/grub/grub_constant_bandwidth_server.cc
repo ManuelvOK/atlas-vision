@@ -1,6 +1,8 @@
 #include <grub/grub_constant_bandwidth_server.h>
 
+#include <cmath>
 #include <limits>
+#include <iostream>
 
 #include <grub/grub_job.h>
 #include <grub/grub_schedule.h>
@@ -60,7 +62,7 @@ void GrubConstantBandwidthServer::update_virtual_time(int timestamp, float total
     }
 
     int time_distance = timestamp - this->_last_virtual_time_update;
-    int virtual_time_rate = total_utilisation / this->_processor_share;
+    float virtual_time_rate = 1.0 * total_utilisation / this->_processor_share;
     float new_virtual_time = this->_virtual_time + time_distance * virtual_time_rate;
     this->set_virtual_time(timestamp, new_virtual_time);
 
@@ -71,9 +73,11 @@ int GrubConstantBandwidthServer::next_virtual_time_deadline_miss(float total_uti
         return std::numeric_limits<int>::max();
     }
     int virtual_distance = this->_deadline - this->_virtual_time;
-    int virtual_time_rate = total_utilisation / this->_processor_share;
+    //std::cout << "vdist: " << virtual_distance << std::endl;
+    float virtual_time_rate = 1.0 * total_utilisation / this->_processor_share;
+    //std::cout << "vrate: " << virtual_time_rate << std::endl;
 
-    return this->_last_virtual_time_update + virtual_distance / virtual_time_rate;
+    return ceil(this->_last_virtual_time_update + virtual_distance / virtual_time_rate);
 }
 
 bool GrubConstantBandwidthServer::running() const {

@@ -1,0 +1,27 @@
+# This is an example File for the CBS Scheduling algorith simulation
+#
+# Number of cores specification
+# > c number_of_cores
+#
+# hard real time job specification
+# > r id deadline execution_time submission_time
+#
+# soft real time job specification
+# > j id execution_time submission_time cbs_id
+#
+# cbs specification
+# > S id budget period
+
+c 1
+
+j 0  3000  2000 0
+j 1  3000  4800 0
+j 2  1000 17000 0
+
+j 3  1500 3000 1
+j 4  700  7000 1
+j 5  100 12000 1
+j 6  700 14000 1
+
+S 0 2000  7000
+S 1  400  5000

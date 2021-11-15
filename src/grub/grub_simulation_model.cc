@@ -32,6 +32,24 @@ void GrubSimulationModel::change_total_utilisation(float difference) {
     this->_total_utilisation += difference;
 }
 
+std::vector<BaseJob *> GrubSimulationModel::jobs() const {
+    std::vector<BaseJob *> jobs(this->_hard_jobs.begin(), this->_hard_jobs.end());
+    jobs.insert(jobs.end(), this->_soft_jobs.begin(), this->_soft_jobs.end());
+    return jobs;
+}
+
+std::vector<BaseSchedule *> GrubSimulationModel::schedules() const {
+    std::vector<BaseSchedule *> schedules(this->_hard_schedules.begin(),
+                                          this->_hard_schedules.end());
+
+    for (auto &[_, server]: this->_servers) {
+        schedules.insert(schedules.end(), server._schedules.begin(),
+                         server._schedules.end());
+    }
+
+    return schedules;
+}
+
 GrubJob *GrubSimulationModel::next_job(unsigned skip) const {
     GrubJob *hard_job = this->next_hard_job(skip);
     GrubJob *soft_job = this->next_soft_job(skip);
