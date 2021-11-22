@@ -12,7 +12,7 @@
 # cbs specification
 # > S id budget period
 
-c 1
+c 2
 
 j 0 1800    0 0
 j 1 2200 4800 0

@@ -31,6 +31,7 @@ class GrubConstantBandwidthServer : public Printable {
     int _last_virtual_time_update = 0;
     float _virtual_time;
 
+    std::map<int, bool> _running_times;
     bool _running = false;
 
   public:
@@ -49,6 +50,7 @@ class GrubConstantBandwidthServer : public Printable {
 
     int deadline(int timestamp) const;
     int deadline() const;
+    std::map<int, int> deadlines() const;
     void set_deadline(int timestamp, int deadline);
 
     float virtual_time(int timestamp) const;
@@ -58,8 +60,10 @@ class GrubConstantBandwidthServer : public Printable {
 
     int next_virtual_time_deadline_miss(float total_utilisation);
 
+    std::map<int, bool> running_times() const;
     bool running() const;
-    void set_running(bool running);
+    void set_running(int timestamp, bool running);
+    bool running_before(int timestamp) const;
 
     SoftGrubJob *job() const;
 
@@ -78,5 +82,7 @@ class GrubConstantBandwidthServer : public Printable {
     void enqueue_job(SoftGrubJob *job);
 
     virtual std::string to_string() const override;
+
+    std::map<int, unsigned> budget_line() const;
 
 };

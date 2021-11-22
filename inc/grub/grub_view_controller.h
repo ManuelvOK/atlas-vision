@@ -21,6 +21,10 @@ class GrubViewController : public SimulationViewController<GrubSchedule, GrubJob
 
     virtual std::vector<JobArrow *> create_deadline_drawables(std::map<int, std::vector<unsigned>> deadlines) override;
 
+    void create_budget_lines(const std::map<unsigned, GrubConstantBandwidthServer> &servers);
+
+    void create_budget_line(const GrubConstantBandwidthServer &cbs);
+
 public:
     GrubViewController(SDL_GUI::ApplicationBase *application,
                        GrubSimulationModel *grub_model,

@@ -1,5 +1,6 @@
 #include <grub/grub_view_controller.h>
 
+#include <gui/budget_line.h>
 #include <gui/job_rect.h>
 #include <gui/schedule_rect.h>
 
@@ -15,6 +16,7 @@ GrubViewController::GrubViewController(SDL_GUI::ApplicationBase *application,
 
 void GrubViewController::init() {
     SimulationViewController::init();
+    this->create_budget_lines(this->_grub_model->_servers);
     SDL_GUI::Drawable *sidebar = this->_default_interface_model->find_first_drawable("sidebar");
     sidebar->hide();
     this->_default_interface_model->find_first_drawable("messages")->set_x(sidebar->position()._x);
@@ -322,3 +324,145 @@ void GrubViewController::update() {
         });
 }
 
+void GrubViewController::create_budget_lines(const std::map<unsigned,
+                                                            GrubConstantBandwidthServer> &servers) {
+    for (const auto &[_, cbs]: servers) {
+        this->create_budget_line(cbs);
+    }
+}
+
+void GrubViewController::create_budget_line(const GrubConstantBandwidthServer &cbs) {
+    std::vector<SDL_GUI::Drawable *> core_rects;
+    for (unsigned i = 0; i < this->_grub_model->_n_cores; ++i) {
+        std::stringstream ss;
+        ss << "core-" << i;
+        core_rects.push_back(this->_default_interface_model->find_first_drawable(ss.str()));
+    }
+
+    int y_offset = this->_interface_model->scheduler_offset(cbs.id() * 2 + 2) - 2;
+    int height = interface_config.unit.height_px;
+
+    int budget_before = 0;
+    int time_before = 0;
+    int value_before = y_offset + height;
+
+    std::map<int, unsigned> line_values = cbs.budget_line();
+
+    std::cout << "=====\ndrawing budget_line for server " << cbs.id() << std::endl;
+    for (auto &[current_time, current_budget]: line_values) {
+
+        /* deadline postponement on active server */
+        if (cbs.deadlines().contains(current_time)) {
+            std::cout << current_time << ": new deadline";
+            unsigned current_value = y_offset + height;
+            if (not cbs.running_before(current_time)) {
+                current_value = value_before;
+                std::cout << " but did not run";
+            }
+            std::cout << std::endl;
+            /* add line for budget decrease */
+            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
+            /* add line for budget fill */
+            l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, current_value);
+            for (SDL_GUI::Drawable *core_rect: core_rects) {
+                core_rect->add_child(l);
+            }
+            value_before = y_offset;
+            time_before = current_time;
+            budget_before = cbs.period();
+            continue;
+        }
+
+        std::cout << current_time << ": " << current_budget << std::endl;
+
+        /* add Line for budget decrease */
+        float factor = (budget_before - current_budget) * 1.0 / cbs.period();
+        unsigned current_value = value_before + height * factor;
+        BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
+        for (SDL_GUI::Drawable *core_rect: core_rects) {
+            core_rect->add_child(l);
+        }
+
+        value_before = current_value;
+        time_before = current_time;
+        budget_before = current_budget;
+    }
+
+//    for (SoftGrubSchedule *schedule: schedules) {
+//        GrubScheduleData data = schedule->last_data();
+//
+//        /* add point at beginning of schedule */
+//        int current_time = data._begin;
+//
+//        /* add horizontal line */
+//        if (current_time != time_before) {
+//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, value_before);
+//            for (SDL_GUI::Drawable *core_rect: core_rects) {
+//                core_rect->add_child(l);
+//            }
+//        }
+//
+//        /* check for filling at begin of schedule */
+//        if (cbs.deadlines().contains(current_time) && budget_before != cbs.period()) {
+//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, value_before);
+//            for (SDL_GUI::Drawable *core_rect: core_rects) {
+//                core_rect->add_child(l);
+//            }
+//
+//            value_before = y_offset;
+//            budget_before = cbs.period();
+//
+//        }
+//
+//        time_before = current_time;
+//        unsigned execution_time_left = data._execution_time;
+//
+//        /* add points for filling up */
+//        while (execution_time_left >= budget_before) {
+//            current_time += budget_before;
+//
+//            /* add Line for budget decrease */
+//            BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, y_offset + height);
+//            for (SDL_GUI::Drawable *core_rect: core_rects) {
+//                core_rect->add_child(l);
+//            }
+//
+//            /* add line for budget fill */
+//            l = new BudgetLine(this->_interface_model, this->_player_model, current_time, current_time, y_offset, y_offset + height);
+//            for (SDL_GUI::Drawable *core_rect: core_rects) {
+//                core_rect->add_child(l);
+//            }
+//
+//            value_before = y_offset;
+//
+//            execution_time_left -= budget_before;
+//            budget_before = cbs.period();
+//            time_before = current_time;
+//        }
+//
+//        if (execution_time_left == 0) {
+//            continue;
+//        }
+//
+//        current_time += execution_time_left;
+//        /* add line for final budget decrease */
+//        float factor = execution_time_left * 1.0 / cbs.period();
+//        unsigned current_value = value_before + height * factor;
+//        BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, current_time, value_before, current_value);
+//        for (SDL_GUI::Drawable *core_rect: core_rects) {
+//            core_rect->add_child(l);
+//        }
+//
+//        value_before = current_value;
+//        budget_before -= execution_time_left;
+//        time_before = current_time;
+//    }
+
+    BudgetLine *l = new BudgetLine(this->_interface_model, this->_player_model, time_before, time_before + 2000, value_before, value_before);
+    for (SDL_GUI::Drawable *core_rect: core_rects) {
+        core_rect->add_child(l);
+    }
+}

@@ -20,6 +20,7 @@ void GrubSubmissionAction<SoftGrubJob>::execute() {
 
     server->enqueue_job(this->_job);
 
+    std::stringstream message;
     switch (server->_state) {
         case GrubState::INACTIVE:
             server->set_virtual_time(timestamp, timestamp);
@@ -27,21 +28,25 @@ void GrubSubmissionAction<SoftGrubJob>::execute() {
             this->_job->add_change_deadline(timestamp, timestamp + server->period());
             this->_model->change_total_utilisation(server->processor_share());
             server->_state = GrubState::ACTIVE_CONTENDING;
-            std::cout << timestamp << ": Server " << server->id() << " inactive. New deadline: " << timestamp + server->period() << std::endl;
+            message << "Submission on Server " << server->id() << " that is inactive. Changing state to activeContending. New deadline: " << timestamp + server->period() << std::endl;
+            this->_model->add_message(timestamp, message.str(), {this->_job->_id});
             break;
         case GrubState::ACTIVE_CONTENDING:
             this->_job->add_change_deadline(timestamp, server->deadline());
-            std::cout << timestamp << ": Server " << server->id() << " activeContending. Deadline: " << server->deadline() << std::endl;
+            message << "Submission on Server " << server->id() << " that already is activeContending. Deadline: " << server->deadline() << std::endl;
+            this->_model->add_message(timestamp, message.str(), {this->_job->_id});
             break;
         case GrubState::ACTIVE_NON_CONTENDING:
             server->set_deadline(timestamp, timestamp + server->period());
             this->_job->add_change_deadline(timestamp, timestamp + server->period());
             server->_state = GrubState::ACTIVE_CONTENDING;
-            std::cout << timestamp << ": Server " << server->id() << " activeNonContending. New deadline: " << timestamp + server->period() << std::endl;
+            message << "Submission on Server " << server->id() << " that is activeNonContending. Changing state to activeContending. New deadline: " << timestamp + server->period() << std::endl;
+            this->_model->add_message(timestamp, message.str(), {this->_job->_id});
             break;
         default:
             break;
     }
+
 
     /* add Fill Action */
     this->_model->_actions_to_do.push_back(
@@ -143,16 +148,18 @@ void GrubBeginScheduleAction<SoftGrubSchedule>::execute() {
     SoftGrubJob *job = this->_schedule->_grub_job;
     job->_cbs->_active_schedule = this->_schedule;
     job->_cbs->update_virtual_time(timestamp, this->_model->total_utilisation());
-    job->_cbs->set_running(true);
+    job->_cbs->set_running(timestamp, true);
 
     /* Add End Action */
     this->_model->_actions_to_do.push_back(
         new GrubEndScheduleAction(this->_model, job, this->_schedule));
 
-    std::cout << timestamp << ": Starting schedule for job " << job->_id << std::endl
-              << "\tTotal_utilisation: " << this->_model->total_utilisation() << std::endl
-              << "\tvruntime_inc: " << this->_model->total_utilisation() / job->_cbs->processor_share() << std::endl
-              << "\tDeadline postponement: " << job->_cbs->next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
+    std::stringstream message;
+    message << "Starting schedule for job " << job->_id << " on Server " << job->_cbs->id() << std::endl
+            << "    Total_utilisation: " << this->_model->total_utilisation() << std::endl
+            << "    vruntime_inc: " << this->_model->total_utilisation() / job->_cbs->processor_share() << std::endl
+            << "    Deadline postponement: " << job->_cbs->next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
+    this->_model->add_message(timestamp, message.str(), {job->_id});
 
     /* Add RefillBudget Action */
     this->_model->_actions_to_do.push_back(
@@ -185,7 +192,9 @@ void GrubPostponeDeadlineAction::execute() {
         job->add_change_deadline(timestamp, new_deadline);
     }
 
-    std::cout << timestamp << ": virtual runtime of server " << server->id() << " equals deadline. New Deadline: " << new_deadline << std::endl;
+    std::stringstream message;
+    message << "Virtual runtime of server " << server->id() << " equals deadline. New Deadline: " << new_deadline << std::endl;
+    this->_model->add_message(timestamp, message.str());
 
     SoftGrubSchedule *active_schedule = server->_active_schedule;
     if (active_schedule) {
@@ -234,7 +243,7 @@ void GrubEndScheduleAction<SoftGrubSchedule>::execute() {
     GrubConstantBandwidthServer *server = job->_cbs;
     server->_active_schedule = nullptr;
     server->update_virtual_time(timestamp, this->_model->total_utilisation());
-    server->set_running(false);
+    server->set_running(timestamp, false);
 
     if (not job->finished(timestamp)) {
         std::cout << timestamp << ": execution for job " << this->_schedule->job()->_id
@@ -291,13 +300,15 @@ void GrubDeactivateServerAction::execute() {
     /* alter total_utilisation */
     this->_model->change_total_utilisation(-server->processor_share());
 
-    std::cout << timestamp << ": Server " << server->id() << " goes inactive." << std::endl;
+    std::stringstream message;
+    message << "Server " << server->id() << " goes inactive." << std::endl;
     for (auto &[_, other_server]: this->_model->_servers) {
         if (other_server.id() == server->id()) {
             continue;
         }
-        std::cout << "\t Vtime Server " << other_server.id() << ": " << other_server.virtual_time() << std::endl
-                  << "\tDeadline postponement Server: " << other_server.id() << ": " << other_server.next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
+        message << "    Vtime Server " << other_server.id() << ": " << other_server.virtual_time() << std::endl
+                << "    Deadline postponement Server: " << other_server.id() << ": " << other_server.next_virtual_time_deadline_miss(this->_model->total_utilisation()) << std:: endl;
     }
+    this->_model->add_message(timestamp, message.str());
 
 }
